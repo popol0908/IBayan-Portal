@@ -1,0 +1,99 @@
+{
+  "faq": [
+    {
+      "question": "How do I view announcements?",
+      "answer": "To view announcements, click on the 'Announcements' menu item in the sidebar. You'll see all recent barangay announcements with details like dates, descriptions, and images."
+    },
+    {
+      "question": "How do I submit feedback?",
+      "answer": "Go to the 'Feedback & Concerns' page from the sidebar. Click 'Submit New Feedback' button, fill out the form with your category, message, and optional attachment, then submit."
+    },
+    {
+      "question": "How do I vote in surveys?",
+      "answer": "Navigate to 'Vote & Surveys' from the sidebar. You'll see available surveys and voting options. Click on a survey to view details and cast your vote."
+    },
+    {
+      "question": "What are emergency alerts?",
+      "answer": "Emergency alerts are urgent notifications about safety, weather, health advisories, or other critical information. View them in the 'Emergency Alerts' section."
+    },
+    {
+      "question": "How do I check my verification status?",
+      "answer": "Your verification status is shown on your Profile page. If pending, you'll see a 'Pending Verification' page. Once verified, you can access all features."
+    }
+  ],
+  "services": [
+    {
+      "name": "Barangay Clearance",
+      "description": "A document certifying residency. Required for various transactions.",
+      "requirements": ["Valid ID", "Proof of Residency", "Application Form"],
+      "process": "Submit requirements at barangay hall, pay fees, wait for processing (usually 1-2 days)"
+    },
+    {
+      "name": "Business Permit",
+      "description": "Required for operating a business within the barangay.",
+      "requirements": ["Barangay Clearance", "Business Registration", "Location Sketch"],
+      "process": "Apply at barangay hall, inspection scheduled, approval and payment"
+    },
+    {
+      "name": "Certificate of Indigency",
+      "description": "Certifies financial status for government assistance programs.",
+      "requirements": ["Valid ID", "Income Certificate", "Household Information"],
+      "process": "Submit documents, verification process, issuance of certificate"
+    }
+  ],
+  "navigation": {
+    "dashboard": "The Dashboard is your home page showing recent announcements and quick access to main features.",
+    "announcements": "Announcements page displays all barangay announcements. Use the sidebar menu to navigate there.",
+    "emergency-alerts": "Emergency Alerts shows urgent safety and health notifications. Found in the sidebar.",
+    "vote": "Vote & Surveys allows you to participate in barangay surveys and voting. Access from sidebar.",
+    "feedback": "Feedback & Concerns lets you submit feedback, complaints, or suggestions. Available in sidebar.",
+    "profile": "Profile page shows your account information and verification status. Click profile icon in sidebar footer."
+  },
+  "admin_guides": {
+    "announcements": {
+      "title": "Managing Announcements",
+      "steps": [
+        "Navigate to 'Manage Announcements' from admin sidebar",
+        "Click 'Add New Announcement' button",
+        "Fill in title, description, date, and optional image",
+        "Click 'Publish' to make it visible to residents"
+      ],
+      "tips": ["Use clear, concise titles", "Include relevant dates", "Add images for better engagement"]
+    },
+    "emergency_alerts": {
+      "title": "Creating Emergency Alerts",
+      "steps": [
+        "Go to 'Manage Emergency Alerts'",
+        "Click 'Create New Alert'",
+        "Select category (Typhoon, Health, Flood, Utility)",
+        "Set severity level (High, Medium, Low)",
+        "Enter title, description, and effective dates",
+        "Publish to notify all residents immediately"
+      ],
+      "tips": ["Use High severity for critical alerts", "Set appropriate effective dates", "Keep descriptions clear and actionable"]
+    },
+    "feedback": {
+      "title": "Reviewing Feedback",
+      "steps": [
+        "Go to 'Review Feedback' page",
+        "View all resident submissions",
+        "Click on a submission to view details",
+        "Reply to residents using the reply form",
+        "Update status (Pending, In Review, Resolved)"
+      ],
+      "tips": ["Respond promptly to resident concerns", "Use clear, professional language", "Mark resolved items appropriately"]
+    },
+    "voting": {
+      "title": "Managing Surveys and Voting",
+      "steps": [
+        "Navigate to 'Voting & Surveys' management",
+        "Create new survey with questions and options",
+        "Set start and end dates",
+        "Monitor results in real-time",
+        "Close survey when complete"
+      ],
+      "tips": ["Create clear, unbiased questions", "Set appropriate timeframes", "Review results for insights"]
+    }
+  }
+}
+

@@ -1,0 +1,131 @@
+/* KPI Summary Styles */
+.kpi-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.kpi-icon {
+    font-size: 2.5rem;
+    min-width: 60px;
+    text-align: center;
+    line-height: 1;
+}
+
+.kpi-content {
+    flex: 1;
+}
+
+.kpi-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.kpi-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0.25rem 0 0 0;
+}
+
+/* Color variants */
+.kpi-blue {
+    border-left-color: #0052cc;
+}
+
+.kpi-green {
+    border-left-color: #4caf50;
+}
+
+.kpi-red {
+    border-left-color: #dc3545;
+}
+
+.kpi-orange {
+    border-left-color: #ff9800;
+}
+
+.kpi-purple {
+    border-left-color: #9c27b0;
+}
+
+.kpi-yellow {
+    border-left-color: #ffc107;
+}
+
+.kpi-cyan {
+    border-left-color: #17a2b8;
+}
+
+.kpi-gray {
+    border-left-color: #6c757d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .kpi-summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .kpi-card {
+        padding: 1rem;
+    }
+
+    .kpi-icon {
+        font-size: 2rem;
+        min-width: 50px;
+    }
+
+    .kpi-value {
+        font-size: 1.5rem;
+    }
+
+    .kpi-label {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .kpi-card {
+        padding: 0.875rem;
+    }
+
+    .kpi-icon {
+        font-size: 1.75rem;
+        min-width: 45px;
+    }
+
+    .kpi-value {
+        font-size: 1.25rem;
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+    }
+}

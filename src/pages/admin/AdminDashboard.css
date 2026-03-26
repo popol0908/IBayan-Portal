@@ -1,0 +1,452 @@
+/* ============================================
+   ADMIN DASHBOARD – Redesigned
+   ============================================ */
+
+/* ── Import Google Font ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.admin-dashboard {
+  min-height: 100vh;
+  background: #f0f2f5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================
+   ADMIN CONTENT AREA
+   ============================================ */
+.admin-content {
+  padding: 1.75rem 2rem;
+}
+
+.admin-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   CONTENT HEADER
+   ============================================ */
+.dash-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.75rem;
+  gap: 1rem;
+}
+
+.dash-header-left {
+  flex: 1;
+}
+
+.dash-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.02em;
+}
+
+.dash-subtitle {
+  font-size: 0.9rem;
+  color: #64748B;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.dash-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.dash-greeting {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  white-space: nowrap;
+}
+
+/* ============================================
+   KPI CARDS ROW
+   ============================================ */
+.kpi-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.35rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  border-radius: 16px 16px 0 0;
+}
+
+.kpi-blue::after { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+.kpi-teal::after { background: linear-gradient(90deg, #14B8A6, #2DD4BF); }
+.kpi-red::after { background: linear-gradient(90deg, #EF4444, #F87171); }
+.kpi-amber::after { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.kpi-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon-blue  { background: #EFF6FF; color: #3B82F6; }
+.kpi-icon-teal  { background: #F0FDFA; color: #14B8A6; }
+.kpi-icon-red   { background: #FEF2F2; color: #EF4444; }
+.kpi-icon-amber { background: #FFFBEB; color: #F59E0B; }
+
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.kpi-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kpi-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.kpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  width: fit-content;
+  margin-top: 0.15rem;
+}
+
+.kpi-badge-green {
+  background: #F0FDF4;
+  color: #16A34A;
+}
+
+.kpi-badge-red {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+.kpi-badge-amber {
+  background: #FFFBEB;
+  color: #D97706;
+}
+
+/* ============================================
+   DASH CARDS (Shared)
+   ============================================ */
+.dash-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
+}
+
+.dash-full-width {
+  margin-bottom: 1.75rem;
+}
+
+.dash-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.dash-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.dash-card-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.dash-card-filter:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #475569;
+}
+
+.dash-card-filter svg {
+  opacity: 0.7;
+}
+
+/* ============================================
+   QUICK ACTIONS
+   ============================================ */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 1.5rem;
+  background: #F8FAFC;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover {
+  background: #ffffff;
+  border-color: #CBD5E1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.qa-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qa-blue  { background: #EFF6FF; color: #3B82F6; }
+.qa-teal  { background: #F0FDFA; color: #14B8A6; }
+.qa-red   { background: #FEF2F2; color: #EF4444; }
+.qa-amber { background: #FFFBEB; color: #F59E0B; }
+
+.qa-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+}
+
+.quick-action-btn:hover .qa-label {
+  color: #0F172A;
+}
+
+
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1280px) {
+  .kpi-cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-content {
+    padding: 1.5rem;
+  }
+
+  .kpi-cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-title {
+    font-size: 1.4rem;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    padding: 1rem;
+  }
+
+  .dash-content-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .dash-greeting {
+    align-self: flex-start;
+  }
+
+  .kpi-cards-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .kpi-card {
+    padding: 1rem 1.15rem;
+  }
+
+  .kpi-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .kpi-icon-wrap svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .kpi-value {
+    font-size: 1.35rem;
+  }
+
+  .kpi-label {
+    font-size: 0.7rem;
+  }
+
+  .dash-card {
+    padding: 1.15rem;
+  }
+
+  .dash-card-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .dash-card-title {
+    font-size: 0.95rem;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .quick-action-btn {
+    padding: 1.15rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .qa-icon-wrap {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-content {
+    padding: 0.75rem;
+  }
+
+  .dash-title {
+    font-size: 1.2rem;
+  }
+
+  .dash-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .dash-greeting {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .kpi-cards-row {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .kpi-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .kpi-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .kpi-icon-wrap svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .kpi-value {
+    font-size: 1.15rem;
+  }
+
+  .dash-card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .quick-action-btn {
+    padding: 1rem;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,796 @@
+/* ============================================================
+   iBayan Portal — Landing Page Styles
+   Modern · Minimalist · High-Key
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ---------- Reset & Base ---------- */
+.ibayan-landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1e293b;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ibayan-landing *,
+.ibayan-landing *::before,
+.ibayan-landing *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- Animations ---------- */
+@keyframes ibayan-fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ibayan-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ibayan-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+
+/* ============================
+   1. NAVBAR
+   ============================ */
+.ibayan-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ibayan-navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Brand */
+.ibayan-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.ibayan-brand-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+}
+
+.ibayan-brand-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
+
+/* Nav Links */
+.ibayan-nav-links {
+  display: flex;
+  list-style: none;
+  gap: 2.25rem;
+  margin: 0;
+  padding: 0;
+}
+
+.ibayan-nav-links a {
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #64748b;
+  position: relative;
+  padding-bottom: 4px;
+  transition: color 0.2s ease;
+}
+
+.ibayan-nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: #1a73e8;
+  border-radius: 1px;
+  transition: width 0.25s ease;
+}
+
+.ibayan-nav-links a:hover {
+  color: #1a73e8;
+}
+
+.ibayan-nav-links a:hover::after {
+  width: 100%;
+}
+
+/* Actions */
+.ibayan-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.ibayan-nav-admin {
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.ibayan-nav-admin:hover {
+  color: #1a73e8;
+  border-color: #1a73e8;
+  background: rgba(26, 115, 232, 0.04);
+}
+
+.ibayan-nav-login {
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #475569;
+  transition: color 0.2s ease;
+}
+
+.ibayan-nav-login:hover {
+  color: #1a73e8;
+}
+
+.ibayan-nav-signup {
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #1a73e8;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.ibayan-nav-signup:hover {
+  background: #1557b0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+/* ============================
+   2. HERO SECTION
+   ============================ */
+.ibayan-hero {
+  background: linear-gradient(170deg, #eaf4fd 0%, #dbeafe 40%, #e8f4fd 100%);
+  padding: 6rem 2rem 5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ibayan-hero::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(26, 115, 232, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ibayan-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(26, 115, 232, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ibayan-hero-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Badge */
+.ibayan-hero-badge {
+  display: inline-block;
+  background: rgba(26, 115, 232, 0.1);
+  color: #1a73e8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  margin-bottom: 1.5rem;
+  animation: ibayan-fadeUp 0.6s ease both;
+}
+
+/* Headline */
+.ibayan-hero-headline {
+  font-size: 3.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #1e293b;
+  margin: 0 0 1.25rem;
+  letter-spacing: -0.03em;
+  animation: ibayan-fadeUp 0.7s ease 0.1s both;
+}
+
+.ibayan-hero-highlight {
+  color: #1a73e8;
+  position: relative;
+}
+
+/* Description */
+.ibayan-hero-desc {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #64748b;
+  max-width: 600px;
+  margin: 0 auto 2.25rem;
+  animation: ibayan-fadeUp 0.7s ease 0.2s both;
+}
+
+/* CTA Buttons */
+.ibayan-hero-cta {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 3.5rem;
+  animation: ibayan-fadeUp 0.7s ease 0.3s both;
+}
+
+.ibayan-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #1a73e8;
+  padding: 0.75rem 1.75rem;
+  border-radius: 10px;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.ibayan-btn-primary:hover {
+  background: #1557b0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.35);
+}
+
+.ibayan-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  background: #ffffff;
+  padding: 0.75rem 1.75rem;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.ibayan-btn-outline:hover {
+  border-color: #1a73e8;
+  color: #1a73e8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(26, 115, 232, 0.12);
+}
+
+/* Stats Bar */
+.ibayan-hero-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 1.25rem 2.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  animation: ibayan-fadeUp 0.8s ease 0.4s both;
+}
+
+.ibayan-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.ibayan-stat-number {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a73e8;
+  letter-spacing: -0.02em;
+}
+
+.ibayan-stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ibayan-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: #e2e8f0;
+}
+
+/* ============================
+   3. ANNOUNCEMENTS SECTION
+   ============================ */
+.ibayan-announcements {
+  padding: 5rem 2rem;
+  background: #ffffff;
+}
+
+.ibayan-section-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ibayan-announcements-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.ibayan-section-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.ibayan-view-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+.ibayan-view-more:hover {
+  color: #1a73e8;
+}
+
+.ibayan-view-more svg {
+  transition: transform 0.2s ease;
+}
+
+.ibayan-view-more:hover svg {
+  transform: translateX(3px);
+}
+
+/* Cards Grid */
+.ibayan-announcements-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+}
+
+.ibayan-announcement-card {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  padding: 1.75rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ibayan-announcement-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  border-color: #e2e8f0;
+}
+
+/* Card Meta */
+.ibayan-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ibayan-card-date {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.ibayan-card-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ibayan-label-advisory {
+  background: rgba(251, 191, 36, 0.12);
+  color: #d97706;
+}
+
+.ibayan-label-notice {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.ibayan-label-event {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.ibayan-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.65rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.ibayan-card-desc {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.65;
+  margin: 0 0 1.25rem;
+  flex: 1;
+}
+
+.ibayan-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a73e8;
+  transition: gap 0.2s ease;
+}
+
+.ibayan-card-link:hover {
+  gap: 0.6rem;
+}
+
+/* ============================
+   4. FEATURE ICONS SECTION
+   ============================ */
+.ibayan-features {
+  padding: 4rem 2rem;
+  background: #fafbfc;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ibayan-features-row {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  flex-wrap: wrap;
+}
+
+.ibayan-feature-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ibayan-feature-icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  color: #64748b;
+}
+
+.ibayan-feature-icon-item:hover .ibayan-feature-icon-circle {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.12);
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
+.ibayan-feature-icon-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+
+.ibayan-feature-icon-item:hover .ibayan-feature-icon-label {
+  color: #1a73e8;
+}
+
+/* ============================
+   5. FOOTER
+   ============================ */
+.ibayan-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 3.5rem 2rem 0;
+  margin-top: auto;
+}
+
+.ibayan-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 3rem;
+  padding-bottom: 2.5rem;
+}
+
+.ibayan-footer-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.75rem;
+}
+
+.ibayan-footer-brand-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.ibayan-footer-heading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ibayan-footer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ibayan-footer-list a {
+  text-decoration: none;
+  font-size: 0.85rem;
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.ibayan-footer-list a:hover {
+  color: #1a73e8;
+}
+
+.ibayan-footer-contact li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.ibayan-footer-contact svg {
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+/* System Status */
+.ibayan-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.ibayan-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: ibayan-pulse 2s infinite;
+}
+
+/* Footer Bottom */
+.ibayan-footer-bottom {
+  border-top: 1px solid #e2e8f0;
+  padding: 1.25rem 0;
+  text-align: center;
+}
+
+.ibayan-footer-bottom p {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ============================
+   RESPONSIVE
+   ============================ */
+
+/* Tablet */
+@media (max-width: 968px) {
+  .ibayan-hero-headline {
+    font-size: 2.5rem;
+  }
+
+  .ibayan-hero {
+    padding: 4.5rem 1.5rem 4rem;
+  }
+
+  .ibayan-announcements-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ibayan-footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+
+  .ibayan-features-row {
+    gap: 3rem;
+  }
+}
+
+/* Mobile landscape */
+@media (max-width: 768px) {
+  .ibayan-navbar-inner {
+    padding: 0 1.25rem;
+    height: 60px;
+  }
+
+  .ibayan-nav-links {
+    display: none;
+  }
+
+  .ibayan-hero {
+    padding: 3.5rem 1.25rem 3rem;
+  }
+
+  .ibayan-hero-headline {
+    font-size: 2rem;
+  }
+
+  .ibayan-hero-desc {
+    font-size: 1rem;
+  }
+
+  .ibayan-hero-stats {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+  }
+
+  .ibayan-stat-divider {
+    width: 60px;
+    height: 1px;
+  }
+
+  .ibayan-announcements {
+    padding: 3.5rem 1.25rem;
+  }
+
+  .ibayan-announcements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ibayan-announcements-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .ibayan-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .ibayan-features-row {
+    gap: 2rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .ibayan-brand-name {
+    font-size: 1rem;
+  }
+
+  .ibayan-brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .ibayan-hero-headline {
+    font-size: 1.65rem;
+  }
+
+  .ibayan-hero-badge {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.85rem;
+  }
+
+  .ibayan-hero-desc {
+    font-size: 0.92rem;
+  }
+
+  .ibayan-hero-cta {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ibayan-btn-primary,
+  .ibayan-btn-outline {
+    width: 100%;
+    justify-content: center;
+    max-width: 280px;
+  }
+
+  .ibayan-section-title {
+    font-size: 1.4rem;
+  }
+
+  .ibayan-feature-icon-circle {
+    width: 56px;
+    height: 56px;
+  }
+
+  .ibayan-feature-icon-circle svg {
+    width: 24px;
+    height: 24px;
+  }
+}
