@@ -5,6 +5,7 @@ import {
   Megaphone,
   Siren,
   CheckCircle,
+  Home,
   Calendar,
   Settings,
   LogOut,
@@ -24,6 +25,7 @@ const icons = {
   megaphone: <Megaphone {...iconProps} />,
   siren: <Siren {...iconProps} />,
   checkCircle: <CheckCircle {...iconProps} />,
+  home: <Home {...iconProps} />,
   calendar: <Calendar {...iconProps} />,
   gear: <Settings {...iconProps} />,
   logout: <LogOut {...iconProps} />,
@@ -45,6 +47,7 @@ const AdminNavbar = () => {
     { path: '/admin/announcements', label: 'Announcements', icon: icons.megaphone },
     { path: '/admin/emergency-alerts', label: 'Emergency Alerts', icon: icons.siren },
     { path: '/admin/residents', label: 'Resident Verification', icon: icons.checkCircle },
+    { path: '/admin/households', label: 'Household Profiling', icon: icons.home },
     { path: '/admin/events', label: 'Events & Programs', icon: icons.calendar },
     { path: '/admin/accounts', label: 'Admin Accounts', icon: icons.gear },
   ];

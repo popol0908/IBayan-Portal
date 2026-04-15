@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Megaphone, Home, AlertTriangle, ClipboardCheck } from 'lucide-react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { getSharedData, subscribeToChanges } from '../../services/dataService';
 import AdminNavbar from '../../components/AdminNavbar';
 import PageLoader from '../../components/PageLoader';
 import './AdminDashboard.css';
@@ -26,48 +27,50 @@ const AdminDashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  const updateStats = async () => {
-    try {
-      const alerts = await getSharedData('emergencyAlerts');
-      const activeAlerts = alerts.filter(alert => alert.status === 'Active').length;
-
-      setStats({
-        totalResidents: 22345,
-        totalHouseholds: 5102,
-        activeAlerts: activeAlerts || 3,
-        pendingVerification: 45,
-      });
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      setStats({
-        totalResidents: 22345,
-        totalHouseholds: 5102,
-        activeAlerts: 3,
-        pendingVerification: 45,
-      });
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    updateStats();
-    const unsubscribeAlerts = subscribeToChanges('emergencyAlerts', () => {
-      updateStats();
-    });
+    let loadedCount = 0;
+    const total = 4; // 4 listeners
+    const checkDone = () => {
+      loadedCount++;
+      if (loadedCount >= total) setIsLoading(false);
+    };
+
+    // 1) Verified residents → totalResidents
+    const qVerified = query(collection(db, 'users'), where('status', '==', 'verified'));
+    const unsubVerified = onSnapshot(qVerified, (snapshot) => {
+      setStats((prev) => ({ ...prev, totalResidents: snapshot.size }));
+      checkDone();
+    }, (err) => { console.error('Error fetching verified users:', err); checkDone(); });
+
+    // 2) Households → totalHouseholds
+    const unsubHouseholds = onSnapshot(collection(db, 'households'), (snapshot) => {
+      setStats((prev) => ({ ...prev, totalHouseholds: snapshot.size }));
+      checkDone();
+    }, (err) => { console.error('Error fetching households:', err); checkDone(); });
+
+    // 3) Pending users → pendingVerification
+    const qPending = query(collection(db, 'users'), where('status', '==', 'pending'));
+    const unsubPending = onSnapshot(qPending, (snapshot) => {
+      setStats((prev) => ({ ...prev, pendingVerification: snapshot.size }));
+      checkDone();
+    }, (err) => { console.error('Error fetching pending users:', err); checkDone(); });
+
+    // 4) Active emergency alerts
+    const unsubAlerts = onSnapshot(collection(db, 'emergencyAlerts'), (snapshot) => {
+      const active = snapshot.docs.filter((d) => d.data().status === 'Active').length;
+      setStats((prev) => ({ ...prev, activeAlerts: active }));
+      checkDone();
+    }, (err) => { console.error('Error fetching alerts:', err); checkDone(); });
+
     return () => {
-      unsubscribeAlerts();
+      unsubVerified();
+      unsubHouseholds();
+      unsubPending();
+      unsubAlerts();
     };
   }, []);
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
-  };
-
-  const userName = currentUser?.displayName || 'Marisa';
+  const userName = currentUser?.displayName || 'Admin';
 
   return (
     <PageLoader isLoading={isLoading} loadingMessage="Loading dashboard...">
@@ -95,7 +98,7 @@ const AdminDashboard = () => {
                 <div className="kpi-info">
                   <span className="kpi-label">Total Residents</span>
                   <span className="kpi-value">{stats.totalResidents.toLocaleString()}</span>
-                  <span className="kpi-badge kpi-badge-green">↑ +2% vs last month</span>
+                  <span className="kpi-badge kpi-badge-green">Verified</span>
                 </div>
               </div>
 
@@ -104,7 +107,7 @@ const AdminDashboard = () => {
                 <div className="kpi-info">
                   <span className="kpi-label">Total Households</span>
                   <span className="kpi-value">{stats.totalHouseholds.toLocaleString()}</span>
-                  <span className="kpi-badge kpi-badge-green">↑ +1% vs last month</span>
+                  <span className="kpi-badge kpi-badge-green">Recorded</span>
                 </div>
               </div>
 
@@ -113,7 +116,11 @@ const AdminDashboard = () => {
                 <div className="kpi-info">
                   <span className="kpi-label">Active Emergency Alerts</span>
                   <span className="kpi-value">{stats.activeAlerts}</span>
-                  <span className="kpi-badge kpi-badge-red">Critical</span>
+                  {stats.activeAlerts > 0 ? (
+                    <span className="kpi-badge kpi-badge-red">Critical</span>
+                  ) : (
+                    <span className="kpi-badge kpi-badge-green">All Clear</span>
+                  )}
                 </div>
               </div>
 
@@ -122,7 +129,11 @@ const AdminDashboard = () => {
                 <div className="kpi-info">
                   <span className="kpi-label">Pending Verification</span>
                   <span className="kpi-value">{stats.pendingVerification}</span>
-                  <span className="kpi-badge kpi-badge-amber">Awaiting Review</span>
+                  {stats.pendingVerification > 0 ? (
+                    <span className="kpi-badge kpi-badge-amber">Awaiting Review</span>
+                  ) : (
+                    <span className="kpi-badge kpi-badge-green">All Reviewed</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -145,6 +156,10 @@ const AdminDashboard = () => {
                   <div className="qa-icon-wrap qa-teal">{Icons.people}</div>
                   <span className="qa-label">Manage Residents</span>
                 </Link>
+                <Link to="/admin/households" className="quick-action-btn">
+                  <div className="qa-icon-wrap qa-teal">{Icons.home}</div>
+                  <span className="qa-label">Household Profiling</span>
+                </Link>
                 <Link to="/admin/accounts" className="quick-action-btn">
                   <div className="qa-icon-wrap qa-amber">{Icons.clipboard}</div>
                   <span className="qa-label">Admin Accounts</span>
@@ -160,3 +175,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

@@ -108,7 +108,7 @@ const Events = () => {
         eventId: selectedEvent.id,
         userId: currentUser.uid,
         userEmail: currentUser.email,
-        userName: userProfile?.displayName || currentUser.email,
+        userName: userProfile?.fullName || userProfile?.displayName || currentUser.displayName || currentUser.email,
         responses: registrationForm,
         createdAt: new Date().toISOString()
       });

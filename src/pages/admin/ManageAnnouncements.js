@@ -278,97 +278,100 @@ const ManageAnnouncements = () => {
             </div>
           )}
 
-          {/* Announcement Linear List */}
-          <div className="announcement-list">
-            {getFilteredAnnouncements().length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-icon"><Megaphone size={48} strokeWidth={1.5} /></span>
-                <h3>
-                  {announcements.length === 0 
-                    ? 'No Announcements Yet' 
-                    : 'No Announcements Match Your Filters'}
-                </h3>
-                <p>
-                  {announcements.length === 0 
-                    ? 'Click "Add New Announcement" to create your first announcement' 
-                    : 'Try adjusting your search or filters.'}
-                </p>
-              </div>
-            ) : (
-              getFilteredAnnouncements().map(announcement => {
-                const typeStyle = getTypeStyle(announcement.type);
-                return (
-                  <div
-                    key={announcement.id}
-                    className="announcement-list-item"
-                    style={{ borderLeftColor: typeStyle.accent }}
-                  >
-                    {/* Header: badges + admin actions */}
-                    <div className="item-header">
-                      <div className="item-badges">
-                        <span className={`type-badge ${typeStyle.badge}`}>
-                          {announcement.type || 'General'}
-                        </span>
-                        {(announcement.type === 'Emergency' || announcement.type === 'Security') && (
-                          <span className="type-badge type-important">Important</span>
-                        )}
-                      </div>
-                      <div className="item-admin-actions">
-                        <button
-                          className="action-icon-btn edit"
-                          onClick={() => handleEdit(announcement)}
-                          title="Edit announcement"
-                        >
-                          <Pencil size={15} strokeWidth={1.8} />
-                        </button>
-                        <button
-                          className="action-icon-btn delete"
-                          onClick={() => openDeleteDialog(announcement)}
-                          title="Delete announcement"
-                        >
-                          <Trash2 size={15} strokeWidth={1.8} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="item-title">{announcement.title}</h3>
-
-                    {/* Description */}
-                    <p className="item-description">{announcement.description}</p>
-
-                    {/* Dates: When + Date Posted */}
-                    <div className="item-dates">
-                      <div className="item-date-row">
-                        <span className="item-date-label">When:</span>
-                        <span className="item-date-value">
-                          {new Date(announcement.whenDate || announcement.date).toLocaleDateString('en-US', {
-                            year: 'numeric', month: 'long', day: 'numeric'
-                          })}
-                          {announcement.whenTime && (
-                            <span className="when-time"> at {
-                              new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
-                                hour: 'numeric', minute: '2-digit', hour12: true
-                              })
-                            }</span>
+          {/* Existing Announcements */}
+          <div className="alerts-table-card">
+            <h2 className="table-card-title">Existing Announcements</h2>
+            <div className="announcement-list">
+              {getFilteredAnnouncements().length === 0 ? (
+                <div className="empty-state">
+                  <span className="empty-icon"><Megaphone size={48} strokeWidth={1.5} /></span>
+                  <h3>
+                    {announcements.length === 0 
+                      ? 'No Announcements Yet' 
+                      : 'No Announcements Match Your Filters'}
+                  </h3>
+                  <p>
+                    {announcements.length === 0 
+                      ? 'Click "Add New Announcement" to create your first announcement' 
+                      : 'Try adjusting your search or filters.'}
+                  </p>
+                </div>
+              ) : (
+                getFilteredAnnouncements().map(announcement => {
+                  const typeStyle = getTypeStyle(announcement.type);
+                  return (
+                    <div
+                      key={announcement.id}
+                      className="announcement-list-item"
+                      style={{ borderLeftColor: typeStyle.accent }}
+                    >
+                      {/* Header: badges + admin actions */}
+                      <div className="item-header">
+                        <div className="item-badges">
+                          <span className={`type-badge ${typeStyle.badge}`}>
+                            {announcement.type || 'General'}
+                          </span>
+                          {(announcement.type === 'Emergency' || announcement.type === 'Security') && (
+                            <span className="type-badge type-important">Important</span>
                           )}
-                        </span>
+                        </div>
+                        <div className="item-admin-actions">
+                          <button
+                            className="action-icon-btn edit"
+                            onClick={() => handleEdit(announcement)}
+                            title="Edit announcement"
+                          >
+                            <Pencil size={15} strokeWidth={1.8} />
+                          </button>
+                          <button
+                            className="action-icon-btn delete"
+                            onClick={() => openDeleteDialog(announcement)}
+                            title="Delete announcement"
+                          >
+                            <Trash2 size={15} strokeWidth={1.8} />
+                          </button>
+                        </div>
                       </div>
-                      {announcement.datePosted && (
+
+                      {/* Title */}
+                      <h3 className="item-title">{announcement.title}</h3>
+
+                      {/* Description */}
+                      <p className="item-description">{announcement.description}</p>
+
+                      {/* Dates: When + Date Posted */}
+                      <div className="item-dates">
                         <div className="item-date-row">
-                          <span className="item-date-label">Date Posted:</span>
+                          <span className="item-date-label">When:</span>
                           <span className="item-date-value">
-                            {new Date(announcement.datePosted).toLocaleDateString('en-US', {
-                              year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                            {new Date(announcement.whenDate || announcement.date).toLocaleDateString('en-US', {
+                              year: 'numeric', month: 'long', day: 'numeric'
                             })}
+                            {announcement.whenTime && (
+                              <span className="when-time"> at {
+                                new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
+                                  hour: 'numeric', minute: '2-digit', hour12: true
+                                })
+                              }</span>
+                            )}
                           </span>
                         </div>
-                      )}
+                        {announcement.datePosted && (
+                          <div className="item-date-row">
+                            <span className="item-date-label">Date Posted:</span>
+                            <span className="item-date-value">
+                              {new Date(announcement.datePosted).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -480,11 +483,11 @@ const ManageAnnouncements = () => {
             </p>
             <div className="dialog-actions">
               <button className="btn btn-secondary" onClick={() => setShowDeleteDialog(false)}>
-                <span className="btn-icon btn-icon-left"><X size={18} strokeWidth={2} /></span>
+                <span className="btn-icon-left"><X size={18} strokeWidth={2} /></span>
                 Cancel
               </button>
               <button className="btn btn-danger" onClick={handleDelete}>
-                <span className="btn-icon btn-icon-left"><Trash2 size={18} strokeWidth={2} /></span>
+                <span className="btn-icon-left"><Trash2 size={18} strokeWidth={2} /></span>
                 Delete
               </button>
             </div>

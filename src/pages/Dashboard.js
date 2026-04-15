@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Megaphone, Siren, Calendar, User, ArrowRight } from 'lucide-react';
+import { Megaphone, Siren, Calendar, User, ArrowRight, Home } from 'lucide-react';
 import IconBox from '../components/IconBox';
 import { getSharedData, subscribeToChanges } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
@@ -187,6 +187,15 @@ const Dashboard = () => {
                 <div className="action-card-content">
                   <h4 className="action-card-title">My Profile</h4>
                   <p className="action-card-description">View and manage your account information</p>
+                </div>
+                <div className="action-card-arrow"><ArrowRight size={20} strokeWidth={2} /></div>
+              </Link>
+
+              <Link to="/household-profile" className="action-card action-success">
+                <IconBox variant="green" size="sm" className="action-card-icon"><Home size={24} strokeWidth={1.8} /></IconBox>
+                <div className="action-card-content">
+                  <h4 className="action-card-title">Household Profile</h4>
+                  <p className="action-card-description">Submit and view your household profile information</p>
                 </div>
                 <div className="action-card-arrow"><ArrowRight size={20} strokeWidth={2} /></div>
               </Link>

@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendChatMessage, saveMessageToFirestore } from '../services/chatService';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import './ChatAssistant.css';
 
 const ChatAssistant = () => {
@@ -9,31 +11,83 @@ const ChatAssistant = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Initialize with welcome message
-  useEffect(() => {
-    if (currentUser && messages.length === 0) {
-      const welcomeMessage = isAdmin
-        ? "Hello! I'm your AI assistant. I can help you manage announcements, alerts, surveys, and feedback. What would you like to know?"
-        : "Hello! I'm your AI assistant. I can help you navigate the system, explain features, and answer barangay-related questions. How can I assist you today?";
-      
-      setMessages([
-        {
-          id: Date.now(),
-          role: 'assistant',
-          content: welcomeMessage,
-          timestamp: new Date()
-        }
-      ]);
+  // Load chat history from Firestore on mount
+  const loadChatHistory = useCallback(async () => {
+    if (!currentUser?.uid || historyLoaded) return;
+
+    try {
+      const chatQuery = query(
+        collection(db, 'chatMessages'),
+        where('userId', '==', currentUser.uid),
+        orderBy('timestamp', 'desc'),
+        limit(20)
+      );
+
+      const snapshot = await getDocs(chatQuery);
+
+      if (!snapshot.empty) {
+        const historicalMessages = [];
+        snapshot.docs.reverse().forEach((doc) => {
+          const data = doc.data();
+          // Add user message
+          historicalMessages.push({
+            id: `hist-user-${doc.id}`,
+            role: 'user',
+            content: data.userMessage,
+            timestamp: data.timestamp?.toDate?.() || new Date(data.createdAt),
+          });
+          // Add assistant response
+          historicalMessages.push({
+            id: `hist-ai-${doc.id}`,
+            role: 'assistant',
+            content: data.assistantResponse,
+            timestamp: data.timestamp?.toDate?.() || new Date(data.createdAt),
+          });
+        });
+
+        setMessages(historicalMessages);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    } finally {
+      setHistoryLoaded(true);
     }
-  }, [currentUser, isAdmin]);
+  }, [currentUser, historyLoaded]);
+
+  // Initialize with welcome message or load history
+  useEffect(() => {
+    if (currentUser && messages.length === 0 && !historyLoaded) {
+      loadChatHistory().then(() => {
+        // After history loads, if still no messages, show welcome
+        setMessages((prev) => {
+          if (prev.length === 0) {
+            const welcomeMessage = isAdmin
+              ? "Hello! I'm your AI assistant for the iBayan admin panel. I can help you manage announcements, alerts, events, verify residents, and more. What would you like to know?"
+              : "Hello! I'm your AI assistant for the iBayan Portal. I can help you navigate the system, check announcements, events, and answer your questions. How can I assist you today?";
+
+            return [
+              {
+                id: Date.now(),
+                role: 'assistant',
+                content: welcomeMessage,
+                timestamp: new Date(),
+              },
+            ];
+          }
+          return prev;
+        });
+      });
+    }
+  }, [currentUser, isAdmin, historyLoaded, loadChatHistory]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isSending]);
 
   // Focus input when chat opens
   useEffect(() => {
@@ -42,29 +96,43 @@ const ChatAssistant = () => {
     }
   }, [isOpen]);
 
+  // Auto-resize textarea
+  const handleInputChange = (e) => {
+    setInputMessage(e.target.value);
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    const maxHeight = 96; // ~4 lines
+    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
+
     if (!inputMessage.trim() || isSending || !currentUser) return;
 
     const userMessage = inputMessage.trim();
     setInputMessage('');
     setIsSending(true);
 
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+    }
+
     // Add user message to chat
     const userMsg = {
       id: Date.now(),
       role: 'user',
       content: userMessage,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
 
     try {
       // Get conversation history
-      const conversationHistory = messages.map(msg => ({
+      const conversationHistory = messages.map((msg) => ({
         role: msg.role,
-        content: msg.content
+        content: msg.content,
       }));
 
       // Send to AI
@@ -81,11 +149,11 @@ const ChatAssistant = () => {
           id: Date.now() + 1,
           role: 'assistant',
           content: result.message,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
-        setMessages(prev => [...prev, assistantMsg]);
+        setMessages((prev) => [...prev, assistantMsg]);
 
-        // Save to Firestore (optional)
+        // Save to Firestore
         if (currentUser?.uid) {
           await saveMessageToFirestore(
             currentUser.uid,
@@ -96,36 +164,39 @@ const ChatAssistant = () => {
           );
         }
       } else {
-        // Show error message
+        // Show user-friendly error message
         const errorMsg = {
           id: Date.now() + 1,
           role: 'assistant',
-          content: `Sorry, I encountered an error: ${result.error}. Please try again or contact support if the issue persists.`,
+          content:
+            "Sorry, I'm having trouble responding right now. Please try again in a moment.",
           timestamp: new Date(),
-          isError: true
+          isError: true,
         };
-        setMessages(prev => [...prev, errorMsg]);
+        setMessages((prev) => [...prev, errorMsg]);
+        console.error('Chat error:', result.error);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMsg = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content:
+          "Sorry, I'm having trouble responding right now. Please try again in a moment.",
         timestamp: new Date(),
-        isError: true
+        isError: true,
       };
-      setMessages(prev => [...prev, errorMsg]);
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsSending(false);
     }
   };
 
   const toggleChat = () => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(e);
@@ -145,6 +216,7 @@ const ChatAssistant = () => {
         onClick={toggleChat}
         aria-label="Toggle AI Assistant"
         title="AI Assistant"
+        id="chat-toggle-btn"
       >
         {isOpen ? (
           <span className="chat-icon">✕</span>
@@ -155,10 +227,13 @@ const ChatAssistant = () => {
 
       {/* Chat Widget */}
       {isOpen && (
-        <div className="chat-widget">
+        <div className="chat-widget" id="chat-widget">
           <div className="chat-header">
             <div className="chat-header-content">
-              <div className="chat-avatar">🤖</div>
+              <div className="chat-avatar-wrapper">
+                <div className="chat-avatar">🤖</div>
+                <span className="online-dot"></span>
+              </div>
               <div className="chat-header-text">
                 <h3 className="chat-title">AI Assistant</h3>
                 <p className="chat-subtitle">
@@ -170,40 +245,79 @@ const ChatAssistant = () => {
               className="chat-close-btn"
               onClick={toggleChat}
               aria-label="Close chat"
+              id="chat-close-btn"
             >
               ✕
             </button>
           </div>
 
-          <div className="chat-messages">
+          <div className="chat-messages" id="chat-messages">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`chat-message ${message.role} ${message.isError ? 'error' : ''}`}
               >
-                <div className="message-content">
-                  {message.content.split('\n').map((line, idx) => (
-                    <React.Fragment key={idx}>
-                      {line}
-                      {idx < message.content.split('\n').length - 1 && <br />}
-                    </React.Fragment>
-                  ))}
-                </div>
-                <div className="message-time">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
+                {message.role === 'assistant' && (
+                  <div className="message-row">
+                    <div className="message-avatar">🤖</div>
+                    <div className="message-bubble-wrapper">
+                      <div className="message-content">
+                        {message.content.split('\n').map((line, idx) => (
+                          <React.Fragment key={idx}>
+                            {line}
+                            {idx < message.content.split('\n').length - 1 && (
+                              <br />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div className="message-time">
+                        {message.timestamp instanceof Date
+                          ? message.timestamp.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {message.role === 'user' && (
+                  <>
+                    <div className="message-content">
+                      {message.content.split('\n').map((line, idx) => (
+                        <React.Fragment key={idx}>
+                          {line}
+                          {idx < message.content.split('\n').length - 1 && (
+                            <br />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div className="message-time">
+                      {message.timestamp instanceof Date
+                        ? message.timestamp.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : ''}
+                    </div>
+                  </>
+                )}
               </div>
             ))}
             {isSending && (
               <div className="chat-message assistant">
-                <div className="message-content">
-                  <div className="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div className="message-row">
+                  <div className="message-avatar">🤖</div>
+                  <div className="message-bubble-wrapper">
+                    <div className="message-content">
+                      <div className="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -217,17 +331,19 @@ const ChatAssistant = () => {
                 ref={inputRef}
                 className="chat-input"
                 value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask me anything..."
                 rows="1"
                 disabled={isSending}
+                id="chat-input"
               />
               <button
                 type="submit"
                 className="chat-send-btn"
                 disabled={!inputMessage.trim() || isSending}
                 aria-label="Send message"
+                id="chat-send-btn"
               >
                 {isSending ? (
                   <span className="send-icon">⏳</span>
@@ -236,9 +352,13 @@ const ChatAssistant = () => {
                 )}
               </button>
             </div>
+            <div className="chat-input-hint">
+              Press Enter to send, Shift+Enter for new line
+            </div>
             <div className="chat-footer">
               <small className="chat-footer-text">
-                AI responses are generated by Google Gemini. Please verify important information.
+                AI responses are generated by Google Gemini. Please verify
+                important information.
               </small>
             </div>
           </form>
@@ -249,4 +369,3 @@ const ChatAssistant = () => {
 };
 
 export default ChatAssistant;
-

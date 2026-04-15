@@ -337,8 +337,12 @@ const ManageEmergencyAlerts = () => {
                           <option value="Active">Active</option>
                           <option value="Resolved">Resolved</option>
                         </select>
-                        <button className="btn btn-sm btn-danger btn-action" onClick={() => openDeleteDialog(alert)} title="Delete">
-                          <span className="btn-icon"><Trash2 size={16} strokeWidth={1.8} /></span>
+                        <button 
+                          className="action-icon-btn delete" 
+                          onClick={() => openDeleteDialog(alert)} 
+                          title="Delete alert"
+                        >
+                          <Trash2 size={15} strokeWidth={1.8} />
                         </button>
                       </td>
                     </tr>
@@ -480,11 +484,11 @@ const ManageEmergencyAlerts = () => {
             </p>
             <div className="dialog-actions">
               <button className="btn btn-secondary" onClick={() => setShowDeleteDialog(false)}>
-                <span className="btn-icon btn-icon-left"><X size={18} strokeWidth={2} /></span>
+                <span className="btn-icon-left"><X size={18} strokeWidth={2} /></span>
                 Cancel
               </button>
               <button className="btn btn-danger" onClick={handleDelete}>
-                <span className="btn-icon btn-icon-left"><Trash2 size={18} strokeWidth={2} /></span>
+                <span className="btn-icon-left"><Trash2 size={18} strokeWidth={2} /></span>
                 Delete
               </button>
             </div>

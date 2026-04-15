@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
@@ -27,6 +28,7 @@ const icons = {
   chevronLeft: <ChevronLeft {...chevronProps} />,
   chevronRight: <ChevronRight {...chevronProps} />,
   warning: <AlertTriangle {...iconProps} />,
+  clipboardList: <ClipboardList {...iconProps} />,
 };
 
 const Navbar = () => {
@@ -41,6 +43,7 @@ const Navbar = () => {
     { path: '/announcements', label: 'Announcements', icon: icons.megaphone },
     { path: '/emergency-alerts', label: 'Emergency Alerts', icon: icons.siren },
     { path: '/events', label: 'Events & Programs', icon: icons.calendar },
+    { path: '/household-profile', label: 'Household Profile', icon: icons.clipboardList },
   ];
 
   // Manage body classes for layout shifting

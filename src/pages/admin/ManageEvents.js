@@ -9,6 +9,8 @@ import { addItem, updateItem, deleteItem, subscribeToChanges, subscribeToFiltere
 import { useToast } from '../../contexts/ToastContext';
 import { validateRequired, validateDate } from '../../utils/validation';
 import AdminNavbar from '../../components/AdminNavbar';
+import { db } from '../../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import './ManageEvents.css';
 import '../../styles/admin-common.css';
 
@@ -38,9 +40,10 @@ const ManageEvents = () => {
     label: '',
     type: 'text',
     required: false,
-    options: '', // For dropdown type
-    currentOption: '' // Current input for adding dropdown options
+    options: '',
+    currentOption: ''
   });
+  const [userProfiles, setUserProfiles] = useState({});
 
   useEffect(() => {
     // Subscribe to real-time events updates
@@ -246,9 +249,26 @@ const ManageEvents = () => {
     }
   };
 
-  const handleViewRegistrations = (event) => {
+  const handleViewRegistrations = async (event) => {
     setSelectedEvent(event);
     setShowRegistrationsModal(true);
+
+    // Fetch profiles for all registrants
+    const eventRegs = registrations.filter(r => r.eventId === event.id);
+    const profiles = { ...userProfiles };
+    for (const reg of eventRegs) {
+      if (reg.userId && !profiles[reg.userId]) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', reg.userId));
+          if (userDoc.exists()) {
+            profiles[reg.userId] = userDoc.data();
+          }
+        } catch (err) {
+          console.error('Error fetching user profile:', err);
+        }
+      }
+    }
+    setUserProfiles(profiles);
   };
 
   const resetForm = () => {
@@ -351,9 +371,11 @@ const ManageEvents = () => {
             </select>
           </div>
 
-          {/* Events List */}
-          <div className="events-table-container">
-            <table className="events-table">
+          {/* Existing Events & Programs */}
+          <div className="alerts-table-card">
+            <h2 className="table-card-title">Existing Events & Programs</h2>
+            <div className="events-table-container">
+              <table className="events-table">
               <thead>
                 <tr>
                   <th>Title</th>
@@ -414,20 +436,20 @@ const ManageEvents = () => {
                           </span>
                         </td>
                         <td>
-                          <div className="action-buttons">
+                          <div className="item-admin-actions">
                             <button
-                              className="btn-icon"
+                              className="action-icon-btn edit"
                               onClick={() => handleEdit(event)}
-                              title="Edit"
+                              title="Edit event"
                             >
-                              <Pencil size={18} strokeWidth={1.8} />
+                              <Pencil size={15} strokeWidth={1.8} />
                             </button>
                             <button
-                              className="btn-icon btn-danger"
+                              className="action-icon-btn delete"
                               onClick={() => openDeleteDialog(event)}
-                              title="Delete"
+                              title="Delete event"
                             >
-                              <Trash2 size={18} strokeWidth={1.8} />
+                              <Trash2 size={15} strokeWidth={1.8} />
                             </button>
                           </div>
                         </td>
@@ -436,7 +458,8 @@ const ManageEvents = () => {
                   })
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
 
           {/* Create/Edit Modal */}
@@ -549,7 +572,6 @@ const ManageEvents = () => {
                           >
                             <option value="text">Text Input</option>
                             <option value="number">Number</option>
-                            <option value="textarea">Textarea</option>
                             <option value="dropdown">Dropdown</option>
                           </select>
                         </div>
@@ -688,7 +710,7 @@ const ManageEvents = () => {
                               <div className="field-actions">
                                 <button
                                   type="button"
-                                  className="btn-icon btn-move"
+                                  className="action-icon-btn btn-move"
                                   onClick={() => handleMoveField(field.id, 'up')}
                                   disabled={index === 0}
                                   title="Move up"
@@ -697,7 +719,7 @@ const ManageEvents = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  className="btn-icon btn-move"
+                                  className="action-icon-btn btn-move"
                                   onClick={() => handleMoveField(field.id, 'down')}
                                   disabled={index === formData.registrationFields.length - 1}
                                   title="Move down"
@@ -706,7 +728,7 @@ const ManageEvents = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  className="btn-icon btn-danger"
+                                  className="action-icon-btn delete"
                                   onClick={() => handleRemoveField(field.id)}
                                   title="Remove field"
                                 >
@@ -796,7 +818,15 @@ const ManageEvents = () => {
                                 <div className="registration-user-name">
                                   <span className="user-icon"><User size={20} strokeWidth={1.8} /></span>
                                   <div className="user-name-content">
-                                    <strong>{registration.userName || 'No name provided'}</strong>
+                                    <strong>
+                                      {(() => {
+                                        const profile = userProfiles[registration.userId];
+                                        if (profile?.fullName) return profile.fullName;
+                                        const name = registration.userName;
+                                        if (name && !name.includes('@')) return name;
+                                        return name || 'No name provided';
+                                      })()}
+                                    </strong>
                                     <span className="user-email-subtitle">{registration.userEmail || 'No email'}</span>
                                   </div>
                                 </div>
@@ -903,20 +933,19 @@ const ManageEvents = () => {
               <div className="delete-dialog" onClick={e => e.stopPropagation()}>
                 <h3 className="dialog-title">
                   <span className="warning-icon"><AlertTriangle size={20} strokeWidth={1.8} /></span>
-                  Delete Event
+                  Confirm Deletion
                 </h3>
                 <p className="dialog-message">
                   Are you sure you want to delete "{selectedEvent?.title}"? 
                   This will also delete all registrations for this event. This action cannot be undone.
                 </p>
                 <div className="dialog-actions">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setShowDeleteDialog(false)}
-                  >
+                  <button className="btn btn-secondary" onClick={() => setShowDeleteDialog(false)}>
+                    <span className="btn-icon-left"><X size={18} strokeWidth={2} /></span>
                     Cancel
                   </button>
                   <button className="btn btn-danger" onClick={handleDelete}>
+                    <span className="btn-icon-left"><Trash2 size={18} strokeWidth={2} /></span>
                     Delete
                   </button>
                 </div>

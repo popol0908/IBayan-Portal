@@ -270,9 +270,13 @@
 
 .modal-actions {
   display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
+  gap: 12px;
   margin-top: 1.75rem;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  min-height: 44px;
 }
 
 /* Modal form Buttons */
@@ -368,12 +372,13 @@
 
 .dialog-actions {
   display: flex;
-  gap: 0.75rem;
-  justify-content: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .dialog-actions .btn {
-  min-width: 120px;
+  flex: 1;
+  min-height: 44px;
 }
 
 @media (max-width: 768px) {

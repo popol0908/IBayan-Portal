@@ -132,6 +132,27 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
     
+    // Households collection
+    match /households/{householdId} {
+      // Users can read their own household profile
+      allow read: if isAuthenticated() && resource.data.submittedBy == request.auth.uid;
+      // Admins can read all households
+      allow read: if isAdmin();
+      // Users can create a household
+      allow create: if isAuthenticated() && request.resource.data.submittedBy == request.auth.uid;
+      // Admins can update or delete
+      allow update, delete: if isAdmin();
+    }
+    
+    // Metadata collection (for sequential IDs like householdCounter)
+    match /metadata/{documentId} {
+      // Authenticated users need to read, update, and create the counter using transactions
+      // (create is needed if the document doesn't exist yet for the very first household)
+      allow read, update, create: if isAuthenticated();
+      // Only admins can delete metadata docs
+      allow delete: if isAdmin();
+    }
+
     // Archived collections - for historical data and auditing
     // Pattern: archived_{collectionName}
     match /{collectionName}/{documentId} {

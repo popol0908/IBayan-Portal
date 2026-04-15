@@ -1,55 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { CheckCircle, Users, MapPin, Phone, Cake, FileText, Paperclip, Clock, Download, X } from 'lucide-react';
+import { CheckCircle, Users, Phone, Cake, Paperclip, Clock, Download, X, ShieldCheck, ShieldX, AlertTriangle, MapPin, Calendar } from 'lucide-react';
 import IconBox from '../../components/IconBox';
 import { db } from '../../firebase';
 import AdminNavbar from '../../components/AdminNavbar';
 import { useToast } from '../../contexts/ToastContext';
 import './ResidentVerification.css';
 
-const iconProps = { size: 16, strokeWidth: 1.8 };
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return null;
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+const getAddress = (user) => {
+  if (user.presentAddress) return user.presentAddress;
+  if (user.permanentAddress) return user.permanentAddress;
+  if (user.address) return user.address;
+  return 'N/A';
+};
 
 const ResidentVerification = () => {
   const { showToast } = useToast();
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [verifiedUsers, setVerifiedUsers] = useState([]);
+  const [declinedUsers, setDeclinedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showProofModal, setShowProofModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [decliningUserId, setDecliningUserId] = useState(null);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [approvingUserId, setApprovingUserId] = useState(null);
+  const [activeTab, setActiveTab] = useState('pending');
 
   useEffect(() => {
-    const q = query(collection(db, 'users'), where('status', '==', 'pending'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const users = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-      setPendingUsers(users);
-      setLoading(false);
-    }, (error) => {
-      console.error('Error loading pending users:', error);
-      setLoading(false);
-    });
+    let loadedCount = 0;
+    const checkDone = () => { loadedCount++; if (loadedCount >= 3) setLoading(false); };
 
-    return () => unsubscribe();
+    const qPending = query(collection(db, 'users'), where('status', '==', 'pending'));
+    const unsubPending = onSnapshot(qPending, (snapshot) => {
+      setPendingUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      checkDone();
+    }, (err) => { console.error('Error loading pending:', err); checkDone(); });
+
+    const qVerified = query(collection(db, 'users'), where('status', '==', 'verified'));
+    const unsubVerified = onSnapshot(qVerified, (snapshot) => {
+      setVerifiedUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      checkDone();
+    }, (err) => { console.error('Error loading verified:', err); checkDone(); });
+
+    const qDeclined = query(collection(db, 'users'), where('status', '==', 'declined'));
+    const unsubDeclined = onSnapshot(qDeclined, (snapshot) => {
+      setDeclinedUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      checkDone();
+    }, (err) => { console.error('Error loading declined:', err); checkDone(); });
+
+    return () => { unsubPending(); unsubVerified(); unsubDeclined(); };
   }, []);
 
-  const handleApprove = async (userId) => {
-    try {
-      // Find the user to get their email
-      const user = pendingUsers.find(u => u.id === userId);
-      if (!user) {
-        showToast('User not found.', 'error');
-        return;
-      }
+  const openApproveModal = (userId) => {
+    setApprovingUserId(userId);
+    setShowApproveModal(true);
+  };
 
-      const userRef = doc(db, 'users', userId);
+  const handleApproveSubmit = async () => {
+    if (!approvingUserId) return;
+    try {
+      const userRef = doc(db, 'users', approvingUserId);
       await updateDoc(userRef, {
         status: 'verified',
         declineReason: '',
         verifiedAt: serverTimestamp()
       });
-
       showToast('Resident approved successfully.', 'success');
+      setShowApproveModal(false);
+      setApprovingUserId(null);
     } catch (error) {
       console.error('Error approving resident:', error);
       showToast('Failed to approve resident.', 'error');
@@ -58,22 +86,13 @@ const ResidentVerification = () => {
 
   const handleDeclineSubmit = async () => {
     if (!decliningUserId) return;
-    
     try {
-      // Find the user to get their email
-      const user = pendingUsers.find(u => u.id === decliningUserId);
-      if (!user) {
-        showToast('User not found.', 'error');
-        return;
-      }
-
       const userRef = doc(db, 'users', decliningUserId);
       await updateDoc(userRef, {
         status: 'declined',
         declineReason: declineReason,
         declinedAt: serverTimestamp()
       });
-
       showToast('Resident declined successfully.', 'info');
       setShowDeclineModal(false);
       setDeclineReason('');
@@ -84,15 +103,94 @@ const ResidentVerification = () => {
     }
   };
 
-  const openProofModal = (user) => {
-    setSelectedUser(user);
-    setShowProofModal(true);
-  };
+  const openProofModal = (user) => { setSelectedUser(user); setShowProofModal(true); };
+  const openDetailModal = (user) => { setSelectedUser(user); setShowDetailModal(true); };
+  const openDeclineModal = (userId) => { setDecliningUserId(userId); setDeclineReason(''); setShowDeclineModal(true); };
 
-  const openDeclineModal = (userId) => {
-    setDecliningUserId(userId);
-    setDeclineReason('');
-    setShowDeclineModal(true);
+  const activeUsers = activeTab === 'pending' ? pendingUsers : activeTab === 'verified' ? verifiedUsers : declinedUsers;
+
+  const renderCard = (user) => {
+    const status = activeTab;
+    return (
+      <div key={user.id} className="rv-card">
+        {/* Card top row: avatar + name + badge */}
+        <div className="rv-card-top">
+          <div className={`rv-avatar rv-avatar-${status}`}>
+            {user.fullName?.charAt(0).toUpperCase()}
+          </div>
+          <div className="rv-card-identity">
+            <h3 className="rv-card-name">{user.fullName}</h3>
+            <p className="rv-card-email">{user.email}</p>
+          </div>
+          <span className={`rv-badge rv-badge-${status}`}>
+            {status === 'pending' && <><Clock size={12} /> Pending</>}
+            {status === 'verified' && <><ShieldCheck size={12} /> Verified</>}
+            {status === 'declined' && <><ShieldX size={12} /> Declined</>}
+          </span>
+        </div>
+
+        {/* Compact detail chips */}
+        <div className="rv-card-details">
+          <div className="rv-chip" title={getAddress(user)}>
+            <MapPin size={13} />
+            <span>{user.purok || getAddress(user)}</span>
+          </div>
+          <div className="rv-chip">
+            <Phone size={13} />
+            <span>{user.contactNumber || 'N/A'}</span>
+          </div>
+          <div className="rv-chip">
+            <Cake size={13} />
+            <span>{user.birthday ? new Date(user.birthday).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}</span>
+          </div>
+          {user.proofUrl && (
+            <button className="rv-chip rv-chip-link" onClick={() => openProofModal(user)}>
+              <Paperclip size={13} />
+              <span>View Proof</span>
+            </button>
+          )}
+        </div>
+
+        {/* Status-specific info */}
+        {status === 'verified' && user.verifiedAt && (
+          <div className="rv-card-meta rv-meta-verified">
+            <Calendar size={13} /> Approved {formatTimestamp(user.verifiedAt)}
+          </div>
+        )}
+        {status === 'declined' && (
+          <>
+            {user.declinedAt && (
+              <div className="rv-card-meta rv-meta-declined">
+                <Calendar size={13} /> Declined {formatTimestamp(user.declinedAt)}
+              </div>
+            )}
+            {user.declineReason && (
+              <div className="rv-decline-reason">
+                <AlertTriangle size={13} />
+                <span>{user.declineReason}</span>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Footer: actions or "View Details" */}
+        <div className="rv-card-footer">
+          <button className="rv-btn-ghost" onClick={() => openDetailModal(user)}>
+            View Full Details
+          </button>
+          {status === 'pending' && (
+            <div className="rv-card-actions">
+              <button className="rv-btn rv-btn-approve" onClick={() => openApproveModal(user.id)}>
+                <CheckCircle size={15} /> Approve
+              </button>
+              <button className="rv-btn rv-btn-decline" onClick={() => openDeclineModal(user.id)}>
+                <X size={15} /> Decline
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -101,158 +199,194 @@ const ResidentVerification = () => {
 
       <div className="admin-content">
         <div className="admin-container">
+          {/* Header */}
           <div className="admin-page-header">
             <div>
               <h1 className="admin-page-title">Resident Verification</h1>
-              <p className="admin-page-subtitle">Review and approve registered residents</p>
+              <p className="admin-page-subtitle">Review and manage registered residents</p>
             </div>
           </div>
 
+          {/* Summary Stats — always visible */}
+          {!loading && (
+            <div className="rv-stats-row">
+              <button className={`rv-stat ${activeTab === 'pending' ? 'rv-stat-active' : ''}`} onClick={() => setActiveTab('pending')}>
+                <IconBox variant="amber" size="sm"><Clock size={18} strokeWidth={1.8} /></IconBox>
+                <div>
+                  <span className="rv-stat-num">{pendingUsers.length}</span>
+                  <span className="rv-stat-label">Pending</span>
+                </div>
+              </button>
+              <button className={`rv-stat ${activeTab === 'verified' ? 'rv-stat-active' : ''}`} onClick={() => setActiveTab('verified')}>
+                <IconBox variant="green" size="sm"><ShieldCheck size={18} strokeWidth={1.8} /></IconBox>
+                <div>
+                  <span className="rv-stat-num">{verifiedUsers.length}</span>
+                  <span className="rv-stat-label">Verified</span>
+                </div>
+              </button>
+              <button className={`rv-stat ${activeTab === 'declined' ? 'rv-stat-active' : ''}`} onClick={() => setActiveTab('declined')}>
+                <IconBox variant="red" size="sm"><ShieldX size={18} strokeWidth={1.8} /></IconBox>
+                <div>
+                  <span className="rv-stat-num">{declinedUsers.length}</span>
+                  <span className="rv-stat-label">Declined</span>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* Loading */}
           {loading && (
             <div className="loading-container">
               <div className="loading-spinner">Loading...</div>
             </div>
           )}
 
-          {!loading && pendingUsers.length === 0 && (
-            <div className="empty-state">
-              <span className="empty-icon"><CheckCircle size={48} strokeWidth={1.5} /></span>
-              <h3>No Pending Residents</h3>
-              <p>All resident verification requests have been processed.</p>
+          {/* Cards Grid */}
+          {!loading && activeUsers.length > 0 && (
+            <div className="rv-grid">
+              {activeUsers.map(user => renderCard(user))}
             </div>
           )}
 
-          {!loading && pendingUsers.length > 0 && (
-            <div className="verification-container">
-              <div className="verification-stats">
-                <div className="stat-card">
-                  <IconBox variant="blue" size="sm"><Users size={20} strokeWidth={1.8} /></IconBox>
-                  <div className="stat-content">
-                    <p className="stat-label">Pending Verification</p>
-                    <p className="stat-value">{pendingUsers.length}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="residents-grid">
-                {pendingUsers.map(user => (
-                  <div key={user.id} className="resident-card">
-                    <div className="card-header">
-                      <div className="user-avatar">
-                        {user.fullName?.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="user-info">
-                        <h3 className="user-name">{user.fullName}</h3>
-                        <p className="user-email">{user.email}</p>
-                      </div>
-                      <span className="pending-badge"><Clock size={14} strokeWidth={1.8} style={{ marginRight: 4, verticalAlign: -2 }} />Pending</span>
-                    </div>
-
-                    <div className="card-body">
-                      <div className="info-row">
-                        <span className="info-label"><MapPin {...iconProps} style={{ marginRight: 6, verticalAlign: -2 }} /> Address:</span>
-                        <span className="info-value">{user.address}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label"><Phone {...iconProps} style={{ marginRight: 6, verticalAlign: -2 }} /> Contact:</span>
-                        <span className="info-value">{user.contactNumber}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label"><Cake {...iconProps} style={{ marginRight: 6, verticalAlign: -2 }} /> Birthday:</span>
-                        <span className="info-value">
-                          {user.birthday ? new Date(user.birthday).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          }) : 'N/A'}
-                        </span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label"><FileText {...iconProps} style={{ marginRight: 6, verticalAlign: -2 }} /> Proof:</span>
-                        {user.proofUrl ? (
-                          <button
-                            className="proof-link"
-                            onClick={() => openProofModal(user)}
-                          >
-                            <Paperclip size={14} strokeWidth={1.8} style={{ marginRight: 4, verticalAlign: -2 }} />View Document
-                          </button>
-                        ) : (
-                          <span className="info-value">No file</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="card-actions">
-                      <button
-                        className="btn btn-approve"
-                        onClick={() => handleApprove(user.id)}
-                        title="Approve this resident"
-                      >
-                        <CheckCircle size={18} strokeWidth={1.8} style={{ marginRight: 6, verticalAlign: -3 }} />Approve
-                      </button>
-                      <button
-                        className="btn btn-decline"
-                        onClick={() => openDeclineModal(user.id)}
-                        title="Decline this resident"
-                      >
-                        <X size={18} strokeWidth={1.8} style={{ marginRight: 6, verticalAlign: -3 }} />Decline
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Empty */}
+          {!loading && activeUsers.length === 0 && (
+            <div className="empty-state">
+              <span className="empty-icon">
+                {activeTab === 'pending' && <Clock size={48} strokeWidth={1.5} />}
+                {activeTab === 'verified' && <ShieldCheck size={48} strokeWidth={1.5} />}
+                {activeTab === 'declined' && <ShieldX size={48} strokeWidth={1.5} />}
+              </span>
+              <h3>
+                {activeTab === 'pending' && 'No Pending Residents'}
+                {activeTab === 'verified' && 'No Verified Residents'}
+                {activeTab === 'declined' && 'No Declined Residents'}
+              </h3>
+              <p>
+                {activeTab === 'pending' && 'All verification requests have been processed.'}
+                {activeTab === 'verified' && 'No residents have been verified yet.'}
+                {activeTab === 'declined' && 'No residents have been declined.'}
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Proof Modal */}
-      {showProofModal && selectedUser && (
-        <div className="modal-overlay" onClick={() => setShowProofModal(false)}>
+      {/* ====== DETAIL MODAL ====== */}
+      {showDetailModal && selectedUser && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
           <div className="modal-dialog" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 className="modal-title">Proof of Residency - {selectedUser.fullName}</h2>
-              <button className="modal-close" onClick={() => setShowProofModal(false)} aria-label="Close"><X size={20} strokeWidth={2} /></button>
+              <h2 className="modal-title">Resident Details</h2>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}><X size={20} /></button>
             </div>
             <div className="modal-body">
-              {selectedUser.proofUrl?.toLowerCase().endsWith('.pdf') ? (
-                <iframe
-                  src={selectedUser.proofUrl}
-                  className="proof-viewer"
-                  title="Proof Document"
-                />
-              ) : (
-                <img
-                  src={selectedUser.proofUrl}
-                  alt="Proof of Residency"
-                  className="proof-image"
-                />
-              )}
+              <div className="detail-top">
+                <div className="rv-avatar rv-avatar-lg">{selectedUser.fullName?.charAt(0).toUpperCase()}</div>
+                <div>
+                  <h3 className="detail-name">{selectedUser.fullName}</h3>
+                  <p className="detail-email">{selectedUser.email}</p>
+                </div>
+              </div>
+              <div className="detail-grid">
+                {selectedUser.permanentAddress && (
+                  <div className="detail-item">
+                    <span className="detail-label">Permanent Address</span>
+                    <span className="detail-value">{selectedUser.permanentAddress}</span>
+                  </div>
+                )}
+                {selectedUser.presentAddress && (
+                  <div className="detail-item">
+                    <span className="detail-label">Present Address</span>
+                    <span className="detail-value">{selectedUser.presentAddress}</span>
+                  </div>
+                )}
+                {!selectedUser.permanentAddress && selectedUser.address && (
+                  <div className="detail-item">
+                    <span className="detail-label">Address</span>
+                    <span className="detail-value">{selectedUser.address}</span>
+                  </div>
+                )}
+                {selectedUser.purok && (
+                  <div className="detail-item">
+                    <span className="detail-label">Purok</span>
+                    <span className="detail-value">{selectedUser.purok}</span>
+                  </div>
+                )}
+                <div className="detail-item">
+                  <span className="detail-label">Contact Number</span>
+                  <span className="detail-value">{selectedUser.contactNumber || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Birthday</span>
+                  <span className="detail-value">{selectedUser.birthday ? new Date(selectedUser.birthday).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</span>
+                </div>
+                {selectedUser.verifiedAt && (
+                  <div className="detail-item">
+                    <span className="detail-label">Approved On</span>
+                    <span className="detail-value">{formatTimestamp(selectedUser.verifiedAt)}</span>
+                  </div>
+                )}
+                {selectedUser.declinedAt && (
+                  <div className="detail-item">
+                    <span className="detail-label">Declined On</span>
+                    <span className="detail-value">{formatTimestamp(selectedUser.declinedAt)}</span>
+                  </div>
+                )}
+                {selectedUser.declineReason && (
+                  <div className="detail-item detail-item-full">
+                    <span className="detail-label">Decline Reason</span>
+                    <span className="detail-value">{selectedUser.declineReason}</span>
+                  </div>
+                )}
+                {selectedUser.proofUrl && (
+                  <div className="detail-item detail-item-full">
+                    <span className="detail-label">Proof of Residency</span>
+                    <button className="rv-btn-ghost" onClick={() => { setShowDetailModal(false); openProofModal(selectedUser); }} style={{ marginTop: '0.35rem' }}>
+                      <Paperclip size={14} /> View Document
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="modal-footer">
-              <a
-                href={selectedUser.proofUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary"
-              >
-                <Download size={18} strokeWidth={1.8} style={{ marginRight: 6, verticalAlign: -3 }} />Download
-              </a>
-              <button className="btn btn-secondary" onClick={() => setShowProofModal(false)}>
-                Close
-              </button>
+              <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>Close</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Decline Modal */}
+      {/* ====== PROOF MODAL ====== */}
+      {showProofModal && selectedUser && (
+        <div className="modal-overlay" onClick={() => setShowProofModal(false)}>
+          <div className="modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Proof — {selectedUser.fullName}</h2>
+              <button className="modal-close" onClick={() => setShowProofModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              {selectedUser.proofUrl?.toLowerCase().endsWith('.pdf') ? (
+                <iframe src={selectedUser.proofUrl} className="proof-viewer" title="Proof Document" />
+              ) : (
+                <img src={selectedUser.proofUrl} alt="Proof of Residency" className="proof-image" />
+              )}
+            </div>
+            <div className="modal-footer">
+              <a href={selectedUser.proofUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                <Download size={16} style={{ marginRight: 6 }} /> Download
+              </a>
+              <button className="btn btn-secondary" onClick={() => setShowProofModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====== DECLINE MODAL ====== */}
       {showDeclineModal && (
         <div className="modal-overlay" onClick={() => setShowDeclineModal(false)}>
           <div className="modal-dialog" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Decline Resident</h2>
-              <button className="modal-close" onClick={() => setShowDeclineModal(false)} aria-label="Close"><X size={20} strokeWidth={2} /></button>
+              <button className="modal-close" onClick={() => setShowDeclineModal(false)}><X size={20} /></button>
             </div>
             <div className="modal-body">
               <p className="modal-message">Please provide a reason for declining (optional):</p>
@@ -265,11 +399,28 @@ const ResidentVerification = () => {
               />
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowDeclineModal(false)}>
-                Cancel
-              </button>
-              <button className="btn btn-danger" onClick={handleDeclineSubmit}>
-                Confirm Decline
+              <button className="btn btn-secondary" onClick={() => setShowDeclineModal(false)}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleDeclineSubmit}>Confirm Decline</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====== APPROVE CONFIRMATION MODAL ====== */}
+      {showApproveModal && (
+        <div className="modal-overlay" onClick={() => setShowApproveModal(false)}>
+          <div className="modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Approve Resident</h2>
+              <button className="modal-close" onClick={() => setShowApproveModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-message">Are you sure you want to approve this resident? They will gain full access to the system.</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowApproveModal(false)}>Cancel</button>
+              <button className="btn btn-approve-confirm" onClick={handleApproveSubmit}>
+                <CheckCircle size={16} /> Confirm Approve
               </button>
             </div>
           </div>

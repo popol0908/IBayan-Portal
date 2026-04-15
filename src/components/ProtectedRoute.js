@@ -1,6 +1,6 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const ProtectedRoute = ({ children, requireVerified = false }) => {
   const { currentUser, loading, userProfile } = useAuth();
@@ -15,16 +15,20 @@ const ProtectedRoute = ({ children, requireVerified = false }) => {
   }
 
   if (!currentUser) {
-    
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // If email is not yet verified, redirect to the email verification page
+  if (userProfile?.status === "emailUnverified") {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   if (requireVerified) {
-    const status = userProfile?.status || 'pending';
-    if (status === 'pending') {
+    const status = userProfile?.status || "pending";
+    if (status === "pending") {
       return <Navigate to="/verification/pending" replace />;
     }
-    if (status === 'declined') {
+    if (status === "declined") {
       return <Navigate to="/verification/declined" replace />;
     }
   }

@@ -2,98 +2,114 @@
   "faq": [
     {
       "question": "How do I view announcements?",
-      "answer": "To view announcements, click on the 'Announcements' menu item in the sidebar. You'll see all recent barangay announcements with details like dates, descriptions, and images."
-    },
-    {
-      "question": "How do I submit feedback?",
-      "answer": "Go to the 'Feedback & Concerns' page from the sidebar. Click 'Submit New Feedback' button, fill out the form with your category, message, and optional attachment, then submit."
-    },
-    {
-      "question": "How do I vote in surveys?",
-      "answer": "Navigate to 'Vote & Surveys' from the sidebar. You'll see available surveys and voting options. Click on a survey to view details and cast your vote."
+      "answer": "To view announcements, click on 'Announcements' in the sidebar menu. You'll see all recent barangay announcements with details like titles, descriptions, dates, and images."
     },
     {
       "question": "What are emergency alerts?",
-      "answer": "Emergency alerts are urgent notifications about safety, weather, health advisories, or other critical information. View them in the 'Emergency Alerts' section."
+      "answer": "Emergency alerts are urgent notifications about safety, weather, health advisories, or other critical information affecting the barangay. View them by clicking 'Emergency Alerts' in the sidebar."
+    },
+    {
+      "question": "How do I check upcoming events?",
+      "answer": "Navigate to 'Events & Programs' from the sidebar. You'll see all upcoming barangay events and programs with dates, times, locations, and descriptions. You can also RSVP to events you'd like to attend."
     },
     {
       "question": "How do I check my verification status?",
-      "answer": "Your verification status is shown on your Profile page. If pending, you'll see a 'Pending Verification' page. Once verified, you can access all features."
-    }
-  ],
-  "services": [
-    {
-      "name": "Barangay Clearance",
-      "description": "A document certifying residency. Required for various transactions.",
-      "requirements": ["Valid ID", "Proof of Residency", "Application Form"],
-      "process": "Submit requirements at barangay hall, pay fees, wait for processing (usually 1-2 days)"
+      "answer": "Your verification status is shown on your Profile page. If your account is pending verification, you'll see a 'Pending Verification' page. Once verified by an admin, you can access all system features."
     },
     {
-      "name": "Business Permit",
-      "description": "Required for operating a business within the barangay.",
-      "requirements": ["Barangay Clearance", "Business Registration", "Location Sketch"],
-      "process": "Apply at barangay hall, inspection scheduled, approval and payment"
+      "question": "How do I update my profile?",
+      "answer": "Click on the 'Profile' button in the sidebar footer. From there you can view and update your personal information, profile picture, and account details."
     },
     {
-      "name": "Certificate of Indigency",
-      "description": "Certifies financial status for government assistance programs.",
-      "requirements": ["Valid ID", "Income Certificate", "Household Information"],
-      "process": "Submit documents, verification process, issuance of certificate"
+      "question": "How do I register for an account?",
+      "answer": "Go to the iBayan Portal landing page and click 'Sign Up'. Fill in the registration form with your personal details, email, and password. After signing up, verify your email address and wait for admin verification of your account."
+    },
+    {
+      "question": "What happens after I sign up?",
+      "answer": "After signing up, you'll receive an email verification link. Click the link to verify your email. Then, a barangay admin will review and verify your account. You'll have limited access until your account is fully verified."
+    },
+    {
+      "question": "How do I reset my password?",
+      "answer": "On the login page, click 'Forgot Password'. Enter your registered email address, and you'll receive a password reset link via email."
+    },
+    {
+      "question": "Why can't I access some features?",
+      "answer": "Some features like Emergency Alerts, Events, and the Dashboard require your account to be verified by a barangay admin. If your account is pending verification, you'll only have access to Announcements and your Profile page."
     }
   ],
   "navigation": {
-    "dashboard": "The Dashboard is your home page showing recent announcements and quick access to main features.",
-    "announcements": "Announcements page displays all barangay announcements. Use the sidebar menu to navigate there.",
-    "emergency-alerts": "Emergency Alerts shows urgent safety and health notifications. Found in the sidebar.",
-    "vote": "Vote & Surveys allows you to participate in barangay surveys and voting. Access from sidebar.",
-    "feedback": "Feedback & Concerns lets you submit feedback, complaints, or suggestions. Available in sidebar.",
-    "profile": "Profile page shows your account information and verification status. Click profile icon in sidebar footer."
+    "dashboard": "The Dashboard (Home) is your main page showing recent announcements, emergency alerts, and quick access to main features. Click 'Home' in the sidebar.",
+    "announcements": "The Announcements page displays all barangay announcements. Click 'Announcements' in the sidebar menu to navigate there.",
+    "emergency-alerts": "Emergency Alerts shows urgent safety, weather, and health notifications. Click 'Emergency Alerts' in the sidebar. Requires verified account.",
+    "events": "Events & Programs shows all upcoming barangay events, community programs, and activities. Click 'Events & Programs' in the sidebar. Requires verified account.",
+    "profile": "Your Profile page shows your account information, verification status, and lets you edit your personal details. Click your profile icon at the bottom of the sidebar."
   },
   "admin_guides": {
     "announcements": {
       "title": "Managing Announcements",
       "steps": [
-        "Navigate to 'Manage Announcements' from admin sidebar",
-        "Click 'Add New Announcement' button",
-        "Fill in title, description, date, and optional image",
-        "Click 'Publish' to make it visible to residents"
+        "Navigate to 'Announcements' from the admin sidebar",
+        "Click the 'Create Announcement' button",
+        "Fill in the title, description, and optional image",
+        "Click 'Publish' to make it visible to all residents"
       ],
-      "tips": ["Use clear, concise titles", "Include relevant dates", "Add images for better engagement"]
+      "tips": ["Use clear, concise titles", "Include relevant dates and details", "Add images for better engagement", "You can edit or delete existing announcements"]
     },
     "emergency_alerts": {
-      "title": "Creating Emergency Alerts",
+      "title": "Managing Emergency Alerts",
       "steps": [
-        "Go to 'Manage Emergency Alerts'",
+        "Go to 'Emergency Alerts' from the admin sidebar",
         "Click 'Create New Alert'",
-        "Select category (Typhoon, Health, Flood, Utility)",
-        "Set severity level (High, Medium, Low)",
-        "Enter title, description, and effective dates",
+        "Select the alert category (e.g., Typhoon, Health, Flood, Utility)",
+        "Set the severity level (High, Medium, Low)",
+        "Enter the title, detailed description, and effective dates",
         "Publish to notify all residents immediately"
       ],
-      "tips": ["Use High severity for critical alerts", "Set appropriate effective dates", "Keep descriptions clear and actionable"]
+      "tips": ["Use High severity for critical and life-threatening alerts", "Set appropriate effective dates so alerts auto-expire", "Keep descriptions clear and actionable with specific instructions"]
     },
-    "feedback": {
-      "title": "Reviewing Feedback",
+    "resident_verification": {
+      "title": "Verifying Resident Accounts",
       "steps": [
-        "Go to 'Review Feedback' page",
-        "View all resident submissions",
-        "Click on a submission to view details",
-        "Reply to residents using the reply form",
-        "Update status (Pending, In Review, Resolved)"
+        "Navigate to 'Resident Verification' from the admin sidebar",
+        "You will see a list of pending resident registrations",
+        "Click on a resident to view their submitted details and documents",
+        "Review their information for accuracy",
+        "Click 'Approve' to verify the resident or 'Decline' to reject their application",
+        "A confirmation modal will appear before finalizing your decision"
       ],
-      "tips": ["Respond promptly to resident concerns", "Use clear, professional language", "Mark resolved items appropriately"]
+      "tips": ["Review all submitted documents carefully before approving", "Declined residents can re-submit their application", "Verified residents gain full access to all portal features"]
     },
-    "voting": {
-      "title": "Managing Surveys and Voting",
+    "events": {
+      "title": "Managing Events & Programs",
       "steps": [
-        "Navigate to 'Voting & Surveys' management",
-        "Create new survey with questions and options",
-        "Set start and end dates",
-        "Monitor results in real-time",
-        "Close survey when complete"
+        "Navigate to 'Events & Programs' from the admin sidebar",
+        "Click 'Create Event' to add a new event",
+        "Fill in the event title, description, date, time, and location",
+        "Add an optional image for the event",
+        "Click 'Save' or 'Publish' to make the event visible to residents"
       ],
-      "tips": ["Create clear, unbiased questions", "Set appropriate timeframes", "Review results for insights"]
+      "tips": ["Include clear location details", "Set accurate dates and times", "You can edit or delete events after creation", "Monitor RSVPs to gauge attendance"]
+    },
+    "admin_accounts": {
+      "title": "Managing Admin Accounts",
+      "steps": [
+        "Navigate to 'Admin Accounts' from the admin sidebar",
+        "View a list of all current admin accounts",
+        "Use the 'Add Admin' button to create a new admin account",
+        "Fill in the admin's email and set access credentials",
+        "You can also remove existing admin accounts if needed"
+      ],
+      "tips": ["Only add trusted personnel as admins", "Each admin has full access to all management features", "Keep the number of admin accounts minimal for security"]
+    },
+    "dashboard": {
+      "title": "Using the Admin Dashboard",
+      "steps": [
+        "The Admin Dashboard is your overview page",
+        "View key metrics like total residents, pending verifications, and active alerts",
+        "Use the quick-action cards to navigate to management pages",
+        "Monitor recent activity and system statistics"
+      ],
+      "tips": ["Check the dashboard regularly for pending tasks", "Use KPI cards for a quick health check of the system"]
     }
   }
 }
-

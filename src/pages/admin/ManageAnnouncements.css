@@ -153,6 +153,26 @@
 }
 
 /* =============================================
+   EXISTING ANNOUNCEMENTS TABLE CARD
+   ============================================= */
+
+.alerts-table-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
+  margin-bottom: 2rem;
+}
+
+.table-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+/* =============================================
    LINEAR LIST LAYOUT
    ============================================= */
 
@@ -357,6 +377,12 @@
   font-size: 0.95rem;
 }
 
+.alerts-table-card .empty-state {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
 /* =============================================
    MODAL & FORM
    ============================================= */
@@ -496,9 +522,13 @@
 
 .modal-actions {
   display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
+  gap: 12px;
   margin-top: 1.75rem;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  min-height: 44px;
 }
 
 /* Delete dialog */
@@ -539,12 +569,13 @@
 
 .dialog-actions {
   display: flex;
-  gap: 0.75rem;
-  justify-content: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .dialog-actions .btn {
-  min-width: 120px;
+  flex: 1;
+  min-height: 44px;
 }
 
 /* =============================================

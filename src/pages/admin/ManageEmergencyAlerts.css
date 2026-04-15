@@ -373,23 +373,31 @@
 .status-select-active { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
 .status-select-done { background: #F8FAFC; color: #64748B; border-color: #E2E8F0; }
 
-.btn-action {
-  padding: 0.45rem;
-  border: 1px solid transparent;
+.action-icon-btn {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  font-size: 0.95rem;
+  border: 1px solid transparent;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.18s ease;
+  color: #94A3B8;
 }
 
-.btn-action.btn-edit { background: #ffffff; color: #3B82F6; border-color: #BFDBFE; }
-.btn-action.btn-edit:hover { background: #EFF6FF; border-color: #93C5FD; }
+.action-icon-btn.edit:hover {
+  background: #EFF6FF;
+  color: #3B82F6;
+  border-color: #BFDBFE;
+}
 
-.btn-action.btn-delete { background: #ffffff; color: #EF4444; border-color: #FECACA; }
-.btn-action.btn-delete:hover { background: #FEF2F2; border-color: #FCA5A5; }
+.action-icon-btn.delete:hover {
+  background: #FEF2F2;
+  color: #EF4444;
+  border-color: #FECACA;
+}
 
 .empty-table, .empty-table-cell {
   text-align: center;
@@ -519,11 +527,15 @@
 
 .modal-dialog-alert .modal-actions {
   display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
+  gap: 12px;
   margin-top: 1.75rem;
   padding-top: 1rem;
   border-top: 1px solid #F1F5F9;
+}
+
+.modal-dialog-alert .modal-actions .btn {
+  flex: 1;
+  min-height: 44px;
 }
 
 /* Modals */
@@ -589,12 +601,13 @@
 
 .dialog-actions {
   display: flex;
-  gap: 0.75rem;
-  justify-content: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .dialog-actions .btn {
-  min-width: 120px;
+  flex: 1;
+  min-height: 44px;
 }
 
 @media (max-width: 1024px) {

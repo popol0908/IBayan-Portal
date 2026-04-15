@@ -1,35 +1,45 @@
-import React, { useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ToastProvider } from './contexts/ToastContext';
-import { LoadingProvider, useLoading } from './contexts/LoadingContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminProtectedRoute from './components/AdminProtectedRoute';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Loading from './components/Loading';
-import ChatAssistant from './components/ChatAssistant';
-import { SpeedInsights } from '@vercel/speed-insights/react';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Landing from './pages/Landing';
-import Dashboard from './pages/Dashboard';
-import Announcements from './pages/Announcements';
-import EmergencyAlerts from './pages/EmergencyAlerts';
-import PendingVerification from './pages/PendingVerification';
-import VerificationDeclined from './pages/VerificationDeclined';
-import Profile from './pages/Profile';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import ManageAnnouncements from './pages/admin/ManageAnnouncements';
-import ManageEmergencyAlerts from './pages/admin/ManageEmergencyAlerts';
-import ResidentVerification from './pages/admin/ResidentVerification';
-import ManageAdminAccounts from './pages/admin/ManageAdminAccounts';
+import React, { useEffect, useRef } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
+import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Loading from "./components/Loading";
+import ChatAssistant from "./components/ChatAssistant";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Landing from "./pages/Landing";
+import Dashboard from "./pages/Dashboard";
+import Announcements from "./pages/Announcements";
+import EmergencyAlerts from "./pages/EmergencyAlerts";
+import PendingVerification from "./pages/PendingVerification";
+import VerificationDeclined from "./pages/VerificationDeclined";
+import Profile from "./pages/Profile";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageAnnouncements from "./pages/admin/ManageAnnouncements";
+import ManageEmergencyAlerts from "./pages/admin/ManageEmergencyAlerts";
+import ResidentVerification from "./pages/admin/ResidentVerification";
+import ManageAdminAccounts from "./pages/admin/ManageAdminAccounts";
+import HouseholdProfiling from "./pages/admin/HouseholdProfiling";
+import HouseholdProfile from "./pages/HouseholdProfile";
 
-import Events from './pages/Events';
-import ManageEvents from './pages/admin/ManageEvents';
-import './App.css';
-import './styles/common.css';
+import Events from "./pages/Events";
+import ManageEvents from "./pages/admin/ManageEvents";
+import EmailVerification from "./pages/EmailVerification";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import "./App.css";
+import "./styles/common.css";
 
 function AppContent() {
   const location = useLocation();
@@ -38,13 +48,18 @@ function AppContent() {
   const prevLocationRef = useRef(location.pathname);
   const loadingTimeoutRef = useRef(null);
 
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
-  const isAdminPage = location.pathname.startsWith('/admin');
-  const isLandingPage = location.pathname === '/';
-  const isAdminLoginPage = location.pathname === '/admin/login';
+  const isAuthPage =
+    location.pathname === "/login" ||
+    location.pathname === "/signup" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/reset-password";
+  const isAdminPage = location.pathname.startsWith("/admin");
+  const isLandingPage = location.pathname === "/";
+  const isAdminLoginPage = location.pathname === "/admin/login";
 
   // Only show ChatAssistant when user is authenticated and not on public pages
-  const shouldShowChatAssistant = currentUser && !isLandingPage && !isAuthPage && !isAdminLoginPage;
+  const shouldShowChatAssistant =
+    currentUser && !isLandingPage && !isAuthPage && !isAdminLoginPage;
 
   // Detect route changes and show loading
   useEffect(() => {
@@ -55,13 +70,17 @@ function AppContent() {
 
     // Don't show loading for auth page transitions
     const isAuthTransition =
-      location.pathname === '/login' ||
-      location.pathname === '/signup' ||
-      prevLocationRef.current === '/login' ||
-      prevLocationRef.current === '/signup';
+      location.pathname === "/login" ||
+      location.pathname === "/signup" ||
+      location.pathname === "/forgot-password" ||
+      location.pathname === "/reset-password" ||
+      prevLocationRef.current === "/login" ||
+      prevLocationRef.current === "/signup" ||
+      prevLocationRef.current === "/forgot-password" ||
+      prevLocationRef.current === "/reset-password";
 
     if (!isAuthTransition) {
-      startLoading('Loading page...');
+      startLoading("Loading page...");
 
       // Clear any existing timeout
       if (loadingTimeoutRef.current) {
@@ -98,12 +117,12 @@ function AppContent() {
   // Manage body scroll lock when loading
   useEffect(() => {
     if (isLoading) {
-      document.body.classList.add('loading-active');
+      document.body.classList.add("loading-active");
     } else {
-      document.body.classList.remove('loading-active');
+      document.body.classList.remove("loading-active");
     }
     return () => {
-      document.body.classList.remove('loading-active');
+      document.body.classList.remove("loading-active");
     };
   }, [isLoading]);
 
@@ -114,8 +133,10 @@ function AppContent() {
         {!isAuthPage && !isAdminPage && !isLandingPage && <Navbar />}
         <main className="main-content">
           <Routes>
-            { }
+            {}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/signup" element={<Signup />} />
             <Route
               path="/dashboard"
@@ -174,8 +195,16 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/household-profile"
+              element={
+                <ProtectedRoute requireVerified>
+                  <HouseholdProfile />
+                </ProtectedRoute>
+              }
+            />
 
-            { }
+            {}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin/dashboard"
@@ -226,6 +255,15 @@ function AppContent() {
                 </AdminProtectedRoute>
               }
             />
+            <Route
+              path="/admin/households"
+              element={
+                <AdminProtectedRoute>
+                  <HouseholdProfiling />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route path="/verify-email" element={<EmailVerification />} />
             <Route path="/" element={<Landing />} />
           </Routes>
         </main>
