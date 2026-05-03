@@ -8,9 +8,12 @@ import {
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
+import { SearchProvider } from "./contexts/SearchContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Navbar from "./components/Navbar";
+import TopHeader from "./components/TopHeader";
+import AdminTopHeader from "./components/AdminTopHeader";
 import Footer from "./components/Footer";
 import Loading from "./components/Loading";
 import ChatAssistant from "./components/ChatAssistant";
@@ -20,17 +23,16 @@ import Signup from "./pages/Signup";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Announcements from "./pages/Announcements";
-import EmergencyAlerts from "./pages/EmergencyAlerts";
 import PendingVerification from "./pages/PendingVerification";
 import VerificationDeclined from "./pages/VerificationDeclined";
 import Profile from "./pages/Profile";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageAnnouncements from "./pages/admin/ManageAnnouncements";
-import ManageEmergencyAlerts from "./pages/admin/ManageEmergencyAlerts";
 import ResidentVerification from "./pages/admin/ResidentVerification";
 import ManageAdminAccounts from "./pages/admin/ManageAdminAccounts";
 import HouseholdProfiling from "./pages/admin/HouseholdProfiling";
+import ChangePassword from "./pages/admin/ChangePassword";
 import HouseholdProfile from "./pages/HouseholdProfile";
 
 import Events from "./pages/Events";
@@ -130,8 +132,14 @@ function AppContent() {
     <>
       {isLoading && <Loading message="Loading page..." />}
       <div className="App">
-        {!isAuthPage && !isAdminPage && !isLandingPage && <Navbar />}
-        <main className="main-content">
+        {!isAuthPage && !isAdminPage && !isLandingPage && (
+          <>
+            <Navbar />
+            <TopHeader />
+          </>
+        )}
+        {isAdminPage && !isAdminLoginPage && <AdminTopHeader />}
+        <main className={`main-content ${(!isAuthPage && !isLandingPage) ? 'has-top-header' : ''} ${isAdminPage && !isAdminLoginPage ? 'admin-main' : ''}`}>
           <Routes>
             {}
             <Route path="/login" element={<Login />} />
@@ -154,14 +162,7 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/emergency-alerts"
-              element={
-                <ProtectedRoute requireVerified>
-                  <EmergencyAlerts />
-                </ProtectedRoute>
-              }
-            />
+
             <Route
               path="/verification/pending"
               element={
@@ -207,6 +208,14 @@ function AppContent() {
             {}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
+              path="/admin/change-password"
+              element={
+                <AdminProtectedRoute>
+                  <ChangePassword />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/dashboard"
               element={
                 <AdminProtectedRoute>
@@ -219,14 +228,6 @@ function AppContent() {
               element={
                 <AdminProtectedRoute>
                   <ManageAnnouncements />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/emergency-alerts"
-              element={
-                <AdminProtectedRoute>
-                  <ManageEmergencyAlerts />
                 </AdminProtectedRoute>
               }
             />
@@ -281,7 +282,9 @@ function App() {
       <ToastProvider>
         <LoadingProvider>
           <Router>
-            <AppContent />
+            <SearchProvider>
+              <AppContent />
+            </SearchProvider>
           </Router>
         </LoadingProvider>
       </ToastProvider>

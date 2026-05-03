@@ -5,13 +5,15 @@ import {
 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import {
-  collection, onSnapshot, updateDoc, deleteDoc, doc, getDoc,
+  collection, onSnapshot, updateDoc, deleteDoc, doc, getDoc, setDoc, serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useToast } from '../../contexts/ToastContext';
 import IconBox from '../../components/IconBox';
 import AdminNavbar from '../../components/AdminNavbar';
 import HouseholdPrintView from './HouseholdPrintView';
+import { addActivityLog } from '../../services/activityLogService';
+import { useAuth } from '../../contexts/AuthContext';
 import './HouseholdProfiling.css';
 import '../../styles/admin-common.css';
 
@@ -30,6 +32,7 @@ const formatDate = (d) => {
    ================================================ */
 const HouseholdProfiling = () => {
   const { showToast } = useToast();
+  const { currentUser, userProfile } = useAuth();
 
   /* ── State ── */
   const [households, setHouseholds] = useState([]);
@@ -56,6 +59,7 @@ const HouseholdProfiling = () => {
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: selectedHousehold ? `Household-${selectedHousehold.householdNo}` : 'Household',
+    pageStyle: `@page { size: landscape !important; margin: 10mm; }`,
   });
 
   /* ── Real-time Firestore listener ── */
@@ -132,6 +136,27 @@ const HouseholdProfiling = () => {
     try {
       await updateDoc(doc(db, 'households', selectedHousehold.id), { status: 'approved' });
       showToast('Household approved successfully!', 'success');
+      addActivityLog('approved', 'households', `Approved household "${selectedHousehold.householdNo}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
+      
+      // Notify the submitter
+      if (selectedHousehold.submittedBy) {
+        try {
+          const notifRef = doc(collection(db, 'notifications'));
+          await setDoc(notifRef, {
+            userId: selectedHousehold.submittedBy,
+            role: 'resident',
+            title: 'Household Approved',
+            message: 'Your household profile has been approved.',
+            type: 'household',
+            read: false,
+            createdAt: serverTimestamp(),
+            link: '/household-profile',
+          });
+        } catch (notifErr) {
+          console.error('Error sending approval notification:', notifErr);
+        }
+      }
+
       setShowApproveDialog(false);
       setSelectedHousehold(null);
     } catch (error) {
@@ -145,6 +170,7 @@ const HouseholdProfiling = () => {
     try {
       await deleteDoc(doc(db, 'households', selectedHousehold.id));
       showToast('Household deleted successfully!', 'success');
+      addActivityLog('deleted', 'households', `Deleted household "${selectedHousehold.householdNo}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
       setShowDeleteDialog(false);
       setSelectedHousehold(null);
     } catch (error) {
@@ -191,32 +217,25 @@ const HouseholdProfiling = () => {
 
           {/* ── Stats Row ── */}
           <div className="hh-stats-grid">
-            <div className="hh-stat-card">
+            <div className="admin-card hh-stat-card">
               <IconBox variant="blue" size="sm"><Home size={20} strokeWidth={1.8} /></IconBox>
               <div className="hh-stat-content">
                 <h3 className="hh-stat-number">{households.length}</h3>
                 <p className="hh-stat-label">Total Households</p>
               </div>
             </div>
-            <div className="hh-stat-card hh-stat-amber">
+            <div className="admin-card hh-stat-card hh-stat-amber">
               <IconBox variant="amber" size="sm"><Clock size={20} strokeWidth={1.8} /></IconBox>
               <div className="hh-stat-content">
                 <h3 className="hh-stat-number">{pendingCount}</h3>
                 <p className="hh-stat-label">Pending Review</p>
               </div>
             </div>
-            <div className="hh-stat-card hh-stat-green">
+            <div className="admin-card hh-stat-card hh-stat-green">
               <IconBox variant="green" size="sm"><CheckCircle size={20} strokeWidth={1.8} /></IconBox>
               <div className="hh-stat-content">
                 <h3 className="hh-stat-number">{approvedCount}</h3>
                 <p className="hh-stat-label">Approved</p>
-              </div>
-            </div>
-            <div className="hh-stat-card hh-stat-teal">
-              <IconBox variant="teal" size="sm"><Users size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{totalMembers}</h3>
-                <p className="hh-stat-label">Total Members</p>
               </div>
             </div>
           </div>
@@ -250,10 +269,10 @@ const HouseholdProfiling = () => {
 
           {/* ── Households Table ── */}
           {!loading && (
-            <div className="hh-table-card">
-              <h2 className="hh-table-card-title">Submitted Household Profiles</h2>
+            <div className="admin-card hh-table-card">
+              <h2 className="admin-card-title">Submitted Household Profiles</h2>
               <div className="hh-table-container">
-                <table className="hh-table">
+                <table className="hh-table admin-table">
                   <thead>
                     <tr>
                       <th>HH No.</th>
@@ -289,31 +308,31 @@ const HouseholdProfiling = () => {
                           <td><span className="hh-no-cell">{h.householdNo}</span></td>
                           <td>{submitterNames[h.submittedBy] || '...'}</td>
                           <td>{h.street || '—'}</td>
-                          <td><span className="hh-purok-badge">{h.purok}</span></td>
+                          <td><span className="badge-pill badge-teal">{h.purok}</span></td>
                           <td>
-                            <span className="hh-member-count">
+                            <span className="badge-pill badge-blue" style={{gap: '4px'}}>
                               <Users size={14} strokeWidth={2} />
                               {h.members?.length || 0}
                             </span>
                           </td>
                           <td>{formatDate(h.dateAccomplished)}</td>
                           <td>
-                            <span className={`hh-status-badge ${h.status}`}>
+                            <span className={`badge-pill ${h.status === 'pending' ? 'badge-amber' : 'badge-green'}`}>
                               {h.status === 'pending' ? 'Pending' : 'Approved'}
                             </span>
                           </td>
                           <td>
                             <div className="hh-actions">
-                              <button className="hh-action-btn view" title="View Details" onClick={() => openViewModal(h)}>
-                                <Eye size={15} strokeWidth={1.8} />
+                              <button className="action-icon-btn view" title="View Details" onClick={() => openViewModal(h)}>
+                                <Eye size={16} strokeWidth={1.8} />
                               </button>
                               {h.status === 'pending' && (
-                                <button className="hh-action-btn approve" title="Approve" onClick={() => openApproveDialog(h)}>
-                                  <CheckCircle size={15} strokeWidth={1.8} />
+                                <button className="action-icon-btn approve" title="Approve" onClick={() => openApproveDialog(h)}>
+                                  <CheckCircle size={16} strokeWidth={1.8} />
                                 </button>
                               )}
-                              <button className="hh-action-btn delete" title="Delete" onClick={() => openDeleteDialog(h)}>
-                                <Trash2 size={15} strokeWidth={1.8} />
+                              <button className="action-icon-btn delete" title="Delete" onClick={() => openDeleteDialog(h)}>
+                                <Trash2 size={16} strokeWidth={1.8} />
                               </button>
                             </div>
                           </td>

@@ -1,0 +1,139 @@
+/* ============================================
+   AdminTopHeader – Admin Layout
+   ============================================ */
+
+.admin-top-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 24px;
+  z-index: 998;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sidebar-aware left offset — must match AdminNavbar.css exactly */
+body.sidebar-expanded .admin-top-header { left: 260px; }
+body.sidebar-collapsed .admin-top-header { left: 72px; }
+
+/* Left side */
+.admin-top-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right side */
+.admin-top-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Admin name */
+.admin-top-header-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #64748B;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Search Bar ── */
+.admin-top-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-top-search-icon {
+  position: absolute;
+  left: 10px;
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.admin-top-search-input {
+  height: 36px;
+  width: 280px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0 12px 0 34px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #0F172A;
+  background: #F8FAFC;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-top-search-input::placeholder {
+  color: #94A3B8;
+}
+
+.admin-top-search-input:focus {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: #fff;
+}
+
+/* ── Responsive — match AdminNavbar.css breakpoints ── */
+@media (max-width: 1440px) {
+  body.sidebar-expanded .admin-top-header { left: 250px; }
+  body.sidebar-collapsed .admin-top-header { left: 68px; }
+}
+
+@media (max-width: 1024px) {
+  body.sidebar-expanded .admin-top-header { left: 240px; }
+  body.sidebar-collapsed .admin-top-header { left: 64px; }
+
+  .admin-top-search-input {
+    width: 220px;
+  }
+}
+
+@media (max-width: 900px) {
+  body.sidebar-expanded .admin-top-header { left: 220px; }
+  body.sidebar-collapsed .admin-top-header { left: 60px; }
+
+  .admin-top-search-input {
+    width: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-top-header {
+    left: 0 !important;
+    padding: 0 16px 0 60px;
+  }
+
+  .admin-top-header-name {
+    display: none;
+  }
+
+  .admin-top-search-input {
+    width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-top-header {
+    padding: 0 12px 0 56px;
+  }
+
+  .admin-top-search-input {
+    width: 120px;
+    font-size: 0.8rem;
+  }
+}

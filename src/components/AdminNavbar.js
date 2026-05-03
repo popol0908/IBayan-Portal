@@ -34,23 +34,49 @@ const icons = {
   warning: <AlertTriangle {...iconProps} />,
 };
 
+/**
+ * All possible nav items.  Each item optionally has:
+ *   • requiredPermission – the permissions key that must be true for the user
+ *   • secretaryOnly      – only visible to Secretary / main admin (no subRole)
+ *
+ * If neither key is set the item is always visible (e.g. Dashboard).
+ */
+const ALL_NAV_ITEMS = [
+  { path: '/admin/dashboard',     label: 'Dashboard',             icon: icons.chart },
+  { path: '/admin/announcements', label: 'Announcements',         icon: icons.megaphone,  requiredPermission: 'announcements' },
+  { path: '/admin/residents',     label: 'Resident Verification', icon: icons.checkCircle, requiredPermission: 'residentVerification' },
+  { path: '/admin/households',    label: 'Household Profiling',   icon: icons.home,        requiredPermission: 'householdProfiling' },
+  { path: '/admin/events',        label: 'Events & Programs',     icon: icons.calendar,    requiredPermission: 'events' },
+  { path: '/admin/accounts',      label: 'Admin Accounts',        icon: icons.gear,        secretaryOnly: true },
+];
+
 const AdminNavbar = () => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, userProfile } = useAuth();
   const navigate = useNavigate();
   const { startLoading } = useLoading();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const navItems = [
-    { path: '/admin/dashboard', label: 'Dashboard', icon: icons.chart },
-    { path: '/admin/announcements', label: 'Announcements', icon: icons.megaphone },
-    { path: '/admin/emergency-alerts', label: 'Emergency Alerts', icon: icons.siren },
-    { path: '/admin/residents', label: 'Resident Verification', icon: icons.checkCircle },
-    { path: '/admin/households', label: 'Household Profiling', icon: icons.home },
-    { path: '/admin/events', label: 'Events & Programs', icon: icons.calendar },
-    { path: '/admin/accounts', label: 'Admin Accounts', icon: icons.gear },
-  ];
+  // Determine the user's sub-role (normalised)
+  const subRole = (userProfile?.subRole || '').trim().toLowerCase();
+  // Main admin (no subRole) and Secretary get full access
+  const isFullAccess = !subRole || subRole === 'secretary';
+
+  // Build the filtered nav items based on the user's permissions
+  const navItems = ALL_NAV_ITEMS.filter((item) => {
+    // Dashboard is always visible
+    if (!item.requiredPermission && !item.secretaryOnly) return true;
+
+    // Secretary-only items
+    if (item.secretaryOnly) return isFullAccess;
+
+    // Legacy main-admin accounts without a permissions object → show everything
+    if (!userProfile?.permissions) return isFullAccess;
+
+    // Check the specific permission
+    return Boolean(userProfile.permissions[item.requiredPermission]);
+  });
 
   // Manage body classes for layout shifting
   useEffect(() => {

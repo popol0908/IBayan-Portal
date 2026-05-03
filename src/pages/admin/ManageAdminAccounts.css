@@ -11,11 +11,10 @@
 }
 
 .admin-container {
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: 100%;
 }
 
-/* Card Container */
+/* ── Card ── */
 .accounts-card {
   background: #ffffff;
   border-radius: 16px;
@@ -31,7 +30,7 @@
   margin-bottom: 1.25rem;
 }
 
-/* Table */
+/* ── Table ── */
 .table-responsive {
   overflow-x: auto;
   border-radius: 12px;
@@ -56,10 +55,11 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap;
 }
 
 .accounts-table td {
-  padding: 1.25rem;
+  padding: 1rem 1.25rem;
   color: #334155;
   border-bottom: 1px solid #F1F5F9;
   font-size: 0.9rem;
@@ -78,57 +78,76 @@
   border-bottom: none;
 }
 
-.status-badge {
-  display: inline-flex;
+/* ── Account cell with avatar ── */
+.account-cell {
+  display: flex;
   align-items: center;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  gap: 0.75rem;
+}
+
+.account-name {
   font-weight: 600;
+  color: #0F172A;
   white-space: nowrap;
 }
 
-.status-active {
-  background: #DCFCE7;
-  color: #16A34A;
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  text-transform: uppercase;
 }
 
-.actions-cell {
-  display: flex;
+.avatar-purple { background: linear-gradient(135deg, #A855F7, #7E22CE); }
+.avatar-teal { background: linear-gradient(135deg, #2DD4BF, #0F766E); }
+.avatar-gray { background: linear-gradient(135deg, #94A3B8, #475569); }
+
+.avatar-lg {
+  width: 52px;
+  height: 52px;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6); /* fallback for modal */
+}
+
+/* ── Mini Progress Bar for Permissions ── */
+.perm-progress-wrapper {
+  display: inline-flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.btn-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: #ffffff;
+.perm-segments {
+  display: flex;
+  gap: 3px;
 }
 
-.btn-delete {
-  color: #EF4444;
-  border-color: #FECACA;
+.perm-segment {
+  width: 8px;
+  height: 16px;
+  border-radius: 2px;
+  background: #E2E8F0;
 }
 
-.btn-delete:hover:not(:disabled) {
-  background: #FEF2F2;
-  border-color: #FCA5A5;
+.perm-segment.filled {
+  background: var(--admin-accent);
 }
 
-.btn-delete:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  border-color: #F1F5F9;
-  color: #94A3B8;
+.perm-progress-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
 }
 
-/* Empty State */
+/* Action buttons removed from here since they are in admin-common.css now */
+
+/* ── Empty state ── */
 .empty-table {
   text-align: center;
   padding: 3.5rem 2rem;
@@ -147,13 +166,10 @@
   margin: 0;
 }
 
-/* Modals */
+/* ── Modals ── */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(15, 23, 42, 0.65);
   display: flex;
   align-items: center;
@@ -165,7 +181,7 @@
 
 @keyframes overlayFadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 .modal-dialog {
@@ -175,13 +191,17 @@
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
   animation: dialogFloatIn 0.3s ease-out;
+}
+
+.modal-dialog.modal-lg {
+  max-width: 640px;
 }
 
 @keyframes dialogFloatIn {
   from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-header {
@@ -202,50 +222,54 @@
 .modal-close {
   background: none;
   border: none;
-  font-size: 1.25rem;
   cursor: pointer;
   color: #94A3B8;
   transition: color 0.2s ease;
   padding: 0;
 }
 
-.modal-close:hover {
-  color: #0F172A;
-}
+.modal-close:hover { color: #0F172A; }
 
 .modal-form {
   padding: 1.5rem 1.75rem;
 }
 
-/* Form Styles */
+/* ── Form ── */
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.15rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .form-label {
   display: block;
   font-weight: 600;
   color: #334155;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
   font-size: 0.85rem;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 0.9rem;
   border: 1px solid #E2E8F0;
   border-radius: 10px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   background: #ffffff;
   color: #0F172A;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
   outline: none;
   border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
 }
 
 .form-input:disabled {
@@ -263,15 +287,168 @@
 .field-error {
   display: block;
   color: #EF4444;
-  font-size: 0.8rem;
-  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  margin-top: 0.3rem;
   font-weight: 500;
 }
 
+/* ── Permissions grid — card style ── */
+.permissions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+/* Last item alone on its row: keep half-width aligned left */
+.permission-card:last-child:nth-child(odd) {
+  grid-column: 1 / 2;
+}
+
+.permission-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+  background: #fff;
+  user-select: none;
+}
+
+.permission-card:hover {
+  border-color: #93C5FD;
+  background: #F0F9FF;
+}
+
+.permission-card.checked {
+  border-color: #3B82F6;
+  background: #EFF6FF;
+}
+
+.permission-card input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #3B82F6;
+  cursor: pointer;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.perm-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #F1F5F9;
+  color: #64748B;
+  flex-shrink: 0;
+  transition: background 0.18s, color 0.18s;
+}
+
+.permission-card.checked .perm-card-icon {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.perm-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.perm-card-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1E293B;
+  line-height: 1.3;
+}
+
+.perm-card-desc {
+  font-size: 0.74rem;
+  color: #64748B;
+  line-height: 1.3;
+}
+
+/* ── Permissions view (chips) ── */
+.permissions-view {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.perm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.perm-on  { background: #DCFCE7; color: #16A34A; }
+.perm-off { background: #F1F5F9; color: #94A3B8; }
+
+/* ── View modal profile ── */
+.view-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.view-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 0.15rem;
+}
+
+.view-email {
+  color: #64748B;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* ── Details grid ── */
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detail-item > span:last-child {
+  font-size: 0.9rem;
+  color: #0F172A;
+}
+
+/* ── Modal actions ── */
 .modal-actions {
   display: flex;
   gap: 12px;
-  margin-top: 1.75rem;
+  margin-top: 1.5rem;
 }
 
 .modal-actions .btn {
@@ -279,7 +456,7 @@
   min-height: 44px;
 }
 
-/* Modal form Buttons */
+/* ── Buttons ── */
 .btn {
   padding: 0.6rem 1.25rem;
   font-size: 0.9rem;
@@ -294,54 +471,27 @@
   gap: 0.4rem;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn-primary {
-  background: #3B82F6;
-  color: white;
-  border-color: transparent;
-}
+.btn-primary { background: #3B82F6; color: white; }
+.btn-primary:hover:not(:disabled) { background: #2563EB; }
 
-.btn-primary:hover:not(:disabled) {
-  background: #2563EB;
-}
+.btn-secondary { background: white; color: #475569; border-color: #CBD5E1; }
+.btn-secondary:hover:not(:disabled) { background: #F1F5F9; color: #0F172A; }
 
-.btn-secondary {
-  background: white;
-  color: #475569;
-  border-color: #CBD5E1;
-}
+.btn-danger { background: #EF4444; color: white; }
+.btn-danger:hover:not(:disabled) { background: #DC2626; }
 
-.btn-secondary:hover:not(:disabled) {
-  background: #F1F5F9;
-  color: #0F172A;
-}
+.btn-icon { font-size: 1.1rem; }
 
-.btn-danger {
-  background: #EF4444;
-  color: white;
-  border-color: transparent;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #DC2626;
-}
-
-.btn-icon {
-  font-size: 1.1rem;
-}
-
-/* Delete Dialog */
+/* ── Delete dialog ── */
 .delete-dialog {
   background: #ffffff;
   border-radius: 16px;
   padding: 2.5rem 2rem;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
   text-align: center;
   animation: dialogFloatIn 0.3s ease-out;
 }
@@ -355,13 +505,9 @@
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  letter-spacing: -0.01em;
 }
 
-.warning-icon {
-  font-size: 1.75rem;
-  color: #F59E0B;
-}
+.warning-icon { color: #F59E0B; }
 
 .dialog-message {
   color: #64748B;
@@ -381,29 +527,23 @@
   min-height: 44px;
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .admin-content {
-    padding: 1rem;
-  }
-  
+  .admin-content { padding: 1rem; }
+
   .admin-page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
 
-  .accounts-card {
-    padding: 1rem;
-  }
-
-  .modal-dialog {
-    width: 95%;
-  }
-
-  .modal-header,
-  .modal-form {
-    padding: 1.25rem;
-  }
+  .accounts-card { padding: 1rem; }
+  .modal-dialog { width: 95%; }
+  .modal-dialog.modal-lg { max-width: 95%; }
+  .modal-header, .modal-form { padding: 1.25rem; }
+  .form-row { grid-template-columns: 1fr; }
+  .permissions-grid { grid-template-columns: 1fr; }
+  .details-grid { grid-template-columns: 1fr; }
 
   .accounts-table th,
   .accounts-table td {

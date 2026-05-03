@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, Calendar, Users, X, Pencil, Trash2, ChevronUp, ChevronDown,
-  ClipboardList, FileText, User, Clock, Hash, AlertTriangle,
+  ClipboardList, FileText, User, Clock, Hash, AlertTriangle, Printer,
 } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
 import IconBox from '../../components/IconBox';
 import { useAuth } from '../../contexts/AuthContext';
 import { addItem, updateItem, deleteItem, subscribeToChanges, subscribeToFilteredData } from '../../services/dataService';
@@ -10,7 +11,10 @@ import { useToast } from '../../contexts/ToastContext';
 import { validateRequired, validateDate } from '../../utils/validation';
 import AdminNavbar from '../../components/AdminNavbar';
 import { db } from '../../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { useSearch } from '../../contexts/SearchContext';
+import EventPrintView from './EventPrintView';
+import { addActivityLog } from '../../services/activityLogService';
 import './ManageEvents.css';
 import '../../styles/admin-common.css';
 
@@ -34,7 +38,7 @@ const ManageEvents = () => {
     registrationFields: []
   });
   const [errors, setErrors] = useState({});
-  const [searchQuery, setSearchQuery] = useState('');
+  const { searchQuery } = useSearch();
   const [statusFilter, setStatusFilter] = useState('all');
   const [newField, setNewField] = useState({
     label: '',
@@ -44,6 +48,13 @@ const ManageEvents = () => {
     currentOption: ''
   });
   const [userProfiles, setUserProfiles] = useState({});
+
+  // Print
+  const eventPrintRef = useRef();
+  const handleEventPrint = useReactToPrint({
+    contentRef: eventPrintRef,
+    documentTitle: selectedEvent ? `Event-${selectedEvent.title}` : 'Event',
+  });
 
   useEffect(() => {
     // Subscribe to real-time events updates
@@ -193,6 +204,7 @@ const ManageEvents = () => {
           updatedAt: new Date().toISOString()
         });
         showToast('Event updated successfully!', 'success');
+        addActivityLog('updated', 'events', `Updated event "${formData.title}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
       } else {
         // Create new event
         await addItem('events', {
@@ -202,6 +214,32 @@ const ManageEvents = () => {
           updatedAt: new Date().toISOString()
         });
         showToast('Event created successfully!', 'success');
+        addActivityLog('created', 'events', `Created event "${formData.title}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
+
+        // Notify all verified residents
+        try {
+          const residentsSnap = await getDocs(query(collection(db, 'users'), where('status', '==', 'verified')));
+          if (!residentsSnap.empty) {
+            const batch = writeBatch(db);
+            residentsSnap.docs.forEach((userDoc) => {
+              if (userDoc.data().role === 'admin') return;
+              const notifRef = doc(collection(db, 'notifications'));
+              batch.set(notifRef, {
+                userId: userDoc.id,
+                role: 'resident',
+                title: 'New Event',
+                message: formData.title,
+                type: 'event',
+                read: false,
+                createdAt: serverTimestamp(),
+                link: '/events',
+              });
+            });
+            await batch.commit();
+          }
+        } catch (notifErr) {
+          console.error('Error sending event notifications:', notifErr);
+        }
       }
 
       setShowModal(false);
@@ -241,6 +279,7 @@ const ManageEvents = () => {
       // Delete the event (will be archived first)
       await deleteItem('events', selectedEvent.id, archivedBy, archivedByEmail);
       showToast('Event deleted successfully!', 'success');
+      addActivityLog('deleted', 'events', `Deleted event "${selectedEvent?.title}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
       setShowDeleteDialog(false);
       setSelectedEvent(null);
     } catch (error) {
@@ -325,41 +364,36 @@ const ManageEvents = () => {
           </div>
 
           {/* Statistics */}
-          <div className="stats-grid">
-            <div className="stat-card">
+          <div className="hh-stats-grid">
+            <div className="admin-card hh-stat-card">
               <IconBox variant="blue" size="sm"><Calendar size={20} strokeWidth={1.8} /></IconBox>
-              <div className="stat-content">
-                <h3 className="stat-number">{events.length}</h3>
-                <p className="stat-label">Total Events</p>
+              <div className="hh-stat-content">
+                <h3 className="hh-stat-number">{events.length}</h3>
+                <p className="hh-stat-label">Total Events</p>
               </div>
             </div>
-            <div className="stat-card">
+            <div className="admin-card hh-stat-card hh-stat-teal">
               <IconBox variant="teal" size="sm"><Calendar size={20} strokeWidth={1.8} /></IconBox>
-              <div className="stat-content">
-                <h3 className="stat-number">
-                  {events.filter(e => getEventStatus(e) === 'upcoming').length}
+              <div className="hh-stat-content">
+                <h3 className="hh-stat-number">
+                  {events.filter(e => getEventStatus(e) === 'upcoming' || getEventStatus(e) === 'today').length}
                 </h3>
-                <p className="stat-label">Upcoming</p>
+                <p className="hh-stat-label">Upcoming & Ongoing</p>
               </div>
             </div>
-            <div className="stat-card">
-              <IconBox variant="green" size="sm"><Users size={20} strokeWidth={1.8} /></IconBox>
-              <div className="stat-content">
-                <h3 className="stat-number">{registrations.length}</h3>
-                <p className="stat-label">Total Registrations</p>
+            <div className="admin-card hh-stat-card hh-stat-amber">
+              <IconBox variant="amber" size="sm"><Calendar size={20} strokeWidth={1.8} /></IconBox>
+              <div className="hh-stat-content">
+                <h3 className="hh-stat-number">
+                  {events.filter(e => getEventStatus(e) === 'past').length}
+                </h3>
+                <p className="hh-stat-label">Past</p>
               </div>
             </div>
           </div>
 
           {/* Filters */}
           <div className="filters-section">
-            <input
-              type="text"
-              placeholder="Search events..."
-              className="search-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
             <select
               className="filter-select"
               value={statusFilter}
@@ -372,94 +406,74 @@ const ManageEvents = () => {
           </div>
 
           {/* Existing Events & Programs */}
-          <div className="alerts-table-card">
-            <h2 className="table-card-title">Existing Events & Programs</h2>
-            <div className="events-table-container">
-              <table className="events-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Date</th>
-                  <th>Location</th>
-                  <th>Registrations</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEvents.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="empty-state-cell">
-                      <div className="empty-state">
-                        <div className="empty-icon"><Calendar size={48} strokeWidth={1.5} /></div>
-                        <h3>No Events Found</h3>
-                        <p>Create your first event to get started.</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredEvents.map((event) => {
-                    const eventRegs = getEventRegistrations(event.id);
-                    const status = getEventStatus(event);
-                    return (
-                      <tr key={event.id}>
-                        <td>
-                          <div className="event-title-cell">
-                            <strong>{event.title}</strong>
-                            {event.description && (
-                              <span className="event-description">{event.description.substring(0, 50)}...</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          {new Date(event.eventDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                          {event.eventTime && <div className="event-time">{event.eventTime}</div>}
-                        </td>
-                        <td>{event.location || '-'}</td>
-                        <td>
-                          <button
-                            className="btn-registrations"
-                            onClick={() => handleViewRegistrations(event)}
-                          >
-                            <span className="btn-registrations-icon"><Users size={18} strokeWidth={1.8} /></span>
-                            <span className="btn-registrations-count">{eventRegs.length}</span>
-                            <span className="btn-registrations-text">Registered</span>
-                          </button>
-                        </td>
-                        <td>
-                          <span className={`status-badge status-${status}`}>
-                            {status === 'upcoming' ? 'Upcoming' : status === 'today' ? 'Today' : 'Past'}
+          <div className="events-card-list">
+            {filteredEvents.length === 0 ? (
+              <div className="admin-card empty-state-card">
+                <div className="empty-state">
+                  <div className="empty-icon"><Calendar size={48} strokeWidth={1.5} /></div>
+                  <h3>No Events Found</h3>
+                  <p>Create your first event to get started.</p>
+                </div>
+              </div>
+            ) : (
+              filteredEvents.map((event) => {
+                const eventRegs = getEventRegistrations(event.id);
+                const status = getEventStatus(event);
+                const statusColorMap = {
+                  past: 'gray',
+                  upcoming: 'teal',
+                  today: 'green'
+                };
+                const accentColor = statusColorMap[status];
+
+                return (
+                  <div key={event.id} className={`admin-card event-horizontal-card accent-${accentColor}`}>
+                    <div className="event-card-content">
+                      <div className="event-card-header">
+                        <div className="event-title-wrap">
+                          <h3 className="event-title">{event.title}</h3>
+                          <span className={`badge-pill badge-${accentColor}`}>
+                            {status === 'upcoming' ? 'Upcoming' : status === 'today' ? 'Ongoing' : 'Past'}
                           </span>
-                        </td>
-                        <td>
-                          <div className="item-admin-actions">
-                            <button
-                              className="action-icon-btn edit"
-                              onClick={() => handleEdit(event)}
-                              title="Edit event"
-                            >
-                              <Pencil size={15} strokeWidth={1.8} />
-                            </button>
-                            <button
-                              className="action-icon-btn delete"
-                              onClick={() => openDeleteDialog(event)}
-                              title="Delete event"
-                            >
-                              <Trash2 size={15} strokeWidth={1.8} />
-                            </button>
+                        </div>
+                        {event.description && (
+                          <p className="event-description">{event.description}</p>
+                        )}
+                      </div>
+                      
+                      <div className="event-card-details">
+                        <div className="event-pill">
+                          <Calendar size={14} strokeWidth={2} />
+                          <span>
+                            {new Date(event.eventDate).toLocaleDateString('en-US', {
+                              year: 'numeric', month: 'short', day: 'numeric'
+                            })} {event.eventTime && `• ${event.eventTime}`}
+                          </span>
+                        </div>
+                        {event.location && (
+                          <div className="event-pill">
+                            <span style={{display: 'inline-flex', marginTop: '-2px'}}><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                            <span>{event.location}</span>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-              </table>
-            </div>
+                        )}
+                        <button className="badge-pill badge-blue event-reg-btn" onClick={() => handleViewRegistrations(event)}>
+                          <Users size={14} strokeWidth={2} style={{marginRight: '4px'}} />
+                          {eventRegs.length} Registered
+                        </button>
+                      </div>
+                    </div>
+                    <div className="event-card-actions">
+                      <button className="action-icon-btn edit" onClick={() => handleEdit(event)} title="Edit event">
+                        <Pencil size={16} strokeWidth={1.8} />
+                      </button>
+                      <button className="action-icon-btn delete" onClick={() => openDeleteDialog(event)} title="Delete event">
+                        <Trash2 size={16} strokeWidth={1.8} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Create/Edit Modal */}
@@ -794,19 +808,29 @@ const ManageEvents = () => {
                   ) : (
                     <>
                       <div className="registrations-summary">
-                        <div className="summary-item">
-                          <span className="summary-label">Total Registrations:</span>
-                          <span className="summary-value">{eventRegistrations.length}</span>
+                        <div className="summary-stat-card">
+                          <div className="summary-stat-icon blue">
+                            <Users size={20} strokeWidth={1.8} />
+                          </div>
+                          <div className="summary-stat-info">
+                            <span className="summary-stat-value">{eventRegistrations.length}</span>
+                            <span className="summary-stat-label">Total Registrations</span>
+                          </div>
                         </div>
-                        <div className="summary-item">
-                          <span className="summary-label">Event Date:</span>
-                          <span className="summary-value">
-                            {new Date(selectedEvent.eventDate).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </span>
+                        <div className="summary-stat-card">
+                          <div className="summary-stat-icon green">
+                            <Calendar size={20} strokeWidth={1.8} />
+                          </div>
+                          <div className="summary-stat-info">
+                            <span className="summary-stat-value">
+                              {new Date(selectedEvent.eventDate).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </span>
+                            <span className="summary-stat-label">Event Date</span>
+                          </div>
                         </div>
                       </div>
                       <div className="registrations-list">
@@ -830,39 +854,25 @@ const ManageEvents = () => {
                                     <span className="user-email-subtitle">{registration.userEmail || 'No email'}</span>
                                   </div>
                                 </div>
-                                <div className="registration-meta">
-                                  <span className="registration-date">
-                                    <span className="meta-icon"><Clock size={16} strokeWidth={1.8} /></span>
+                                <div className="registration-date-row">
+                                  <Clock size={14} strokeWidth={1.8} />
+                                  <span>
                                     {(() => {
                                       try {
                                         let dateValue = registration.createdAt;
-                                        
-                                        // Handle Firestore Timestamp
                                         if (dateValue && typeof dateValue === 'object' && dateValue.toDate) {
                                           dateValue = dateValue.toDate();
-                                        }
-                                        // Handle Firestore Timestamp with seconds/nanoseconds
-                                        else if (dateValue && typeof dateValue === 'object' && dateValue.seconds) {
+                                        } else if (dateValue && typeof dateValue === 'object' && dateValue.seconds) {
                                           dateValue = new Date(dateValue.seconds * 1000);
-                                        }
-                                        // Handle string or Date
-                                        else if (dateValue) {
+                                        } else if (dateValue) {
                                           dateValue = new Date(dateValue);
                                         }
-                                        
-                                        if (!dateValue || isNaN(dateValue.getTime())) {
-                                          return 'Date not available';
-                                        }
-                                        
-                                        return dateValue.toLocaleString('en-US', {
-                                          month: 'short',
-                                          day: 'numeric',
-                                          year: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit'
+                                        if (!dateValue || isNaN(dateValue.getTime())) return 'Date not available';
+                                        return 'Registered on ' + dateValue.toLocaleString('en-US', {
+                                          month: 'short', day: 'numeric', year: 'numeric',
+                                          hour: '2-digit', minute: '2-digit'
                                         });
                                       } catch (e) {
-                                        console.error('Date parsing error:', e, registration.createdAt);
                                         return 'Date not available';
                                       }
                                     })()}
@@ -870,40 +880,32 @@ const ManageEvents = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="registration-responses">
-                              <div className="responses-header">
-                                <span className="responses-title"><FileText size={18} strokeWidth={1.8} style={{ marginRight: 8, verticalAlign: -3 }} />Registration Details</span>
-                              </div>
-                              {selectedEvent.registrationFields && selectedEvent.registrationFields.length > 0 ? (
+                            {selectedEvent.registrationFields && selectedEvent.registrationFields.length > 0 && (
+                              <div className="registration-responses">
+                                <div className="responses-header">
+                                  <span className="responses-title">
+                                    <FileText size={16} strokeWidth={1.8} />
+                                    Registration Details
+                                  </span>
+                                </div>
                                 <div className="responses-grid">
                                   {selectedEvent.registrationFields.map((field) => {
                                     const response = registration.responses && registration.responses[field.id];
                                     return (
                                       <div key={field.id} className="response-item">
-                                        <label className="response-label">
-                                          <span className="response-label-icon">
-                                            {field.type === 'dropdown' ? <ClipboardList size={16} strokeWidth={1.8} /> : field.type === 'textarea' ? <FileText size={16} strokeWidth={1.8} /> : field.type === 'number' ? <Hash size={16} strokeWidth={1.8} /> : <Pencil size={16} strokeWidth={1.8} />}
-                                          </span>
+                                        <span className="response-label">
                                           {field.label}
                                           {field.required && <span className="required-indicator">*</span>}
-                                        </label>
-                                        <div className="response-value">
-                                          {response ? (
-                                            <span className="response-text">{String(response)}</span>
-                                          ) : (
-                                            <span className="response-empty">Not answered</span>
-                                          )}
-                                        </div>
+                                        </span>
+                                        <span className="response-value">
+                                          {response ? String(response) : <em className="response-empty">Not answered</em>}
+                                        </span>
                                       </div>
                                     );
                                   })}
                                 </div>
-                              ) : (
-                                <div className="no-fields-message-small">
-                                  <p>No registration form fields were configured for this event.</p>
-                                </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -911,13 +913,16 @@ const ManageEvents = () => {
                   )}
                 </div>
                 <div className="modal-footer registrations-modal-footer">
-                  <div className="footer-info">
-                    <span className="footer-text">
-                      Showing {eventRegistrations.length} registration{eventRegistrations.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
                   <button
                     className="btn btn-primary"
+                    onClick={handleEventPrint}
+                    disabled={eventRegistrations.length === 0}
+                  >
+                    <Printer size={16} strokeWidth={1.8} />
+                    Export to PDF
+                  </button>
+                  <button
+                    className="btn btn-secondary"
                     onClick={() => setShowRegistrationsModal(false)}
                   >
                     Close
@@ -952,6 +957,13 @@ const ManageEvents = () => {
               </div>
             </div>
           )}
+          {/* Hidden Event Print Component */}
+          <EventPrintView
+            ref={eventPrintRef}
+            event={selectedEvent}
+            registrations={eventRegistrations}
+            userProfiles={userProfiles}
+          />
         </div>
       </div>
     </div>

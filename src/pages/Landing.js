@@ -1,25 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, FileText, User, Mic, Megaphone } from 'lucide-react';
+import { Shield, FileText, User, Mic, Megaphone, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping, ArrowRight } from 'lucide-react';
 import { subscribeToChanges } from '../services/dataService';
 import './Landing.css';
 import './Announcements.css';
 
 const iconProps = { size: 28, strokeWidth: 1.5 };
 
-const getTypeStyle = (type) => {
+const getCategoryConfig = (type) => {
   switch (type) {
-    case 'Emergency':
-      return { badge: 'type-emergency', accent: '#DC2626' };
-    case 'Security':
-      return { badge: 'type-security', accent: '#DC2626' };
+    case 'Environment':
+      return { badge: 'cat-environment', border: 'border-environment', color: '#16A34A', gradient: 'linear-gradient(135deg, #16A34A 0%, #22C55E 100%)', icon: <Leaf size={36} strokeWidth={1.5} /> };
     case 'Health':
-      return { badge: 'type-health', accent: '#16A34A' };
+      return { badge: 'cat-health', border: 'border-health', color: '#2563EB', gradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)', icon: <HeartPulse size={36} strokeWidth={1.5} /> };
+    case 'Safety':
+      return { badge: 'cat-safety', border: 'border-safety', color: '#DC2626', gradient: 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)', icon: <ShieldAlert size={36} strokeWidth={1.5} /> };
+    case 'Events':
+      return { badge: 'cat-events', border: 'border-events', color: '#7C3AED', gradient: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)', icon: <CalendarHeart size={36} strokeWidth={1.5} /> };
+    case 'Services':
+      return { badge: 'cat-services', border: 'border-services', color: '#EA580C', gradient: 'linear-gradient(135deg, #EA580C 0%, #F97316 100%)', icon: <HandHelping size={36} strokeWidth={1.5} /> };
+    // Legacy fallbacks
+    case 'Emergency':
+    case 'Security':
+      return { badge: 'cat-safety', border: 'border-safety', color: '#DC2626', gradient: 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)', icon: <ShieldAlert size={36} strokeWidth={1.5} /> };
     case 'Infrastructure':
-      return { badge: 'type-infrastructure', accent: '#64748B' };
+      return { badge: 'cat-services', border: 'border-services', color: '#EA580C', gradient: 'linear-gradient(135deg, #EA580C 0%, #F97316 100%)', icon: <HandHelping size={36} strokeWidth={1.5} /> };
     case 'General':
     default:
-      return { badge: 'type-general', accent: '#3B82F6' };
+      return { badge: 'cat-environment', border: 'border-environment', color: '#16A34A', gradient: 'linear-gradient(135deg, #16A34A 0%, #22C55E 100%)', icon: <Leaf size={36} strokeWidth={1.5} /> };
   }
 };
 
@@ -27,9 +35,15 @@ const Landing = () => {
   const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
-    // Fetch only the latest 3 announcements for the landing page or just limit in UI
     const unsubscribe = subscribeToChanges('announcements', (data) => {
-      setAnnouncements(data.slice(0, 3)); // showing latest 3
+      const sorted = [...data].sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        const dateA = new Date(a.datePosted || a.createdAt || 0);
+        const dateB = new Date(b.datePosted || b.createdAt || 0);
+        return dateB - dateA;
+      });
+      setAnnouncements(sorted.slice(0, 3));
     });
     return () => unsubscribe();
   }, []);
@@ -112,70 +126,92 @@ const Landing = () => {
 
           <div className="ibayan-announcements-container">
             {announcements.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon"><Megaphone size={48} strokeWidth={1.5} /></div>
+              <div className="ann-empty-state">
+                <div className="ann-empty-icon"><Megaphone size={48} strokeWidth={1.5} /></div>
                 <h3>No Recent Announcements</h3>
                 <p>Check back later for updates.</p>
               </div>
             ) : (
-              <div className="announcement-list">
+              <div className="announcements-card-grid">
                 {announcements.map((announcement) => {
-                  const typeStyle = getTypeStyle(announcement.type);
+                  const catConfig = getCategoryConfig(announcement.type);
                   return (
-                    <div
-                      key={announcement.id}
-                      className="announcement-list-item"
-                      style={{ borderLeftColor: typeStyle.accent }}
-                    >
-                      {/* Header: type badges */}
-                      <div className="item-header">
-                        <div className="item-badges">
-                          <span className={`type-badge ${typeStyle.badge}`}>
-                            {announcement.type || 'General'}
-                          </span>
-                          {(announcement.type === 'Emergency' || announcement.type === 'Security') && (
-                            <span className="type-badge type-important">Important</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="item-title">{announcement.title}</h3>
-
-                      {/* Description */}
-                      <p className="item-description">{announcement.description}</p>
-
-                      {/* Dates: When + Date Posted */}
-                      <div className="item-dates">
-                        <div className="item-date-row">
-                          <span className="item-date-label">When:</span>
-                          <span className="item-date-value">
-                            {new Date(announcement.whenDate || announcement.date).toLocaleDateString('en-US', {
-                              year: 'numeric', month: 'long', day: 'numeric'
-                            })}
-                            {announcement.whenTime && (
-                              <span className="when-time"> at {
-                                new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
-                                  hour: 'numeric', minute: '2-digit', hour12: true
-                                })
-                              }</span>
-                            )}
-                          </span>
-                        </div>
-                        {announcement.datePosted && (
-                          <div className="item-date-row">
-                            <span className="item-date-label">Date Posted:</span>
-                            <span className="item-date-value">
-                              {new Date(announcement.datePosted).toLocaleDateString('en-US', {
-                                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                              })}
-                            </span>
+                    <div key={announcement.id} className={`ann-card ${announcement.pinned ? 'border-pinned' : catConfig.border}`}>
+                      {/* Banner Image */}
+                      <div className="ann-card-banner">
+                        {announcement.imageUrl ? (
+                          <img src={announcement.imageUrl} alt="" className="ann-banner-img" />
+                        ) : (
+                          <div className="ann-banner-placeholder" style={{ background: catConfig.gradient }}>
+                            <div className="ann-placeholder-icon">{catConfig.icon}</div>
                           </div>
                         )}
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="ann-card-body">
+                        {/* Top row */}
+                        <div className="ann-card-top-row">
+                          <span className={`ann-cat-badge ${catConfig.badge}`}>
+                            {announcement.type || 'General'}
+                          </span>
+                          {announcement.pinned && (
+                            <span className="ann-pinned-badge">📌 Pinned by Admin</span>
+                          )}
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="ann-card-title">{announcement.title}</h3>
+
+                        {/* Description */}
+                        <p className="ann-card-excerpt">
+                          {announcement.description}
+                        </p>
+
+                        {/* Login to Read More → link to login */}
+                        <Link to="/login" className="ann-read-more">
+                          Login to Read More <ArrowRight size={14} strokeWidth={2.5} />
+                        </Link>
+
+                        {/* Timestamps */}
+                        <div className="ann-card-timestamps">
+                          <div className="ann-timestamp">
+                            <span className="ann-ts-label">When:</span>
+                            <span className="ann-ts-value">
+                              {new Date(announcement.whenDate || announcement.date).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric'
+                              })}
+                              {announcement.whenTime && (
+                                <span> at {
+                                  new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
+                                    hour: 'numeric', minute: '2-digit', hour12: true
+                                  })
+                                }</span>
+                              )}
+                            </span>
+                          </div>
+                          {announcement.datePosted && (
+                            <div className="ann-timestamp">
+                              <span className="ann-ts-label">Posted:</span>
+                              <span className="ann-ts-value">
+                                {new Date(announcement.datePosted).toLocaleDateString('en-US', {
+                                  year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
                 })}
+              </div>
+            )}
+            {announcements.length > 0 && (
+              <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+                <Link to="/login" className="ibayan-btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0.6rem 1.4rem' }}>
+                  See All Announcements <ArrowRight size={18} strokeWidth={2} />
+                </Link>
               </div>
             )}
           </div>

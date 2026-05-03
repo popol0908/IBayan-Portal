@@ -33,19 +33,47 @@ body.sidebar-collapsed .App {
   padding-left: 72px;
 }
 
+@media (max-width: 1440px) {
+  body.sidebar-expanded .App { padding-left: 250px; }
+  body.sidebar-collapsed .App { padding-left: 68px; }
+}
+
+@media (max-width: 1024px) {
+  body.sidebar-expanded .App { padding-left: 240px; }
+  body.sidebar-collapsed .App { padding-left: 64px; }
+}
+
+@media (max-width: 900px) {
+  body.sidebar-expanded .App { padding-left: 220px; }
+  body.sidebar-collapsed .App { padding-left: 60px; }
+}
+
 @media (max-width: 768px) {
   body.sidebar-expanded .App,
-  body.sidebar-collapsed .App {
-    padding-left: 0;
-  }
+  body.sidebar-collapsed .App { padding-left: 0; }
 }
 
 .main-content {
   flex: 1;
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
+}
+
+/* User-facing pages keep a readable max-width */
+.main-content:not(.admin-main) {
+  padding: 2rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Admin pages fill the full available width */
+.main-content.admin-main {
+  padding: 0;
+  max-width: 100%;
+}
+
+/* Offset for fixed top header */
+.main-content.has-top-header {
+  padding-top: calc(64px + 2rem);
 }
 
 /* ============================================
@@ -377,7 +405,7 @@ body.sidebar-collapsed .App {
    RESPONSIVE DESIGN
    ============================================ */
 @media (max-width: 768px) {
-  .main-content {
+  .main-content:not(.admin-main) {
     padding: 1rem;
   }
 
@@ -425,7 +453,7 @@ body.sidebar-collapsed .App {
 }
 
 @media (max-width: 480px) {
-  .main-content {
+  .main-content:not(.admin-main) {
     padding: 0.75rem;
   }
 

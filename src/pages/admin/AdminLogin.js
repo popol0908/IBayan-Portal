@@ -19,9 +19,19 @@ const AdminLogin = () => {
   const { login, error, setError, currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to admin dashboard if already logged in as admin
+  // Redirect if already logged in as admin
   useEffect(() => {
     if (currentUser && userProfile?.role === 'admin') {
+      // Block suspended / pending accounts
+      if (userProfile.status === 'Suspended' || userProfile.status === 'Pending') {
+        signOut(auth);
+        return;
+      }
+      // Redirect to change-password if required
+      if (userProfile.mustChangePassword === true) {
+        navigate('/admin/change-password');
+        return;
+      }
       navigate('/admin/dashboard');
     }
   }, [currentUser, userProfile, navigate]);
@@ -54,6 +64,27 @@ const AdminLogin = () => {
       console.log('User data:', userSnap.data());
       
       if (userSnap.exists() && userSnap.data().role === 'admin') {
+        const userData = userSnap.data();
+
+        // Fix 3 — Enforce account status
+        if (userData.status === 'Suspended') {
+          await signOut(auth);
+          setError('Your account is suspended. Please contact the main administrator.');
+          return;
+        }
+        if (userData.status === 'Pending') {
+          await signOut(auth);
+          setError('Your account is pending activation.');
+          return;
+        }
+
+        // Fix 2 — Enforce mustChangePassword
+        if (userData.mustChangePassword === true) {
+          console.log('Must change password. Redirecting to change-password page.');
+          navigate('/admin/change-password');
+          return;
+        }
+
         console.log('Admin role confirmed. Redirecting to dashboard.');
         navigate('/admin/dashboard');
       } else if (!userSnap.exists()) {

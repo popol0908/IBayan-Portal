@@ -28,80 +28,85 @@
     z-index: 99999;
     background: white;
     color: #000;
-    font-family: 'Times New Roman', Times, serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 9px;
     line-height: 1.3;
   }
 
   @page {
-    size: A4 landscape;
+    size: landscape !important;
     margin: 10mm;
   }
 
   /* ── Page Header ── */
   .print-page-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 10px;
+    align-items: center;
     position: relative;
+    margin-bottom: 20px;
   }
 
   .print-header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    position: absolute;
+    left: 0;
+    top: 0;
   }
 
   .print-seal {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
   }
 
-  .print-header-left-text {
-    font-size: 8px;
-    text-align: left;
-    line-height: 1.4;
-  }
-
-  .print-header-left-text p {
-    margin: 0;
-  }
-
   .print-header-center {
+    width: 100%;
     text-align: center;
-    flex: 1;
-    padding: 0 20px;
+  }
+
+  .print-republic,
+  .print-city {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.2;
   }
 
   .print-header-center h1 {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
-    letter-spacing: 0.5px;
-    margin: 0;
-    line-height: 1.5;
-    text-transform: uppercase;
+    margin: 5px 0 0;
+    line-height: 1.2;
+  }
+
+  /* ── Info Row & Date ── */
+  .print-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 10px;
+  }
+
+  .print-info-block {
+    flex-shrink: 0;
+  }
+
+  .print-date-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 2px;
+  }
+
+  .print-date-label {
+    font-size: 9px;
+    font-weight: bold;
   }
 
   .print-date-box {
     border: 1px solid #000;
-    padding: 6px 10px;
-    font-size: 8px;
-    text-align: left;
-    white-space: nowrap;
-    min-width: 160px;
-  }
-
-  .print-date-box span {
+    padding: 2px 20px;
+    font-size: 9px;
     font-weight: bold;
-  }
-
-  .print-date-value {
-    border-bottom: 1px solid #000;
-    padding: 0 4px;
-    display: inline-block;
-    min-width: 90px;
+    min-width: 100px;
     text-align: center;
   }
 
@@ -126,23 +131,22 @@
   .print-info-table .info-label {
     font-weight: bold;
     text-align: left;
-    background: #f8f8f8;
+    width: 120px;
   }
 
   .print-info-table .info-value {
     text-align: left;
-    min-width: 100px;
+    min-width: 120px;
   }
 
   .print-info-table .psg-label {
     font-weight: bold;
     text-align: center;
-    background: #f8f8f8;
     width: 30px;
   }
 
   .print-info-table .psg-value {
-    width: 30px;
+    width: 50px;
     text-align: center;
   }
 
@@ -187,14 +191,6 @@
 
   .print-members-table tbody tr.empty-row td {
     height: 18px;
-  }
-
-  /* Row number column */
-  .print-members-table .row-num {
-    width: 20px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 7px;
   }
 
   /* ── Footer ── */

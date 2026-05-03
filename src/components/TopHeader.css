@@ -1,0 +1,101 @@
+/* ============================================
+   TopHeader – Resident Layout
+   ============================================ */
+
+.top-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 998;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sidebar-aware left offset (mirrors sidebar width) */
+body.sidebar-expanded .top-header { left: 260px; }
+body.sidebar-collapsed .top-header { left: 72px; }
+
+/* Left side */
+.top-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-header-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Right side */
+.top-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Profile avatar button */
+.top-header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0052CC 0%, #0066FF 100%);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 82, 204, 0.25);
+}
+
+.top-header-avatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(0, 82, 204, 0.35);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1440px) {
+  body.sidebar-expanded .top-header { left: 250px; }
+  body.sidebar-collapsed .top-header { left: 68px; }
+}
+
+@media (max-width: 1024px) {
+  body.sidebar-expanded .top-header { left: 240px; }
+  body.sidebar-collapsed .top-header { left: 64px; }
+}
+
+@media (max-width: 900px) {
+  body.sidebar-expanded .top-header { left: 220px; }
+  body.sidebar-collapsed .top-header { left: 60px; }
+}
+
+@media (max-width: 768px) {
+  .top-header {
+    left: 0 !important;
+    padding: 0 16px 0 60px; /* leave room for hamburger */
+  }
+}
+
+@media (max-width: 480px) {
+  .top-header {
+    padding: 0 12px 0 56px;
+  }
+
+  .top-header-title {
+    font-size: 0.95rem;
+  }
+}

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { CheckCircle, Users, Phone, Cake, Paperclip, Clock, Download, X, ShieldCheck, ShieldX, AlertTriangle, MapPin, Calendar } from 'lucide-react';
 import IconBox from '../../components/IconBox';
 import { db } from '../../firebase';
 import AdminNavbar from '../../components/AdminNavbar';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { addActivityLog } from '../../services/activityLogService';
 import './ResidentVerification.css';
 
 const formatTimestamp = (timestamp) => {
@@ -22,6 +24,7 @@ const getAddress = (user) => {
 
 const ResidentVerification = () => {
   const { showToast } = useToast();
+  const { currentUser, userProfile } = useAuth();
   const [pendingUsers, setPendingUsers] = useState([]);
   const [verifiedUsers, setVerifiedUsers] = useState([]);
   const [declinedUsers, setDeclinedUsers] = useState([]);
@@ -76,6 +79,28 @@ const ResidentVerification = () => {
         verifiedAt: serverTimestamp()
       });
       showToast('Resident approved successfully.', 'success');
+      
+      // Log activity
+      const approvedUser = [...pendingUsers, ...verifiedUsers, ...declinedUsers].find(u => u.id === approvingUserId);
+      addActivityLog('approved', 'residents', `Approved resident "${approvedUser?.fullName || 'Unknown'}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
+      
+      // Notify the resident
+      try {
+        const notifRef = doc(collection(db, 'notifications'));
+        await setDoc(notifRef, {
+          userId: approvingUserId,
+          role: 'resident',
+          title: 'Account Verified',
+          message: 'Your account has been verified by the barangay admin.',
+          type: 'system',
+          read: false,
+          createdAt: serverTimestamp(),
+          link: '/dashboard',
+        });
+      } catch (notifErr) {
+        console.error('Error sending verification notification:', notifErr);
+      }
+
       setShowApproveModal(false);
       setApprovingUserId(null);
     } catch (error) {
@@ -94,6 +119,10 @@ const ResidentVerification = () => {
         declinedAt: serverTimestamp()
       });
       showToast('Resident declined successfully.', 'info');
+      
+      // Log activity
+      const declinedUser = [...pendingUsers, ...verifiedUsers, ...declinedUsers].find(u => u.id === decliningUserId);
+      addActivityLog('declined', 'residents', `Declined resident "${declinedUser?.fullName || 'Unknown'}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
       setShowDeclineModal(false);
       setDeclineReason('');
       setDecliningUserId(null);

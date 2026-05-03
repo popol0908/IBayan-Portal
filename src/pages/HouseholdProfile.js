@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, X, Users, ClipboardList, Send, Clock, CheckCircle } from 'lucide-react';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp, doc, runTransaction } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, serverTimestamp, doc, runTransaction, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -17,8 +17,7 @@ const NAME_REGEX = /^[a-zA-Z\s.\-']+$/;
 
 const EMPTY_MEMBER = {
   lastName: '', firstName: '', middleName: '', extensionName: '',
-  street: '', purok: '',
-  dateOfBirth: '', placeOfBirth: '', gender: '', civilStatus: '',
+  placeOfBirth: '', dateOfBirth: '', gender: '', civilStatus: '',
   citizenship: 'Filipino', occupation: '', relationshipToHead: '',
 };
 
@@ -54,6 +53,7 @@ const HouseholdProfile = () => {
   const [saving, setSaving] = useState(false);
 
   // Form state (only used in CASE 1: no household yet)
+  const [houseNo, setHouseNo] = useState('');
   const [street, setStreet] = useState('');
   const [purok, setPurok] = useState('');
   const [dateAccomplished, setDateAccomplished] = useState(new Date().toISOString().split('T')[0]);
@@ -61,6 +61,13 @@ const HouseholdProfile = () => {
   const [memberForm, setMemberForm] = useState({ ...EMPTY_MEMBER });
   const [errors, setErrors] = useState({});
   const [memberErrors, setMemberErrors] = useState({});
+
+  /* ── Auto-fill Purok ── */
+  useEffect(() => {
+    if (userProfile?.purok) {
+      setPurok(userProfile.purok);
+    }
+  }, [userProfile]);
 
   /* ── Listen for existing household submission ── */
   useEffect(() => {
@@ -133,6 +140,7 @@ const HouseholdProfile = () => {
   const handleSubmit = async () => {
     // Validate household fields
     const errs = {};
+    if (!houseNo.trim()) errs.houseNo = 'House No. is required.';
     if (!street.trim()) errs.street = 'Street is required.';
     if (!purok) errs.purok = 'Purok is required.';
     if (!dateAccomplished) errs.dateAccomplished = 'Date is required.';
@@ -163,6 +171,7 @@ const HouseholdProfile = () => {
         city: 'Olongapo',
         barangay: 'Mabayuan',
         psgCode: '',
+        houseNo,
         street,
         purok,
         dateAccomplished,
@@ -170,6 +179,31 @@ const HouseholdProfile = () => {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+      // Notify all admins about the new household submission
+      try {
+        const adminsSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'admin')));
+        if (!adminsSnap.empty) {
+          const batch = writeBatch(db);
+          adminsSnap.docs.forEach((adminDoc) => {
+            const notifRef = doc(collection(db, 'notifications'));
+            batch.set(notifRef, {
+              userId: adminDoc.id,
+              role: 'admin',
+              title: 'New Household Submission',
+              message: `${userProfile?.fullName || currentUser.email} submitted a household profile.`,
+              type: 'household',
+              read: false,
+              createdAt: serverTimestamp(),
+              link: '/admin/households',
+            });
+          });
+          await batch.commit();
+        }
+      } catch (notifErr) {
+        console.error('Error sending household submission notification to admins:', notifErr);
+      }
+
       showToast('Household profile submitted successfully!', 'success');
     } catch (error) {
       console.error('Error submitting household:', error);
@@ -238,6 +272,10 @@ const HouseholdProfile = () => {
                 <div className="hp-info-item">
                   <span className="hp-info-label">Barangay</span>
                   <span className="hp-info-value">Mabayuan</span>
+                </div>
+                <div className="hp-info-item">
+                  <span className="hp-info-label">House No.</span>
+                  <span className="hp-info-value">{household.houseNo || '—'}</span>
                 </div>
                 <div className="hp-info-item">
                   <span className="hp-info-label">Street</span>
@@ -330,6 +368,17 @@ const HouseholdProfile = () => {
                 {/* Editable fields */}
                 <div className="hp-form-row">
                   <div className="hp-form-group">
+                    <label className="hp-form-label">House No. *</label>
+                    <input
+                      type="text"
+                      className={`hp-form-input ${errors.houseNo ? 'input-error' : ''}`}
+                      value={houseNo}
+                      onChange={(e) => { setHouseNo(e.target.value); if (errors.houseNo) setErrors((p) => ({ ...p, houseNo: '' })); }}
+                      placeholder="Enter house number"
+                    />
+                    {errors.houseNo && <span className="hp-field-error">{errors.houseNo}</span>}
+                  </div>
+                  <div className="hp-form-group">
                     <label className="hp-form-label">Street *</label>
                     <input
                       type="text"
@@ -341,15 +390,14 @@ const HouseholdProfile = () => {
                     {errors.street && <span className="hp-field-error">{errors.street}</span>}
                   </div>
                   <div className="hp-form-group">
-                    <label className="hp-form-label">Purok *</label>
-                    <select
-                      className={`hp-form-select ${errors.purok ? 'input-error' : ''}`}
-                      value={purok}
-                      onChange={(e) => { setPurok(e.target.value); if (errors.purok) setErrors((p) => ({ ...p, purok: '' })); }}
-                    >
-                      <option value="">Select Purok</option>
-                      {PUROK_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                    <label className="hp-form-label">Purok</label>
+                    <input
+                      type="text"
+                      className="hp-form-input hp-disabled-input"
+                      value={purok || 'Loading...'}
+                      disabled
+                      style={{ cursor: 'not-allowed', backgroundColor: '#f3f4f6', color: '#6b7280' }}
+                    />
                     {errors.purok && <span className="hp-field-error">{errors.purok}</span>}
                   </div>
                 </div>
@@ -399,29 +447,18 @@ const HouseholdProfile = () => {
                       <input type="text" name="extensionName" className="hp-form-input" value={memberForm.extensionName} onChange={handleMemberChange} placeholder="Jr., Sr., III" />
                     </div>
                     <div className="hp-form-group">
-                      <label className="hp-form-label">Street</label>
-                      <input type="text" name="street" className="hp-form-input" value={memberForm.street} onChange={handleMemberChange} placeholder="Street" />
+                      <label className="hp-form-label">Place of Birth *</label>
+                      <input type="text" name="placeOfBirth" className={`hp-form-input ${memberErrors.placeOfBirth ? 'input-error' : ''}`} value={memberForm.placeOfBirth} onChange={handleMemberChange} placeholder="Place of Birth" />
+                      {memberErrors.placeOfBirth && <span className="hp-field-error">{memberErrors.placeOfBirth}</span>}
                     </div>
-                    <div className="hp-form-group">
-                      <label className="hp-form-label">Purok</label>
-                      <select name="purok" className="hp-form-select" value={memberForm.purok} onChange={handleMemberChange}>
-                        <option value="">Select Purok</option>
-                        {PUROK_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="hp-form-row-3">
                     <div className="hp-form-group">
                       <label className="hp-form-label">Date of Birth *</label>
                       <input type="date" name="dateOfBirth" className={`hp-form-input ${memberErrors.dateOfBirth ? 'input-error' : ''}`} value={memberForm.dateOfBirth} onChange={handleMemberChange} />
                       {memberErrors.dateOfBirth && <span className="hp-field-error">{memberErrors.dateOfBirth}</span>}
                     </div>
-                    <div className="hp-form-group">
-                      <label className="hp-form-label">Place of Birth *</label>
-                      <input type="text" name="placeOfBirth" className={`hp-form-input ${memberErrors.placeOfBirth ? 'input-error' : ''}`} value={memberForm.placeOfBirth} onChange={handleMemberChange} placeholder="Place of Birth" />
-                      {memberErrors.placeOfBirth && <span className="hp-field-error">{memberErrors.placeOfBirth}</span>}
-                    </div>
+                  </div>
+
+                  <div className="hp-form-row-3">
                     <div className="hp-form-group">
                       <label className="hp-form-label">Gender *</label>
                       <select name="gender" className={`hp-form-select ${memberErrors.gender ? 'input-error' : ''}`} value={memberForm.gender} onChange={handleMemberChange}>
@@ -430,9 +467,6 @@ const HouseholdProfile = () => {
                       </select>
                       {memberErrors.gender && <span className="hp-field-error">{memberErrors.gender}</span>}
                     </div>
-                  </div>
-
-                  <div className="hp-form-row-3">
                     <div className="hp-form-group">
                       <label className="hp-form-label">Civil Status *</label>
                       <select name="civilStatus" className={`hp-form-select ${memberErrors.civilStatus ? 'input-error' : ''}`} value={memberForm.civilStatus} onChange={handleMemberChange}>
@@ -446,19 +480,21 @@ const HouseholdProfile = () => {
                       <input type="text" name="citizenship" className={`hp-form-input ${memberErrors.citizenship ? 'input-error' : ''}`} value={memberForm.citizenship} onChange={handleMemberChange} placeholder="Citizenship" />
                       {memberErrors.citizenship && <span className="hp-field-error">{memberErrors.citizenship}</span>}
                     </div>
+                  </div>
+
+                  <div className="hp-form-row-3">
                     <div className="hp-form-group">
                       <label className="hp-form-label">Occupation</label>
                       <input type="text" name="occupation" className="hp-form-input" value={memberForm.occupation} onChange={handleMemberChange} placeholder="Occupation" />
                     </div>
-                  </div>
-
-                  <div className="hp-form-group">
-                    <label className="hp-form-label">Relationship to Head *</label>
-                    <select name="relationshipToHead" className={`hp-form-select ${memberErrors.relationshipToHead ? 'input-error' : ''}`} value={memberForm.relationshipToHead} onChange={handleMemberChange}>
-                      <option value="">Select Relationship</option>
-                      {RELATIONSHIP_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                    {memberErrors.relationshipToHead && <span className="hp-field-error">{memberErrors.relationshipToHead}</span>}
+                    <div className="hp-form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="hp-form-label">Relationship to Head *</label>
+                      <select name="relationshipToHead" className={`hp-form-select ${memberErrors.relationshipToHead ? 'input-error' : ''}`} value={memberForm.relationshipToHead} onChange={handleMemberChange}>
+                        <option value="">Select Relationship</option>
+                        {RELATIONSHIP_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                      {memberErrors.relationshipToHead && <span className="hp-field-error">{memberErrors.relationshipToHead}</span>}
+                    </div>
                   </div>
 
                   <button type="button" className="hp-add-member-btn" onClick={handleAddMember}>

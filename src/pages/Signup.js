@@ -10,7 +10,7 @@ import {
   validatePhoneNumber,
   validateRequired,
 } from "../utils/validation";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "../firebase";
 import {
   User,
@@ -241,6 +241,30 @@ const Signup = () => {
         status: "emailUnverified",
         createdAt: serverTimestamp(),
       });
+
+      // Notify all admins about the new registration
+      try {
+        const adminsSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'admin')));
+        if (!adminsSnap.empty) {
+          const batch = writeBatch(db);
+          adminsSnap.docs.forEach((adminDoc) => {
+            const notifRef = doc(collection(db, 'notifications'));
+            batch.set(notifRef, {
+              userId: adminDoc.id,
+              role: 'admin',
+              title: 'New Registration',
+              message: `${formData.name} has registered.`,
+              type: 'resident',
+              read: false,
+              createdAt: serverTimestamp(),
+              link: '/admin/residents',
+            });
+          });
+          await batch.commit();
+        }
+      } catch (notifErr) {
+        console.error('Error sending registration notification to admins:', notifErr);
+      }
 
       showToast(
         "Account created! Please check your email to verify your address.",

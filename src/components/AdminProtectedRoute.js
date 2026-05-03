@@ -24,6 +24,11 @@ const AdminProtectedRoute = ({ children }) => {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
+  // Block suspended or pending admin accounts
+  if (userProfile?.status === 'Suspended' || userProfile?.status === 'Pending') {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
   return children;
 };
 

@@ -31,6 +31,8 @@ service cloud.firestore {
       allow update: if isOwner(userId);
       // Admins can update any profile
       allow update: if isAdmin();
+      // Admins can delete users
+      allow delete: if isAdmin();
     }
     
     // Feedback collection
@@ -151,6 +153,33 @@ service cloud.firestore {
       allow read, update, create: if isAuthenticated();
       // Only admins can delete metadata docs
       allow delete: if isAdmin();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Authenticated users can create notifications (batch writes for all users)
+      allow create: if isAuthenticated();
+      // Users can update their own notifications (mark as read)
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // No deletes
+      allow delete: if isAdmin();
+    }
+
+    // Activity logs collection
+    match /activityLogs/{logId} {
+      // Admins can create and read activity logs
+      allow create, read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Audit logs collection (immutable audit trail)
+    match /auditLogs/{logId} {
+      // Admins can create and read audit logs
+      allow create, read: if isAdmin();
+      // Audit logs are immutable — no updates or deletes
+      allow update, delete: if false;
     }
 
     // Archived collections - for historical data and auditing

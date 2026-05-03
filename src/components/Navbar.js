@@ -41,7 +41,6 @@ const Navbar = () => {
   const navItems = [
     { path: '/dashboard', label: 'Home', icon: icons.home },
     { path: '/announcements', label: 'Announcements', icon: icons.megaphone },
-    { path: '/emergency-alerts', label: 'Emergency Alerts', icon: icons.siren },
     { path: '/events', label: 'Events & Programs', icon: icons.calendar },
     { path: '/household-profile', label: 'Household Profile', icon: icons.clipboardList },
   ];
@@ -159,15 +158,6 @@ const Navbar = () => {
 
           {/* Sidebar Footer */}
           <div className="sidebar-footer">
-            <Link
-              to="/profile"
-              onClick={(e) => handleNavClick(e, '/profile')}
-              className={`sidebar-profile-btn ${location.pathname === '/profile' ? 'active' : ''}`}
-              title="Profile"
-            >
-              <span className="profile-icon">{icons.user}</span>
-              {isSidebarOpen && <span className="profile-label">Profile</span>}
-            </Link>
             <button
               className="sidebar-logout-btn"
               onClick={toggleLogoutDialog}
