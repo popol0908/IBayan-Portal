@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users } from '../components/Icons';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToChanges, addItem } from '../services/dataService';
 import { useToast } from '../contexts/ToastContext';
@@ -245,12 +245,24 @@ const Events = () => {
                             month: 'long',
                             day: 'numeric'
                           })}
+                          {event.eventDateEnd && (
+                            <> to {new Date(event.eventDateEnd).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}</>
+                          )}
                         </span>
                       </div>
                       {event.eventTime && (
                         <div className="event-detail-item">
                           <span className="detail-icon"><Clock size={18} strokeWidth={1.8} /></span>
-                          <span className="detail-text">{event.eventTime}</span>
+                          <span className="detail-text">
+                            {event.eventTime}
+                            {event.eventTimeEnd && (
+                              <> to {event.eventTimeEnd}</>
+                            )}
+                          </span>
                         </div>
                       )}
                       {event.location && (
@@ -315,8 +327,19 @@ const Events = () => {
                         month: 'long',
                         day: 'numeric'
                       })}
+                      {selectedEvent.eventDateEnd && (
+                        <> to {new Date(selectedEvent.eventDateEnd).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}</>
+                      )}
                       {selectedEvent.eventTime && (
-                        <> | <strong>Time:</strong> {selectedEvent.eventTime}</>
+                        <> | <strong>Time:</strong> {selectedEvent.eventTime}
+                          {selectedEvent.eventTimeEnd && (
+                            <> to {selectedEvent.eventTimeEnd}</>
+                          )}
+                        </>
                       )}
                       {selectedEvent.location && (
                         <> | <strong>Location:</strong> {selectedEvent.location}</>

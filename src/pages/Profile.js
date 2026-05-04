@@ -8,7 +8,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import {
   Pencil, Lock, Eye, EyeOff, CheckCircle, Clock, XCircle,
   User, Mail, Phone, MapPin, Calendar, Home, Shield
-} from 'lucide-react';
+} from '../components/Icons';
 import PageLoader from '../components/PageLoader';
 import './Profile.css';
 

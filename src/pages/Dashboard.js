@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Megaphone, Siren, Calendar, User, ArrowRight, Home, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping } from 'lucide-react';
+import { Megaphone, Siren, Calendar, User, ArrowRight, Home, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping } from '../components/Icons';
 import IconBox from '../components/IconBox';
 import { getSharedData, subscribeToChanges } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
@@ -135,15 +135,28 @@ const Dashboard = () => {
                           {new Date(announcement.whenDate || announcement.date).toLocaleDateString('en-US', {
                             year: 'numeric', month: 'long', day: 'numeric'
                           })}
-                          {announcement.whenTime && (
-                            <span> at {
-                              new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
-                                hour: 'numeric', minute: '2-digit', hour12: true
-                              })
-                            }</span>
+                          {announcement.whenDateEnd && (
+                            <span> to {new Date(announcement.whenDateEnd).toLocaleDateString('en-US', {
+                              year: 'numeric', month: 'long', day: 'numeric'
+                            })}</span>
                           )}
                         </span>
                       </div>
+                      {announcement.whenTime && (
+                        <div className="ann-timestamp">
+                          <span className="ann-ts-label">Time:</span>
+                          <span className="ann-ts-value">
+                            {new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
+                              hour: 'numeric', minute: '2-digit', hour12: true
+                            })}
+                            {announcement.whenTimeEnd && (
+                              <span> to {new Date(`2000-01-01T${announcement.whenTimeEnd}`).toLocaleTimeString('en-US', {
+                                hour: 'numeric', minute: '2-digit', hour12: true
+                              })}</span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                       {announcement.datePosted && (
                         <div className="ann-timestamp">
                           <span className="ann-ts-label">Posted:</span>

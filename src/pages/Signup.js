@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { TermsModal, PrivacyModal } from "../components/LegalModals";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import {
@@ -24,14 +25,13 @@ import {
   Upload,
   AlertTriangle,
   Megaphone,
-  ClipboardList,
   Bell,
   Info,
   X,
   CheckCircle,
   Eye,
   EyeOff,
-} from "lucide-react";
+} from '../components/Icons';
 import "./Signup.css";
 
 // Cloudinary configuration
@@ -70,6 +70,10 @@ const Signup = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const { signup, sendVerificationEmail, error, setError } = useAuth();
   const { showToast } = useToast();
@@ -157,6 +161,28 @@ const Signup = () => {
     const emailValidation = validateEmail(formData.email);
     if (!emailValidation.isValid) {
       newErrors.email = emailValidation.error;
+    }
+
+    // Strict Birthday Validation
+    if (!formData.birthday) {
+      newErrors.birthday = "Birthday is required.";
+    } else {
+      const birthDate = new Date(formData.birthday);
+      const today = new Date();
+      
+      if (birthDate > today) {
+        newErrors.birthday = "Birthday cannot be in the future.";
+      } else {
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        
+        if (age < 18) {
+          newErrors.birthday = "You must be at least 18 years old to register.";
+        }
+      }
     }
 
     const passwordValidation = validatePassword(formData.password);
@@ -313,7 +339,8 @@ const Signup = () => {
     formData.purok.trim() !== "" &&
     formData.contactNumber.trim() !== "" &&
     !!proofFile &&
-    !fileError;
+    !fileError &&
+    agreedToTerms;
 
   return (
     <div className="signup-container">
@@ -613,6 +640,20 @@ const Signup = () => {
               </label>
             </div>
 
+            <div className="form-options terms-options">
+              <label className="checkbox-container terms-checkbox-container">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  disabled={loading}
+                />
+                <span className="terms-text">
+                  I agree to the <button type="button" className="text-link" onClick={() => setShowTermsModal(true)}>Terms & Conditions</button> and <button type="button" className="text-link" onClick={() => setShowPrivacyModal(true)}>Privacy Policy</button>
+                </span>
+              </label>
+            </div>
+
             <button
               type="submit"
               className="btn btn-primary btn-full"
@@ -647,46 +688,40 @@ const Signup = () => {
         {/* Divider */}
         <div className="signup-divider" />
 
-        {/* Right Side — Info */}
+        {/* Left Side — Branded Info Panel */}
         <div className="signup-info-section">
-          <div className="signup-info-block signup-info-block--main">
-            <h2 className="signup-info-block__title">
-              <span className="signup-info-block__inline-icon">
+          <div className="signup-info-backdrop">
+            <img src="/logo.png" alt="" className="signup-info-bg-logo" />
+          </div>
+          <div className="signup-info-content">
+            <div className="signup-info-brand">
+              <img src="/logo.png" alt="iBayan" className="signup-info-logo" />
+              <h2 className="signup-info-title">iBayan Portal</h2>
+              <p className="signup-info-tagline">Barangay Mabayuan Information Center</p>
+            </div>
+            <div className="signup-info-features">
+              <div className="signup-info-feature">
                 <Megaphone size={18} strokeWidth={1.8} />
-              </span>{" "}
-              Join Our Community
-            </h2>
-            <p className="signup-info-block__text">
-              Create an account to access all the features of Barangay Mabayuan
-              Information Center. Stay connected with your community and never
-              miss important updates.
-            </p>
-          </div>
-
-          <div className="signup-info-block">
-            <h3 className="signup-info-block__title">
-              <span className="signup-info-block__inline-icon">
-                <Megaphone size={16} strokeWidth={1.8} />
-              </span>{" "}
-              Get Instant Updates
-            </h3>
-            <p className="signup-info-block__text">
-              Receive real-time notifications about barangay announcements and
-              events
-            </p>
-          </div>
-
-          <div className="signup-info-block">
-            <h3 className="signup-info-block__title">
-              <span className="signup-info-block__inline-icon">
-                <Bell size={16} strokeWidth={1.8} />
-              </span>{" "}
-              Emergency Alerts
-            </h3>
-            <p className="signup-info-block__text">
-              Get immediate notifications during emergencies and important
-              situations
-            </p>
+                <div>
+                  <strong>Community Updates</strong>
+                  <span>Real-time announcements & emergency alerts</span>
+                </div>
+              </div>
+              <div className="signup-info-feature">
+                <ShieldCheck size={18} strokeWidth={1.8} />
+                <div>
+                  <strong>Verified Residents</strong>
+                  <span>Secure identity verification for all members</span>
+                </div>
+              </div>
+              <div className="signup-info-feature">
+                <Bell size={18} strokeWidth={1.8} />
+                <div>
+                  <strong>Event Notifications</strong>
+                  <span>Never miss barangay events & programs</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -745,6 +780,9 @@ const Signup = () => {
           </div>
         </div>
       )}
+
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
     </div>
   );
 };

@@ -59,10 +59,16 @@ body.sidebar-collapsed .App {
 }
 
 /* User-facing pages keep a readable max-width */
-.main-content:not(.admin-main) {
+.main-content:not(.admin-main):not(.landing-main):not(.auth-main) {
   padding: 2rem;
   max-width: 100%;
   margin: 0 auto;
+}
+
+/* Landing and Auth pages fill the full width */
+.main-content.landing-main, .main-content.auth-main {
+  padding: 0;
+  max-width: 100%;
 }
 
 /* Admin pages fill the full available width */
@@ -405,7 +411,7 @@ body.sidebar-collapsed .App {
    RESPONSIVE DESIGN
    ============================================ */
 @media (max-width: 768px) {
-  .main-content:not(.admin-main) {
+  .main-content:not(.admin-main):not(.landing-main):not(.auth-main) {
     padding: 1rem;
   }
 
@@ -453,7 +459,7 @@ body.sidebar-collapsed .App {
 }
 
 @media (max-width: 480px) {
-  .main-content:not(.admin-main) {
+  .main-content:not(.admin-main):not(.landing-main):not(.auth-main) {
     padding: 0.75rem;
   }
 

@@ -4,8 +4,8 @@ import {
   Users, Megaphone, Home, ClipboardCheck, TrendingUp,
   FileDown, Activity, Calendar, BarChart3, PieChart,
   Clock, UserCheck, UserX, Trash2, Pencil, Plus,
-  CheckCircle, XCircle, ShieldCheck,
-} from 'lucide-react';
+  CheckCircle, XCircle, ShieldCheck, FileText, Table
+} from '../../components/Icons';
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale, PointElement, LineElement,
@@ -19,6 +19,8 @@ import { subscribeToRecentActivity } from '../../services/activityLogService';
 import { subscribeToChanges } from '../../services/dataService';
 import AdminNavbar from '../../components/AdminNavbar';
 import PageLoader from '../../components/PageLoader';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import './AdminDashboard.css';
 
 // Register Chart.js components
@@ -382,8 +384,117 @@ const AdminDashboard = () => {
     };
   }, [announcements, timeFilter]);
 
-  /* ── Export Report ── */
-  const handleExportReport = () => {
+  /* ── Chart Data: Household Members by Age Group ── */
+  const ageGroupData = useMemo(() => {
+    const groups = { '0-17': 0, '18-30': 0, '31-45': 0, '46-60': 0, '60+': 0 };
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    filtered.forEach(h => {
+      (h.members || []).forEach(m => {
+        if (!m.dateOfBirth) return;
+        const bd = m.dateOfBirth.toDate ? m.dateOfBirth.toDate() : new Date(m.dateOfBirth);
+        const age = Math.floor((Date.now() - bd.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+        if (age <= 17) groups['0-17']++;
+        else if (age <= 30) groups['18-30']++;
+        else if (age <= 45) groups['31-45']++;
+        else if (age <= 60) groups['46-60']++;
+        else groups['60+']++;
+      });
+    });
+    return {
+      labels: Object.keys(groups),
+      datasets: [{
+        label: 'Members',
+        data: Object.values(groups),
+        backgroundColor: ['#3B82F6', '#14B8A6', '#F59E0B', '#8B5CF6', '#EF4444'],
+        borderRadius: 8, borderSkipped: false,
+      }],
+    };
+  }, [households, timeFilter]);
+
+  /* ── Chart Data: Civil Status ── */
+  const civilStatusData = useMemo(() => {
+    const map = {};
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    filtered.forEach(h => {
+      (h.members || []).forEach(m => {
+        const cs = m.civilStatus || 'Unknown';
+        map[cs] = (map[cs] || 0) + 1;
+      });
+    });
+    const labels = Object.keys(map);
+    return {
+      labels,
+      datasets: [{
+        data: Object.values(map),
+        backgroundColor: ['#3B82F6', '#14B8A6', '#F59E0B', '#8B5CF6', '#EF4444', '#EC4899'],
+        borderColor: '#fff', borderWidth: 3, hoverOffset: 6,
+      }],
+    };
+  }, [households, timeFilter]);
+
+  /* ── Chart Data: Citizenship ── */
+  const citizenshipData = useMemo(() => {
+    const map = {};
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    filtered.forEach(h => {
+      (h.members || []).forEach(m => {
+        const c = m.citizenship || 'Unknown';
+        map[c] = (map[c] || 0) + 1;
+      });
+    });
+    return {
+      labels: Object.keys(map),
+      datasets: [{
+        data: Object.values(map),
+        backgroundColor: ['#1D9E75', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444'],
+        borderColor: '#fff', borderWidth: 3, hoverOffset: 6,
+      }],
+    };
+  }, [households, timeFilter]);
+
+  /* ── Chart Data: Top Occupations ── */
+  const occupationData = useMemo(() => {
+    const map = {};
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    filtered.forEach(h => {
+      (h.members || []).forEach(m => {
+        const occ = (m.occupation || '').trim();
+        if (!occ || occ === '—' || occ.toLowerCase() === 'n/a') return;
+        map[occ] = (map[occ] || 0) + 1;
+      });
+    });
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    return {
+      labels: sorted.map(([k]) => k),
+      datasets: [{
+        label: 'Members',
+        data: sorted.map(([, v]) => v),
+        backgroundColor: 'rgba(29, 158, 117, 0.75)',
+        borderRadius: 8, borderSkipped: false,
+      }],
+    };
+  }, [households, timeFilter]);
+
+  /* ── Chart Data: Gender Distribution ── */
+  const genderData = useMemo(() => {
+    const map = {};
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    filtered.forEach(h => {
+      (h.members || []).forEach(m => {
+        const g = m.gender || 'Unknown';
+        map[g] = (map[g] || 0) + 1;
+      });
+    });
+    return {
+      labels: Object.keys(map),
+      datasets: [{
+        data: Object.values(map),
+        backgroundColor: ['#3B82F6', '#EC4899', '#94A3B8'],
+        borderColor: '#fff', borderWidth: 3, hoverOffset: 6,
+      }],
+    };
+  }, [households, timeFilter]);  /* ── Export PDF Report ── */
+  const handleExportPDF = () => {
     const filteredUsers = allUsers.filter(u => isWithinFilter(u.verifiedAt || u.createdAt, timeFilter));
     const filteredEvents = events.filter(e => isWithinFilter(e.createdAt || e.eventDate, timeFilter));
     const filteredAnnouncements = announcements.filter(a => isWithinFilter(a.createdAt || a.datePosted, timeFilter));
@@ -399,52 +510,183 @@ const AdminDashboard = () => {
       'all': 'All Time'
     }[timeFilter];
 
-    const rows = [
-      ['IBayan Barangay Dashboard Report'],
-      [`Generated: ${new Date().toLocaleString()}`],
-      [`Period: ${filterLabel}`],
-      [''],
-      ['=== KEY METRICS ==='],
-      ['Metric', 'Value'],
-      ['Total Verified Residents (All-Time)', stats.totalResidents],
-      ['Total Households (All-Time)', stats.totalHouseholds],
-      ['Pending Verification (Current)', stats.pendingVerification],
-      ['Events in Period', filteredEvents.length],
-      ['Announcements in Period', filteredAnnouncements.length],
-      ['Event Registrations in Period', filteredRegs.length],
-      [''],
-      ['=== USER STATUS (Filtered) ==='],
-      ['Status', 'Count'],
-      ['Verified', filteredUsers.filter(u => u.status === 'verified').length],
-      ['Pending', filteredUsers.filter(u => u.status === 'pending').length],
-      ['Declined', filteredUsers.filter(u => u.status === 'declined').length],
-      [''],
-      ['=== HOUSEHOLDS BY PUROK (Filtered) ==='],
-      ['Purok', 'Count'],
-    ];
+    const generatePDF = (logoImg = null) => {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      
+      // Header
+      let startY = 45;
+      if (logoImg) {
+        doc.addImage(logoImg, 'PNG', 14, 15, 24, 24);
+      }
+      
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text('ADMIN DASHBOARD REPORT', 42, 24);
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139); // slate-500
+      doc.text(`Period: ${filterLabel}`, 42, 30);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 42, 35);
 
-    const purokMap = {};
-    filteredHouseholds.forEach(h => { const p = h.purok || 'Unknown'; purokMap[p] = (purokMap[p] || 0) + 1; });
-    Object.entries(purokMap).sort((a, b) => a[0].localeCompare(b[0])).forEach(([k, v]) => {
-      rows.push([k, v]);
-    });
+      // Key Metrics Table
+      autoTable(doc, {
+        startY: startY,
+        head: [['Key Metrics', 'Value']],
+        body: [
+          ['Total Verified Residents (All-Time)', stats.totalResidents.toString()],
+          ['Total Households (All-Time)', stats.totalHouseholds.toString()],
+          ['Pending Verification (Current)', stats.pendingVerification.toString()],
+          ['Events in Period', filteredEvents.length.toString()],
+          ['Announcements in Period', filteredAnnouncements.length.toString()],
+          ['Event Registrations in Period', filteredRegs.length.toString()],
+        ],
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 }, // Teal
+        styles: { fontSize: 9.5, cellPadding: 4 },
+        margin: { top: 10 },
+      });
 
-    rows.push(['']);
-    rows.push(['=== RECENT ACTIVITY (Filtered) ===']);
-    rows.push(['Time', 'Action', 'Module', 'Description', 'Admin']);
-    filteredLogs.forEach(log => {
-      const ts = log.timestamp ? (log.timestamp.toDate ? log.timestamp.toDate() : new Date(log.timestamp)).toLocaleString() : '';
-      rows.push([ts, log.action, log.module, log.description, log.performedByName]);
-    });
+      // User Status Table
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['User Status', 'Count']],
+        body: [
+          ['Verified', filteredUsers.filter(u => u.status === 'verified').length.toString()],
+          ['Pending', filteredUsers.filter(u => u.status === 'pending').length.toString()],
+          ['Declined', filteredUsers.filter(u => u.status === 'declined').length.toString()],
+        ],
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 9.5, cellPadding: 4 },
+      });
 
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Dashboard_Report_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+      // Households by Purok Table
+      const purokMap = {};
+      filteredHouseholds.forEach(h => { const p = h.purok || 'Unknown'; purokMap[p] = (purokMap[p] || 0) + 1; });
+      const purokRows = Object.entries(purokMap).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => [k, v.toString()]);
+      
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Purok', 'Household Count']],
+        body: purokRows,
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 9.5, cellPadding: 4 },
+      });
+
+      // Events Overview Table
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Events Overview', 'Count']],
+        body: eventsOverviewData.labels.map((label, idx) => [label, eventsOverviewData.datasets[0].data[idx].toString()]),
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 9.5, cellPadding: 4 },
+      });
+
+      // Announcements by Category Table
+      if (announcementsCategoryData.labels.length > 0) {
+        autoTable(doc, {
+          startY: doc.lastAutoTable.finalY + 10,
+          head: [['Announcement Category', 'Count']],
+          body: announcementsCategoryData.labels.map((label, idx) => [label, announcementsCategoryData.datasets[0].data[idx].toString()]),
+          headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+          styles: { fontSize: 9.5, cellPadding: 4 },
+        });
+      }
+
+      // Household Members by Age Group Table
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Age Group', 'Members Count']],
+        body: ageGroupData.labels.map((label, idx) => [label, ageGroupData.datasets[0].data[idx].toString()]),
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 9.5, cellPadding: 4 },
+      });
+
+      // Civil Status Table
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Civil Status', 'Count']],
+        body: civilStatusData.labels.map((label, idx) => [label, civilStatusData.datasets[0].data[idx].toString()]),
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 9.5, cellPadding: 4 },
+      });
+
+      // Citizenship Table
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Citizenship', 'Count']],
+        body: citizenshipData.labels.map((label, idx) => [label, citizenshipData.datasets[0].data[idx].toString()]),
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 9.5, cellPadding: 4 },
+      });
+
+      // Gender Distribution Table
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Gender', 'Count']],
+        body: genderData.labels.map((label, idx) => [label, genderData.datasets[0].data[idx].toString()]),
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 9.5, cellPadding: 4 },
+      });
+
+      // Top Occupations Table
+      if (occupationData.labels.length > 0) {
+        autoTable(doc, {
+          startY: doc.lastAutoTable.finalY + 10,
+          head: [['Top Occupations', 'Count']],
+          body: occupationData.labels.map((label, idx) => [label, occupationData.datasets[0].data[idx].toString()]),
+          headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+          styles: { fontSize: 9.5, cellPadding: 4 },
+        });
+      }
+
+      // Recent Activity Table
+      const logRows = filteredLogs.map(log => {
+        const ts = log.timestamp ? (log.timestamp.toDate ? log.timestamp.toDate() : new Date(log.timestamp)).toLocaleString() : '';
+        return [ts, log.action, log.module, log.description, log.performedByName];
+      });
+
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Time', 'Action', 'Module', 'Description', 'Admin']],
+        body: logRows,
+        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
+        styles: { fontSize: 8, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 32 },
+          3: { cellWidth: 'auto' }
+        }
+      });
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9);
+        doc.setTextColor(148, 163, 184); // slate-400
+        doc.text(
+          'Barangay Mabayuan, Olongapo City, Zambales',
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        );
+      }
+
+      doc.save(`Dashboard_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
+    // Load logo image first, then generate PDF
+    const img = new Image();
+    img.src = '/logo.png';
+    img.onload = () => {
+      generatePDF(img);
+    };
+    img.onerror = () => {
+      console.warn("Could not load logo for PDF. Generating without logo.");
+      generatePDF(null);
+    };
   };
 
   /* ── Chart Options ── */
@@ -517,10 +759,10 @@ const AdminDashboard = () => {
                   <option value="1year">Past 1 Year</option>
                   <option value="all">All Time</option>
                 </select>
-                <button className="export-report-btn" onClick={handleExportReport} id="export-report-btn">
-                  <FileDown size={18} strokeWidth={2} />
-                  <span>Export Report</span>
-                </button>
+                  <button className="export-btn" onClick={handleExportPDF} title="Export Dashboard Report to PDF">
+                    <FileText size={16} strokeWidth={2} />
+                    <span>Export PDF</span>
+                  </button>
               </div>
             </div>
 
@@ -573,159 +815,255 @@ const AdminDashboard = () => {
               {/* ── LEFT: Analytics Charts ── */}
               <div className="dash-main-col">
 
-                {/* Row 1: Line + Doughnut */}
-                <div className="charts-row">
-                  <div className="dash-card chart-card chart-card-wide" id="chart-resident-growth">
-                    <div className="dash-card-header">
-                      <h2 className="dash-card-title">
-                        <TrendingUp size={18} strokeWidth={2} className="card-title-icon" />
-                        Resident Growth
-                      </h2>
-                      <span className="chart-period-badge">
-                        {timeFilter === 'all' ? 'All Time' : 
-                         timeFilter === '1year' ? 'Past 1 Year' : 
-                         timeFilter === '1month' ? 'Past 1 Month' : 
-                         timeFilter === '14days' ? 'Past 14 Days' : 'Past 7 Days'}
-                      </span>
-                    </div>
-                    <div className="chart-container chart-container-line">
-                      <Line data={residentGrowthData} options={lineOpts} />
-                    </div>
+                {/* ══════ SECTION: Residents Analytics ══════ */}
+            <div className="analytics-section section-residents">
+              <div className="section-header">
+                <div className="section-header-icon section-icon-blue"><Users size={20} strokeWidth={2} /></div>
+                <div>
+                  <h2 className="section-title">Residents Analytics</h2>
+                  <p className="section-desc">Growth trends and verification status</p>
+                </div>
+              </div>
+              <div className="section-charts">
+                <div className="dash-card chart-card chart-card-wide" id="chart-resident-growth">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <TrendingUp size={18} strokeWidth={2} className="card-title-icon" />
+                      Resident Growth
+                    </h2>
+                    <span className="chart-period-badge">
+                      {timeFilter === 'all' ? 'All Time' : 
+                       timeFilter === '1year' ? 'Past 1 Year' : 
+                       timeFilter === '1month' ? 'Past 1 Month' : 
+                       timeFilter === '14days' ? 'Past 14 Days' : 'Past 7 Days'}
+                    </span>
                   </div>
-
-                  <div className="dash-card chart-card chart-card-narrow" id="chart-status-dist">
-                    <div className="dash-card-header">
-                      <h2 className="dash-card-title">
-                        <PieChart size={18} strokeWidth={2} className="card-title-icon" />
-                        User Status
-                      </h2>
-                    </div>
-                    <div className="chart-container chart-container-doughnut">
-                      <Doughnut data={statusDistData} options={doughnutOpts} />
-                    </div>
-                    <div className="doughnut-center-label">
-                      <span className="doughnut-center-num">
-                        {statusDistData.datasets[0].data.reduce((a, b) => a + b, 0)}
-                      </span>
-                      <span className="doughnut-center-text">Total</span>
-                    </div>
+                  <div className="chart-container chart-container-line">
+                    <Line data={residentGrowthData} options={lineOpts} />
                   </div>
                 </div>
-
-                {/* Row 2: Bar + Doughnut */}
-                <div className="charts-row">
-                  <div className="dash-card chart-card chart-card-half" id="chart-households-purok">
-                    <div className="dash-card-header">
-                      <h2 className="dash-card-title">
-                        <BarChart3 size={18} strokeWidth={2} className="card-title-icon" />
-                        Households by Purok
-                      </h2>
-                    </div>
-                    <div className="chart-container chart-container-bar">
-                      <Bar data={householdByPurokData} options={barOpts} />
-                    </div>
+                <div className="dash-card chart-card chart-card-narrow" id="chart-status-dist">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <PieChart size={18} strokeWidth={2} className="card-title-icon" />
+                      User Status
+                    </h2>
                   </div>
-
-                  <div className="dash-card chart-card chart-card-half" id="chart-announcements-cat">
-                    <div className="dash-card-header">
-                      <h2 className="dash-card-title">
-                        <Megaphone size={18} strokeWidth={2} className="card-title-icon" />
-                        Announcements by Category
-                      </h2>
-                    </div>
-                    <div className="chart-container chart-container-doughnut">
-                      <Doughnut data={announcementsCategoryData} options={doughnutOpts} />
-                    </div>
-                    <div className="doughnut-center-label">
-                      <span className="doughnut-center-num">
-                        {announcementsCategoryData.datasets[0].data.reduce((a, b) => a + b, 0)}
-                      </span>
-                      <span className="doughnut-center-text">Posts</span>
-                    </div>
+                  <div className="chart-container chart-container-doughnut">
+                    <Doughnut data={statusDistData} options={doughnutOpts} />
+                  </div>
+                  <div className="doughnut-center-label">
+                    <span className="doughnut-center-num">
+                      {statusDistData.datasets[0].data.reduce((a, b) => a + b, 0)}
+                    </span>
+                    <span className="doughnut-center-text">Total</span>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Row 3: Events Overview */}
-                <div className="charts-row">
-
-                  <div className="dash-card chart-card chart-card-half" id="chart-events-overview">
-                    <div className="dash-card-header">
-                      <h2 className="dash-card-title">
-                        <Calendar size={18} strokeWidth={2} className="card-title-icon" />
-                        Events Overview
-                      </h2>
-                    </div>
-                    <div className="chart-container chart-container-bar">
-                      <Bar data={eventsOverviewData} options={barOpts} />
-                    </div>
+            {/* ══════ SECTION: Household Analytics ══════ */}
+            <div className="analytics-section section-household">
+              <div className="section-header">
+                <div className="section-header-icon section-icon-teal"><Home size={20} strokeWidth={2} /></div>
+                <div>
+                  <h2 className="section-title">Household Analytics</h2>
+                  <p className="section-desc">Demographic distribution of household members</p>
+                </div>
+              </div>
+              <div className="section-charts">
+                <div className="dash-card chart-card chart-card-half" id="chart-households-purok">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <BarChart3 size={18} strokeWidth={2} className="card-title-icon" />
+                      Households by Purok
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-bar">
+                    <Bar data={householdByPurokData} options={barOpts} />
                   </div>
                 </div>
+                <div className="dash-card chart-card chart-card-half" id="chart-age-group">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <BarChart3 size={18} strokeWidth={2} className="card-title-icon" />
+                      Members by Age Group
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-bar">
+                    <Bar data={ageGroupData} options={barOpts} />
+                  </div>
+                </div>
+              </div>
+              <div className="section-charts">
+                <div className="dash-card chart-card chart-card-half" id="chart-civil-status">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <PieChart size={18} strokeWidth={2} className="card-title-icon" />
+                      Civil Status
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-doughnut">
+                    <Doughnut data={civilStatusData} options={doughnutOpts} />
+                  </div>
+                </div>
+                <div className="dash-card chart-card chart-card-half" id="chart-gender">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <PieChart size={18} strokeWidth={2} className="card-title-icon" />
+                      Gender Distribution
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-doughnut">
+                    <Doughnut data={genderData} options={doughnutOpts} />
+                  </div>
+                </div>
+              </div>
+              <div className="section-charts">
+                <div className="dash-card chart-card chart-card-half" id="chart-citizenship">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <PieChart size={18} strokeWidth={2} className="card-title-icon" />
+                      Citizenship
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-doughnut">
+                    <Doughnut data={citizenshipData} options={doughnutOpts} />
+                  </div>
+                </div>
+                <div className="dash-card chart-card chart-card-half" id="chart-occupation">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <BarChart3 size={18} strokeWidth={2} className="card-title-icon" />
+                      Top Occupations
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-bar">
+                    <Bar data={occupationData} options={{...barOpts, indexAxis: 'y'}} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══════ SECTION: Announcements Analytics ══════ */}
+            <div className="analytics-section section-announcements">
+              <div className="section-header">
+                <div className="section-header-icon section-icon-purple"><Megaphone size={20} strokeWidth={2} /></div>
+                <div>
+                  <h2 className="section-title">Announcements Analytics</h2>
+                  <p className="section-desc">Distribution of announcements by category</p>
+                </div>
+              </div>
+              <div className="section-charts">
+                <div className="dash-card chart-card chart-card-half" id="chart-announcements-cat">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <Megaphone size={18} strokeWidth={2} className="card-title-icon" />
+                      Announcements by Category
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-doughnut">
+                    <Doughnut data={announcementsCategoryData} options={doughnutOpts} />
+                  </div>
+                  <div className="doughnut-center-label">
+                    <span className="doughnut-center-num">
+                      {announcementsCategoryData.datasets[0].data.reduce((a, b) => a + b, 0)}
+                    </span>
+                    <span className="doughnut-center-text">Posts</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══════ SECTION: Events Analytics ══════ */}
+            <div className="analytics-section section-events">
+              <div className="section-header">
+                <div className="section-header-icon section-icon-amber"><Calendar size={20} strokeWidth={2} /></div>
+                <div>
+                  <h2 className="section-title">Events & Programs Analytics</h2>
+                  <p className="section-desc">Event status and registration overview</p>
+                </div>
+              </div>
+              <div className="section-charts">
+                <div className="dash-card chart-card chart-card-half" id="chart-events-overview">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <Calendar size={18} strokeWidth={2} className="card-title-icon" />
+                      Events Overview
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-bar">
+                    <Bar data={eventsOverviewData} options={barOpts} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
               </div>
 
               {/* ── RIGHT: Sidebar ── */}
               <div className="dash-sidebar-col">
-
-                {/* Quick Actions */}
-                <div className="dash-card sidebar-card" id="quick-actions-card">
-                  <div className="dash-card-header">
-                    <h2 className="dash-card-title">Quick Actions</h2>
-                  </div>
-                  <div className="sidebar-quick-actions">
-                    <Link to="/admin/announcements" className="sidebar-qa-btn">
-                      <div className="qa-icon-wrap qa-blue">{Icons.megaphone}</div>
-                      <span className="qa-label">Announcements</span>
-                    </Link>
-                    <Link to="/admin/residents" className="sidebar-qa-btn">
-                      <div className="qa-icon-wrap qa-teal">{Icons.people}</div>
-                      <span className="qa-label">Manage Residents</span>
-                    </Link>
-                    <Link to="/admin/households" className="sidebar-qa-btn">
-                      <div className="qa-icon-wrap qa-teal">{Icons.home}</div>
-                      <span className="qa-label">Household Profiling</span>
-                    </Link>
-                    <Link to="/admin/accounts" className="sidebar-qa-btn">
-                      <div className="qa-icon-wrap qa-amber">{Icons.clipboard}</div>
-                      <span className="qa-label">Admin Accounts</span>
-                    </Link>
-                  </div>
+              {/* Quick Actions */}
+              <div className="dash-card sidebar-card" id="quick-actions-card">
+                <div className="dash-card-header">
+                  <h2 className="dash-card-title">Quick Actions</h2>
                 </div>
+                <div className="sidebar-quick-actions">
+                  <Link to="/admin/announcements" className="sidebar-qa-btn">
+                    <div className="qa-icon-wrap qa-blue">{Icons.megaphone}</div>
+                    <span className="qa-label">Announcements</span>
+                  </Link>
+                  <Link to="/admin/residents" className="sidebar-qa-btn">
+                    <div className="qa-icon-wrap qa-teal">{Icons.people}</div>
+                    <span className="qa-label">Manage Residents</span>
+                  </Link>
+                  <Link to="/admin/households" className="sidebar-qa-btn">
+                    <div className="qa-icon-wrap qa-teal">{Icons.home}</div>
+                    <span className="qa-label">Household Profiling</span>
+                  </Link>
+                  <Link to="/admin/accounts" className="sidebar-qa-btn">
+                    <div className="qa-icon-wrap qa-amber">{Icons.clipboard}</div>
+                    <span className="qa-label">Admin Accounts</span>
+                  </Link>
+                </div>
+              </div>
 
-                {/* Recent Activity */}
-                <div className="dash-card sidebar-card activity-card" id="recent-activity-card">
-                  <div className="dash-card-header">
-                    <h2 className="dash-card-title">
-                      <Clock size={16} strokeWidth={2} className="card-title-icon" />
-                      Recent Activity
-                    </h2>
-                  </div>
-                  <div className="activity-feed">
-                    {activityLogs.length === 0 ? (
-                      <div className="activity-empty">
-                        <Activity size={36} strokeWidth={1.5} />
-                        <p>No recent activity yet</p>
-                        <span>Actions across the system will appear here</span>
-                      </div>
-                    ) : (
-                      activityLogs.map((log) => (
-                        <div key={log.id} className="activity-item">
-                          <div className={`activity-icon-dot ${getActionColor(log.action)}`}>
-                            {getActivityIcon(log.module)}
-                          </div>
-                          <div className="activity-content">
-                            <p className="activity-desc">{log.description}</p>
-                            <div className="activity-meta">
-                              <span className={`activity-action-badge ${getActionColor(log.action)}`}>
-                                {getActionLabel(log.action)}
-                              </span>
-                              <span className="activity-time">{getRelativeTime(log.timestamp)}</span>
-                            </div>
-                            <span className="activity-admin">{log.performedByName}</span>
-                          </div>
+              {/* Recent Activity */}
+              <div className="dash-card sidebar-card activity-card" id="recent-activity-card">
+                <div className="dash-card-header">
+                  <h2 className="dash-card-title">
+                    <Clock size={16} strokeWidth={2} className="card-title-icon" />
+                    Recent Activity
+                  </h2>
+                </div>
+                <div className="activity-feed">
+                  {activityLogs.length === 0 ? (
+                    <div className="activity-empty">
+                      <Activity size={36} strokeWidth={1.5} />
+                      <p>No recent activity yet</p>
+                      <span>Actions across the system will appear here</span>
+                    </div>
+                  ) : (
+                    activityLogs.map((log) => (
+                      <div key={log.id} className="activity-item">
+                        <div className={`activity-icon-dot ${getActionColor(log.action)}`}>
+                          {getActivityIcon(log.module)}
                         </div>
-                      ))
-                    )}
-                  </div>
+                        <div className="activity-content">
+                          <p className="activity-desc">{log.description}</p>
+                          <div className="activity-meta">
+                            <span className={`activity-action-badge ${getActionColor(log.action)}`}>
+                              {getActionLabel(log.action)}
+                            </span>
+                            <span className="activity-time">{getRelativeTime(log.timestamp)}</span>
+                          </div>
+                          <span className="activity-admin">{log.performedByName}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
+              </div>
               </div>
             </div>
 

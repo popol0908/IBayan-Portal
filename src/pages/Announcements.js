@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Megaphone, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping, ArrowRight, X } from 'lucide-react';
+import { Megaphone, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping, ArrowRight, X } from '../components/Icons';
 import { getSharedData, subscribeToChanges } from '../services/dataService';
 import PageLoader from '../components/PageLoader';
 import './Announcements.css';
@@ -187,15 +187,28 @@ const Announcements = () => {
                               {new Date(announcement.whenDate || announcement.date).toLocaleDateString('en-US', {
                                 year: 'numeric', month: 'long', day: 'numeric'
                               })}
-                              {announcement.whenTime && (
-                                <span> at {
-                                  new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
-                                    hour: 'numeric', minute: '2-digit', hour12: true
-                                  })
-                                }</span>
+                              {announcement.whenDateEnd && (
+                                <span> to {new Date(announcement.whenDateEnd).toLocaleDateString('en-US', {
+                                  year: 'numeric', month: 'long', day: 'numeric'
+                                })}</span>
                               )}
                             </span>
                           </div>
+                          {announcement.whenTime && (
+                            <div className="ann-timestamp">
+                              <span className="ann-ts-label">Time:</span>
+                              <span className="ann-ts-value">
+                                {new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
+                                  hour: 'numeric', minute: '2-digit', hour12: true
+                                })}
+                                {announcement.whenTimeEnd && (
+                                  <span> to {new Date(`2000-01-01T${announcement.whenTimeEnd}`).toLocaleTimeString('en-US', {
+                                    hour: 'numeric', minute: '2-digit', hour12: true
+                                  })}</span>
+                                )}
+                              </span>
+                            </div>
+                          )}
                           {announcement.datePosted && (
                             <div className="ann-timestamp">
                               <span className="ann-ts-label">Posted:</span>
@@ -260,11 +273,21 @@ const Announcements = () => {
                   <span>When: {new Date(detailAnnouncement.whenDate || detailAnnouncement.date).toLocaleDateString('en-US', {
                     year: 'numeric', month: 'long', day: 'numeric'
                   })}
-                  {detailAnnouncement.whenTime && (
-                    <span> at {new Date(`2000-01-01T${detailAnnouncement.whenTime}`).toLocaleTimeString('en-US', {
-                      hour: 'numeric', minute: '2-digit', hour12: true
+                  {detailAnnouncement.whenDateEnd && (
+                    <span> to {new Date(detailAnnouncement.whenDateEnd).toLocaleDateString('en-US', {
+                      year: 'numeric', month: 'long', day: 'numeric'
                     })}</span>
                   )}</span>
+                  {detailAnnouncement.whenTime && (
+                    <span>Time: {new Date(`2000-01-01T${detailAnnouncement.whenTime}`).toLocaleTimeString('en-US', {
+                      hour: 'numeric', minute: '2-digit', hour12: true
+                    })}
+                    {detailAnnouncement.whenTimeEnd && (
+                      <span> to {new Date(`2000-01-01T${detailAnnouncement.whenTimeEnd}`).toLocaleTimeString('en-US', {
+                        hour: 'numeric', minute: '2-digit', hour12: true
+                      })}</span>
+                    )}</span>
+                  )}
                   {detailAnnouncement.datePosted && (
                     <span>Posted: {formatTimestamp(detailAnnouncement.datePosted)}</span>
                   )}

@@ -57,8 +57,8 @@ service cloud.firestore {
     
     // Announcements collection
     match /announcements/{announcementId} {
-      // Everyone can read announcements
-      allow read: if isAuthenticated();
+      // Everyone can read announcements (including public unauthenticated users on the landing page)
+      allow read: if true;
       // Only admins can create, update, or delete
       allow create, update, delete: if isAdmin();
     }

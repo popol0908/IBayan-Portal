@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, Calendar, Users, X, Pencil, Trash2, ChevronUp, ChevronDown,
   ClipboardList, FileText, User, Clock, Hash, AlertTriangle, Printer,
-} from 'lucide-react';
+} from '../../components/Icons';
 import { useReactToPrint } from 'react-to-print';
 import IconBox from '../../components/IconBox';
 import { useAuth } from '../../contexts/AuthContext';
@@ -33,7 +33,9 @@ const ManageEvents = () => {
     title: '',
     description: '',
     eventDate: new Date().toISOString().split('T')[0],
+    eventDateEnd: '',
     eventTime: '',
+    eventTimeEnd: '',
     location: '',
     registrationFields: []
   });
@@ -256,7 +258,9 @@ const ManageEvents = () => {
       title: event.title || '',
       description: event.description || '',
       eventDate: event.eventDate || new Date().toISOString().split('T')[0],
+      eventDateEnd: event.eventDateEnd || '',
       eventTime: event.eventTime || '',
+      eventTimeEnd: event.eventTimeEnd || '',
       location: event.location || '',
       registrationFields: event.registrationFields || []
     });
@@ -315,7 +319,9 @@ const ManageEvents = () => {
       title: '',
       description: '',
       eventDate: new Date().toISOString().split('T')[0],
+      eventDateEnd: '',
       eventTime: '',
+      eventTimeEnd: '',
       location: '',
       registrationFields: []
     });
@@ -447,9 +453,25 @@ const ManageEvents = () => {
                           <span>
                             {new Date(event.eventDate).toLocaleDateString('en-US', {
                               year: 'numeric', month: 'short', day: 'numeric'
-                            })} {event.eventTime && `• ${event.eventTime}`}
+                            })}
+                            {event.eventDateEnd && (
+                              <> to {new Date(event.eventDateEnd).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'short', day: 'numeric'
+                              })}</>  
+                            )}
                           </span>
                         </div>
+                        {event.eventTime && (
+                          <div className="event-pill">
+                            <Clock size={14} strokeWidth={2} />
+                            <span>
+                              {event.eventTime}
+                              {event.eventTimeEnd && (
+                                <> to {event.eventTimeEnd}</>  
+                              )}
+                            </span>
+                          </div>
+                        )}
                         {event.location && (
                           <div className="event-pill">
                             <span style={{display: 'inline-flex', marginTop: '-2px'}}><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
@@ -512,9 +534,9 @@ const ManageEvents = () => {
                     />
                   </div>
 
-                  <div className="form-row">
+                    <div className="form-row">
                     <div className="form-group">
-                      <label className="form-label">Event Date *</label>
+                      <label className="form-label">Start Date *</label>
                       <input
                         type="date"
                         name="eventDate"
@@ -526,12 +548,37 @@ const ManageEvents = () => {
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label">Event Time</label>
+                      <label className="form-label">End Date (Optional)</label>
+                      <input
+                        type="date"
+                        name="eventDateEnd"
+                        className="form-input"
+                        value={formData.eventDateEnd}
+                        onChange={handleChange}
+                        min={formData.eventDate || ''}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Start Time (Optional)</label>
                       <input
                         type="time"
                         name="eventTime"
                         className="form-input"
                         value={formData.eventTime}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">End Time (Optional)</label>
+                      <input
+                        type="time"
+                        name="eventTimeEnd"
+                        className="form-input"
+                        value={formData.eventTimeEnd}
                         onChange={handleChange}
                       />
                     </div>

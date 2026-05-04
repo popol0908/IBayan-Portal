@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, User, Trash2, AlertTriangle, X, Eye, Pencil, CheckCircle, Home, Megaphone, Calendar } from 'lucide-react';
+import { Plus, User, Trash2, AlertTriangle, X, Eye, Pencil, CheckCircle, Home, Megaphone, Calendar } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
@@ -272,21 +272,21 @@ const ManageAdminAccounts = () => {
             <div className="admin-card hh-stat-card">
               <IconBox variant="blue" size="sm"><User size={20} strokeWidth={1.8} /></IconBox>
               <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{adminAccounts.length}</h3>
+                <h3 className="hh-stat-number">{adminAccounts.filter(a => a.id !== currentUser?.uid).length}</h3>
                 <p className="hh-stat-label">Total Admins</p>
               </div>
             </div>
             <div className="admin-card hh-stat-card hh-stat-green">
               <IconBox variant="green" size="sm"><CheckCircle size={20} strokeWidth={1.8} /></IconBox>
               <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{adminAccounts.filter(a => (a.status || 'Active').toLowerCase() === 'active').length}</h3>
+                <h3 className="hh-stat-number">{adminAccounts.filter(a => a.id !== currentUser?.uid && (a.status || 'Active').toLowerCase() === 'active').length}</h3>
                 <p className="hh-stat-label">Active</p>
               </div>
             </div>
             <div className="admin-card hh-stat-card hh-stat-red">
               <IconBox variant="red" size="sm"><X size={20} strokeWidth={1.8} /></IconBox>
               <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{adminAccounts.filter(a => (a.status || 'Active').toLowerCase() !== 'active').length}</h3>
+                <h3 className="hh-stat-number">{adminAccounts.filter(a => a.id !== currentUser?.uid && (a.status || 'Active').toLowerCase() !== 'active').length}</h3>
                 <p className="hh-stat-label">Inactive</p>
               </div>
             </div>
@@ -303,7 +303,7 @@ const ManageAdminAccounts = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {adminAccounts.map(a => {
+                  {adminAccounts.filter(a => a.id !== currentUser?.uid).map(a => {
                     const rm = getRoleMeta(a.subRole);
                     const isMain = rm.className === 'role-main-admin';
                     const isStaff = !isMain && a.permissions && Object.values(a.permissions).some(v => v);
@@ -339,7 +339,7 @@ const ManageAdminAccounts = () => {
                   })}
                 </tbody>
               </table>
-              {adminAccounts.length === 0 && (
+              {adminAccounts.filter(a => a.id !== currentUser?.uid).length === 0 && (
                 <div className="empty-table">
                   <span className="empty-icon"><User size={48} strokeWidth={1.5} /></span>
                   <p>No admin accounts created yet</p>

@@ -36,6 +36,7 @@ import ChangePassword from "./pages/admin/ChangePassword";
 import HouseholdProfile from "./pages/HouseholdProfile";
 
 import Events from "./pages/Events";
+import EmergencyHotlines from "./pages/EmergencyHotlines";
 import ManageEvents from "./pages/admin/ManageEvents";
 import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -139,7 +140,7 @@ function AppContent() {
           </>
         )}
         {isAdminPage && !isAdminLoginPage && <AdminTopHeader />}
-        <main className={`main-content ${(!isAuthPage && !isLandingPage) ? 'has-top-header' : ''} ${isAdminPage && !isAdminLoginPage ? 'admin-main' : ''}`}>
+        <main className={`main-content ${(!isAuthPage && !isLandingPage) ? 'has-top-header' : ''} ${isAdminPage && !isAdminLoginPage ? 'admin-main' : ''} ${isLandingPage ? 'landing-main' : ''} ${isAuthPage ? 'auth-main' : ''}`}>
           <Routes>
             {}
             <Route path="/login" element={<Login />} />
@@ -193,6 +194,14 @@ function AppContent() {
               element={
                 <ProtectedRoute requireVerified>
                   <Events />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/emergency-hotlines"
+              element={
+                <ProtectedRoute requireVerified>
+                  <EmergencyHotlines />
                 </ProtectedRoute>
               }
             />

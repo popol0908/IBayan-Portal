@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   CheckCircle,
   KeyRound,
-} from "lucide-react";
+} from '../components/Icons';
 import "./ForgotPassword.css";
 
 const ForgotPassword = () => {

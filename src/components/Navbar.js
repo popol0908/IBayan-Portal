@@ -11,7 +11,7 @@ import {
   ChevronRight,
   AlertTriangle,
   ClipboardList,
-} from 'lucide-react';
+} from './Icons';
 import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
 
@@ -42,6 +42,7 @@ const Navbar = () => {
     { path: '/dashboard', label: 'Home', icon: icons.home },
     { path: '/announcements', label: 'Announcements', icon: icons.megaphone },
     { path: '/events', label: 'Events & Programs', icon: icons.calendar },
+    { path: '/emergency-hotlines', label: 'Emergency Hotlines', icon: icons.siren },
     { path: '/household-profile', label: 'Household Profile', icon: icons.clipboardList },
   ];
 

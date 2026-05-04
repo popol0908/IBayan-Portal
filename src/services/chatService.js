@@ -4,8 +4,7 @@ import { db } from '../firebase';
 import knowledgeBase from '../data/knowledgeBase.json';
 
 // Initialize Gemini AI
-// Note: Replace with your actual API key or use environment variable
-const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY_HERE';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY_HERE';
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // Cache for available model (will be discovered on first use)

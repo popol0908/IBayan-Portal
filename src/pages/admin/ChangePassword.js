@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, AlertTriangle, CheckCircle } from '../../components/Icons';
 import { updatePassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';

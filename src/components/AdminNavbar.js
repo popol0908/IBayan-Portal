@@ -12,7 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
-} from 'lucide-react';
+} from './Icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLoading } from '../contexts/LoadingContext';
 import './AdminNavbar.css';

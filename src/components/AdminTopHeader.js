@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search } from './Icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearch } from '../contexts/SearchContext';
 import NotificationBell from './NotificationBell';

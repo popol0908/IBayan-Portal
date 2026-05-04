@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Mail, RefreshCw, CheckCircle, LogOut, AlertTriangle, Clock } from 'lucide-react';
+import { Mail, RefreshCw, CheckCircle, LogOut, AlertTriangle, Clock } from '../components/Icons';
 import './EmailVerification.css';
 
 const RESEND_COOLDOWN_SECS = 60;

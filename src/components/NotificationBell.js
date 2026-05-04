@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell, Megaphone, Calendar, AlertTriangle, Home, UserPlus, Settings,
-} from 'lucide-react';
+} from './Icons';
 import useNotifications from '../hooks/useNotifications';
 import './NotificationBell.css';
 

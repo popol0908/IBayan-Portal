@@ -17,7 +17,7 @@ import {
   Megaphone,
   Eye,
   EyeOff,
-} from "lucide-react";
+} from '../components/Icons';
 import "./Login.css";
 
 const Login = () => {
@@ -265,35 +265,40 @@ const Login = () => {
         {/* Divider */}
         <div className="login-divider" />
 
-        {/* Right Side — Info */}
+        {/* Right Side — Branded Info Panel */}
         <div className="login-info-section">
-          <div className="info-block info-block--about">
-            <h2 className="info-block__title">
-              <span className="info-block__inline-icon">
-                <Info size={20} strokeWidth={1.8} />
-              </span>{" "}
-              About Barangay Mabayuan
-            </h2>
-            <p className="info-block__text">
-              Barangay Mabayuan is a vibrant community in Olongapo City,
-              committed to serving our residents with dedication and excellence.
-              Our iBayan Portal provides easy access to important announcements,
-              services, and emergency alerts to keep our community informed and
-              connected.
-            </p>
+          <div className="login-info-backdrop">
+            <img src="/logo.png" alt="" className="login-info-bg-logo" />
           </div>
-
-          <div className="info-block">
-            <h3 className="info-block__title">
-              <span className="info-block__inline-icon">
+          <div className="login-info-content">
+            <div className="login-info-brand">
+              <img src="/logo.png" alt="iBayan" className="login-info-logo" />
+              <h2 className="login-info-title">iBayan Portal</h2>
+              <p className="login-info-tagline">Barangay Mabayuan Information Center</p>
+            </div>
+            <div className="login-info-features">
+              <div className="login-info-feature">
                 <Megaphone size={18} strokeWidth={1.8} />
-              </span>{" "}
-              Stay Informed
-            </h3>
-            <p className="info-block__text">
-              Get the latest announcements and emergency alerts from your
-              barangay officials
-            </p>
+                <div>
+                  <strong>Community Updates</strong>
+                  <span>Real-time announcements & emergency alerts</span>
+                </div>
+              </div>
+              <div className="login-info-feature">
+                <Home size={18} strokeWidth={1.8} />
+                <div>
+                  <strong>Household Management</strong>
+                  <span>Register and manage your household profile</span>
+                </div>
+              </div>
+              <div className="login-info-feature">
+                <Info size={18} strokeWidth={1.8} />
+                <div>
+                  <strong>Barangay Services</strong>
+                  <span>Access community programs and events</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

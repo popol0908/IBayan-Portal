@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, KeyRound, LogIn, AlertTriangle, Shield, Users, Building2, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, KeyRound, LogIn, AlertTriangle, Shield, Users, Building2, Eye, EyeOff } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
@@ -223,36 +223,40 @@ const AdminLogin = () => {
         {/* Divider */}
         <div className="admin-login-divider" />
 
-        {/* Right Side — Info */}
+        {/* Right Side — Admin Branded Panel */}
         <div className="admin-login-info">
-          <div className="admin-info-block admin-info-block--main">
-            <h2 className="admin-info-block__title">
-              <span className="admin-info-block__inline-icon"><Building2 size={20} strokeWidth={1.8} /></span>
-              Barangay Admin Center
-            </h2>
-            <p className="admin-info-block__text">
-              Manage residents, announcements, emergency alerts, and community services for Barangay Mabayuan, Olongapo City.
-            </p>
+          <div className="admin-info-backdrop">
+            <img src="/logo.png" alt="" className="admin-info-bg-logo" />
           </div>
-
-          <div className="admin-info-block">
-            <h3 className="admin-info-block__title">
-              <span className="admin-info-block__inline-icon"><Users size={18} strokeWidth={1.8} /></span>
-              Resident Management
-            </h3>
-            <p className="admin-info-block__text">
-              Verify resident accounts, manage profiles, and maintain community records
-            </p>
-          </div>
-
-          <div className="admin-info-block">
-            <h3 className="admin-info-block__title">
-              <span className="admin-info-block__inline-icon"><Shield size={18} strokeWidth={1.8} /></span>
-              Secure Access
-            </h3>
-            <p className="admin-info-block__text">
-              Role-based access control ensures only authorized personnel can manage the system
-            </p>
+          <div className="admin-info-content">
+            <div className="admin-info-brand">
+              <img src="/logo.png" alt="iBayan" className="admin-info-logo" />
+              <h2 className="admin-info-title">Admin Portal</h2>
+              <p className="admin-info-tagline">Barangay Management System</p>
+            </div>
+            <div className="admin-info-features">
+              <div className="admin-info-feature">
+                <Users size={18} strokeWidth={1.8} />
+                <div>
+                  <strong>Resident Management</strong>
+                  <span>Verify accounts & manage community profiles</span>
+                </div>
+              </div>
+              <div className="admin-info-feature">
+                <Shield size={18} strokeWidth={1.8} />
+                <div>
+                  <strong>Dashboard Analytics</strong>
+                  <span>Real-time data insights & demographic reports</span>
+                </div>
+              </div>
+              <div className="admin-info-feature">
+                <Building2 size={18} strokeWidth={1.8} />
+                <div>
+                  <strong>Community Administration</strong>
+                  <span>Announcements, events & household profiling</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

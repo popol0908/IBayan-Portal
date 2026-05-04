@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Megaphone, Calendar, FileText, Pencil, Trash2, X, Save, Sparkles, AlertTriangle, Plus, Upload, ImageIcon, Pin, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping } from 'lucide-react';
+import { Megaphone, Calendar, FileText, Pencil, Trash2, X, Save, Sparkles, AlertTriangle, Plus, Upload, ImageIcon, Pin, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping } from '../../components/Icons';
 import IconBox from '../../components/IconBox';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSharedData, addItem, updateItem, deleteItem, subscribeToChanges } from '../../services/dataService';
@@ -71,7 +71,9 @@ const ManageAnnouncements = () => {
     title: '',
     description: '',
     whenDate: new Date().toISOString().split('T')[0], 
+    whenDateEnd: '',
     whenTime: '',
+    whenTimeEnd: '',
     type: 'Environment',
     pinned: false
   });
@@ -341,7 +343,9 @@ const ManageAnnouncements = () => {
       title: announcement.title,
       description: announcement.description,
       whenDate: announcement.whenDate || announcement.date, 
+      whenDateEnd: announcement.whenDateEnd || '',
       whenTime: announcement.whenTime || '',
+      whenTimeEnd: announcement.whenTimeEnd || '',
       type: announcement.type || 'Environment',
       pinned: announcement.pinned || false
     });
@@ -379,7 +383,9 @@ const ManageAnnouncements = () => {
       title: '',
       description: '',
       whenDate: new Date().toISOString().split('T')[0],
+      whenDateEnd: '',
       whenTime: '',
+      whenTimeEnd: '',
       type: 'Environment',
       pinned: false
     });
@@ -555,15 +561,28 @@ const ManageAnnouncements = () => {
                               {new Date(announcement.whenDate || announcement.date).toLocaleDateString('en-US', {
                                 year: 'numeric', month: 'long', day: 'numeric'
                               })}
-                              {announcement.whenTime && (
-                                <span className="when-time"> at {
-                                  new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
-                                    hour: 'numeric', minute: '2-digit', hour12: true
-                                  })
-                                }</span>
+                              {announcement.whenDateEnd && (
+                                <span> to {new Date(announcement.whenDateEnd).toLocaleDateString('en-US', {
+                                  year: 'numeric', month: 'long', day: 'numeric'
+                                })}</span>
                               )}
                             </span>
                           </div>
+                          {(announcement.whenTime) && (
+                            <div className="admin-ann-date-row">
+                              <span className="admin-ann-date-label">Time:</span>
+                              <span className="admin-ann-date-value">
+                                {new Date(`2000-01-01T${announcement.whenTime}`).toLocaleTimeString('en-US', {
+                                  hour: 'numeric', minute: '2-digit', hour12: true
+                                })}
+                                {announcement.whenTimeEnd && (
+                                  <span> to {new Date(`2000-01-01T${announcement.whenTimeEnd}`).toLocaleTimeString('en-US', {
+                                    hour: 'numeric', minute: '2-digit', hour12: true
+                                  })}</span>
+                                )}
+                              </span>
+                            </div>
+                          )}
                           {announcement.datePosted && (
                             <div className="admin-ann-date-row">
                               <span className="admin-ann-date-label">Posted:</span>
@@ -635,7 +654,7 @@ const ManageAnnouncements = () => {
                 <small className="form-hint">Select the category for this announcement</small>
               </div>
               <div className="form-group">
-                <label className="form-label">When *</label>
+                <label className="form-label">Start Date *</label>
                 <input
                   type="date"
                   name="whenDate"
@@ -647,10 +666,21 @@ const ManageAnnouncements = () => {
                 {errors.whenDate && (
                   <span className="field-error">{errors.whenDate}</span>
                 )}
-                <small className="form-hint">The date of the event or announcement (e.g., October 15, 2025)</small>
               </div>
               <div className="form-group">
-                <label className="form-label">Time (Optional)</label>
+                <label className="form-label">End Date (Optional)</label>
+                <input
+                  type="date"
+                  name="whenDateEnd"
+                  value={formData.whenDateEnd}
+                  onChange={handleChange}
+                  min={formData.whenDate || new Date().toISOString().split('T')[0]}
+                  className="form-input"
+                />
+                <small className="form-hint">Leave blank for single-day announcements</small>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Start Time (Optional)</label>
                 <input
                   type="time"
                   name="whenTime"
@@ -658,7 +688,17 @@ const ManageAnnouncements = () => {
                   onChange={handleChange}
                   className="form-input"
                 />
-                <small className="form-hint">The specific time for the event or announcement</small>
+              </div>
+              <div className="form-group">
+                <label className="form-label">End Time (Optional)</label>
+                <input
+                  type="time"
+                  name="whenTimeEnd"
+                  value={formData.whenTimeEnd}
+                  onChange={handleChange}
+                  className="form-input"
+                />
+                <small className="form-hint">Leave blank if no specific end time</small>
               </div>
               <div className="form-group">
                 <label className="form-label">Description *</label>

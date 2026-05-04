@@ -4,8 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { validatePhoneNumber, validateRequired } from '../utils/validation';
-import { XCircle, AlertTriangle, FileEdit, MapPin, Home as HomeIcon, Phone, FileText, Paperclip, Check } from 'lucide-react';
+import { validatePhoneNumber, validateRequired, validateName } from '../utils/validation';
+import { XCircle, AlertTriangle, FileEdit, MapPin, Home as HomeIcon, Phone, FileText, Paperclip, Check, User, Calendar } from '../components/Icons';
 import './Signup.css';
 
 // Cloudinary configuration
@@ -21,13 +21,19 @@ const VerificationDeclined = () => {
   const [profile, setProfile] = useState(null);
   const [contactNumber, setContactNumber] = useState('');
   const [purok, setPurok] = useState('');
-  const [houseNumber, setHouseNumber] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [permanentAddress, setPermanentAddress] = useState('');
+  const [presentAddress, setPresentAddress] = useState('');
   const [declineReason, setDeclineReason] = useState('');
   const [proofFile, setProofFile] = useState(null);
   const [errors, setErrors] = useState({
+    fullName: '',
+    birthday: '',
+    permanentAddress: '',
+    presentAddress: '',
     contactNumber: '',
     purok: '',
-    houseNumber: '',
     proofFile: ''
   });
 
@@ -40,9 +46,12 @@ const VerificationDeclined = () => {
         if (snapshot.exists()) {
           const data = snapshot.data();
           setProfile(data);
+          setFullName(data.fullName || '');
+          setBirthday(data.birthday || '');
+          setPermanentAddress(data.permanentAddress || '');
+          setPresentAddress(data.presentAddress || '');
           setContactNumber(data.contactNumber || '');
           setPurok(data.purok || '');
-          setHouseNumber(data.houseNumber || '');
           setDeclineReason(data.declineReason || '');
         }
       } catch (error) {
@@ -118,11 +127,36 @@ const VerificationDeclined = () => {
 
     const newErrors = {};
 
+    const nameValidation = validateName(fullName);
+    if (!nameValidation.isValid) newErrors.fullName = nameValidation.error;
+
+    if (!birthday) {
+      newErrors.birthday = "Birthday is required.";
+    } else {
+      const birthDate = new Date(birthday);
+      const today = new Date();
+      if (birthDate > today) {
+        newErrors.birthday = "Birthday cannot be in the future.";
+      } else {
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        if (age < 18) {
+          newErrors.birthday = "You must be at least 18 years old.";
+        }
+      }
+    }
+
+    const permAddrValidation = validateRequired(permanentAddress, 'Permanent address');
+    if (!permAddrValidation.isValid) newErrors.permanentAddress = permAddrValidation.error;
+
+    const presAddrValidation = validateRequired(presentAddress, 'Present address');
+    if (!presAddrValidation.isValid) newErrors.presentAddress = presAddrValidation.error;
+
     const purokValidation = validateRequired(purok, 'Purok');
     if (!purokValidation.isValid) newErrors.purok = purokValidation.error;
-
-    const houseValidation = validateRequired(houseNumber, 'House number');
-    if (!houseValidation.isValid) newErrors.houseNumber = houseValidation.error;
 
     const phoneValidation = validatePhoneNumber(contactNumber);
     if (!phoneValidation.isValid) newErrors.contactNumber = phoneValidation.error;
@@ -152,9 +186,11 @@ const VerificationDeclined = () => {
       // Update Firestore document
       const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
+        fullName,
+        birthday,
+        permanentAddress,
+        presentAddress,
         purok,
-        houseNumber,
-        address: `${purok} ${houseNumber}`.trim(),
         contactNumber,
         proofUrl,
         status: 'pending',
@@ -223,44 +259,110 @@ const VerificationDeclined = () => {
           <form onSubmit={handleSubmit} className="signup-form resubmit-form">
             <h3 className="form-section-title">Update Your Information</h3>
             
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon"><MapPin size={16} strokeWidth={2.5} /></span>
-                  Address (Purok) *
-                </label>
-                <input
-                  type="text"
-                  name="purok"
-                  value={purok}
-                  onChange={(e) => setPurok(e.target.value)}
-                  className={`form-input ${errors.purok ? 'input-error' : ''}`}
-                  placeholder="Enter your Purok"
-                  disabled={loading}
-                />
-                {errors.purok && (
-                  <span className="field-error">{errors.purok}</span>
-                )}
-              </div>
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon"><User size={16} strokeWidth={2.5} /></span>
+                Full Name *
+              </label>
+              <input
+                type="text"
+                name="fullName"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className={`form-input ${errors.fullName ? 'input-error' : ''}`}
+                placeholder="Enter your full name"
+                disabled={loading}
+              />
+              {errors.fullName && <span className="field-error">{errors.fullName}</span>}
+            </div>
 
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon"><HomeIcon size={16} strokeWidth={2.5} /></span>
-                  House Number *
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon"><Calendar size={16} strokeWidth={2.5} /></span>
+                Birthday *
+              </label>
+              <input
+                type="date"
+                name="birthday"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                className={`form-input ${errors.birthday ? 'input-error' : ''}`}
+                disabled={loading}
+              />
+              {errors.birthday && <span className="field-error">{errors.birthday}</span>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon"><MapPin size={16} strokeWidth={2.5} /></span>
+                Permanent Address *
+              </label>
+              <input
+                type="text"
+                name="permanentAddress"
+                value={permanentAddress}
+                onChange={(e) => setPermanentAddress(e.target.value)}
+                className={`form-input ${errors.permanentAddress ? 'input-error' : ''}`}
+                placeholder="Enter your permanent address"
+                disabled={loading}
+              />
+              {errors.permanentAddress && <span className="field-error">{errors.permanentAddress}</span>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon"><HomeIcon size={16} strokeWidth={2.5} /></span>
+                Present Address *
+              </label>
+              <input
+                type="text"
+                name="presentAddress"
+                value={presentAddress}
+                onChange={(e) => setPresentAddress(e.target.value)}
+                className={`form-input ${errors.presentAddress ? 'input-error' : ''}`}
+                placeholder="Enter your present address"
+                disabled={loading}
+              />
+              <div style={{ marginTop: "10px", marginBottom: "5px" }}>
+                <label className="checkbox-container" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", color: "#4b5563", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    onChange={(e) => {
+                      if (e.target.checked) setPresentAddress(permanentAddress);
+                      else setPresentAddress("");
+                    }}
+                    disabled={loading}
+                  />
+                  Same as Permanent Address
                 </label>
-                <input
-                  type="text"
-                  name="houseNumber"
-                  value={houseNumber}
-                  onChange={(e) => setHouseNumber(e.target.value)}
-                  className={`form-input ${errors.houseNumber ? 'input-error' : ''}`}
-                  placeholder="Enter your house number"
-                  disabled={loading}
-                />
-                {errors.houseNumber && (
-                  <span className="field-error">{errors.houseNumber}</span>
-                )}
               </div>
+              {errors.presentAddress && <span className="field-error">{errors.presentAddress}</span>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon"><MapPin size={16} strokeWidth={2.5} /></span>
+                Purok *
+              </label>
+              <select
+                name="purok"
+                value={purok}
+                onChange={(e) => setPurok(e.target.value)}
+                className={`form-input ${errors.purok ? 'input-error' : ''}`}
+                disabled={loading}
+              >
+                <option value="" disabled>Select Purok</option>
+                <option value="Purok 1">Purok 1</option>
+                <option value="Purok 2">Purok 2</option>
+                <option value="Purok 3">Purok 3</option>
+                <option value="Purok 4">Purok 4</option>
+                <option value="Purok 5">Purok 5</option>
+                <option value="Purok 6">Purok 6</option>
+                <option value="Purok 7">Purok 7</option>
+              </select>
+              {errors.purok && (
+                <span className="field-error">{errors.purok}</span>
+              )}
             </div>
 
             <div className="form-group">

@@ -1,0 +1,872 @@
+/* ============================================
+   EMERGENCY HOTLINES PAGE — BRIGHT & CLEAN
+   ============================================ */
+.hotlines-wrapper {
+  background: #f0f2f5;
+  min-height: 100vh;
+  padding: 2rem 0 4rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.hotlines-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+.hotlines-page-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.hotlines-header-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #DC2626 0%, #F87171 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.2);
+  flex-shrink: 0;
+}
+
+.hotlines-page-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.02em;
+}
+
+.hotlines-page-subtitle {
+  font-size: 0.9rem;
+  color: #64748B;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* ============================================
+   TWO-COLUMN LAYOUT
+   ============================================ */
+.hotlines-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.hotlines-left-col,
+.hotlines-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ============================================
+   HERO CARD — BARANGAY MABAYUAN (BRIGHT)
+   ============================================ */
+.hotline-hero-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff 0%, #FEF2F2 50%, #FFF1F2 100%);
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.08), 0 1px 3px rgba(0,0,0,0.04);
+  border: 1.5px solid #FECACA;
+}
+
+.hero-card-glow {
+  position: absolute;
+  top: -60%;
+  right: -25%;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+  color: #B91C1C;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid #FECACA;
+}
+
+.hero-card-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.01em;
+  color: #1E293B;
+}
+
+.hero-card-desc {
+  font-size: 0.88rem;
+  color: #64748B;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+.hero-phone-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+  color: white;
+  font-size: 1.75rem;
+  font-weight: 800;
+  padding: 0.75rem 2rem;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+  letter-spacing: 0.02em;
+}
+
+.hero-phone-number:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(220, 38, 38, 0.35);
+}
+
+.hero-phone-icon {
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+/* ============================================
+   SECTION CARDS (white cards)
+   ============================================ */
+.hotline-section-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0,0,0,0.03);
+  border: 1px solid #E5E7EB;
+  transition: box-shadow 0.3s ease;
+}
+
+.hotline-section-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid #F1F5F9;
+}
+
+.section-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.section-card-icon.olongapo-icon {
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  color: #2563EB;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.12);
+}
+
+.section-card-icon.other-icon {
+  background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
+  color: #7C3AED;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.12);
+}
+
+.section-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.section-card-subtitle {
+  font-size: 0.8rem;
+  color: #94A3B8;
+  margin: 0.25rem 0 0 0;
+  font-weight: 400;
+}
+
+/* ============================================
+   HOTLINE GROUPS (within section cards)
+   ============================================ */
+.hotline-group {
+  margin-bottom: 1.75rem;
+}
+
+.hotline-group:last-child {
+  margin-bottom: 0;
+}
+
+.hotline-group-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.group-header-icon {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.group-header-icon.fire-icon {
+  color: #EA580C;
+}
+
+.group-header-icon.police-icon {
+  color: #2563EB;
+}
+
+.hotline-group-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hotline-group-tag {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #94A3B8;
+  margin-top: 0.15rem;
+}
+
+/* ============================================
+   HOTLINE ENTRIES (bright rows)
+   ============================================ */
+.hotline-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hotline-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: #F8FAFC;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.hotline-entry:hover {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%);
+  border-color: #93C5FD;
+  transform: translateX(4px);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.08);
+}
+
+.hotline-entry-multi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: #F8FAFC;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  transition: all 0.25s ease;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.hotline-entry-multi:hover {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%);
+  border-color: #93C5FD;
+  transform: translateX(4px);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.08);
+}
+
+.entry-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.entry-icon {
+  color: #94A3B8;
+}
+
+.station-area {
+  font-weight: 400;
+  color: #94A3B8;
+  font-size: 0.8rem;
+}
+
+.entry-number {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #2563EB;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.entry-number:hover {
+  color: #1D4ED8;
+  text-decoration: underline;
+}
+
+.entry-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.number-divider {
+  color: #CBD5E1;
+  font-weight: 300;
+}
+
+/* ============================================
+   EMERGENCY TIPS CARD (bright & warm)
+   ============================================ */
+.tips-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0,0,0,0.03);
+  border: 1px solid #E5E7EB;
+  transition: box-shadow 0.3s ease;
+}
+
+.tips-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.tips-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #FEF3C7;
+}
+
+.tips-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #D97706;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.12);
+  flex-shrink: 0;
+}
+
+.tips-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tip-item {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.tip-item:hover {
+  background: #FFFBEB;
+}
+
+.tip-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  color: #B45309;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  border: 1.5px solid #FCD34D;
+}
+
+.tip-content h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 0.25rem 0;
+}
+
+.tip-content p {
+  font-size: 0.8rem;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* ============================================
+   BARANGAY HALL HOURS CARD (bright blue)
+   ============================================ */
+.hall-hours-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0,0,0,0.03);
+  border: 1px solid #E5E7EB;
+  transition: box-shadow 0.3s ease;
+}
+
+.hall-hours-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.hall-hours-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #E0F2FE;
+}
+
+.hall-hours-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563EB;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.1);
+  flex-shrink: 0;
+}
+
+.hall-hours-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.hall-hours-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.hall-hours-building {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #64748B;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.hall-hours-building svg {
+  color: #EF4444;
+  flex-shrink: 0;
+}
+
+.hall-hours-schedule {
+  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #BAE6FD;
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.schedule-days {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0369A1;
+}
+
+.schedule-time {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0C4A6E;
+  background: white;
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.hall-hours-status {
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1.15rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.status-open {
+  background: #DCFCE7;
+  color: #16A34A;
+  border: 1px solid #BBF7D0;
+}
+
+.status-closed {
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1024px) {
+  .hotlines-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hotlines-right-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hotlines-container {
+    padding: 0 1rem;
+  }
+
+  .hotlines-page-header {
+    gap: 1rem;
+  }
+
+  .hotlines-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+
+  .hotlines-page-title {
+    font-size: 1.35rem;
+  }
+
+  .hotlines-right-col {
+    grid-template-columns: 1fr;
+  }
+
+  .hotline-hero-card {
+    padding: 1.75rem;
+  }
+
+  .hero-card-title {
+    font-size: 1.25rem;
+  }
+
+  .hero-phone-number {
+    font-size: 1.4rem;
+    padding: 0.65rem 1.5rem;
+  }
+
+  .hotline-section-card {
+    padding: 1.5rem;
+  }
+
+  .hotline-entry,
+  .hotline-entry-multi {
+    padding: 0.75rem 0.85rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .entry-numbers {
+    padding-left: 0;
+  }
+
+  .tips-card,
+  .hall-hours-card {
+    padding: 1.5rem;
+  }
+
+  .tip-item {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hotlines-wrapper {
+    padding: 1rem 0 3rem;
+  }
+
+  .hotlines-page-title {
+    font-size: 1.15rem;
+  }
+
+  .hotlines-page-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .hotline-hero-card {
+    padding: 1.5rem;
+  }
+
+  .hero-card-title {
+    font-size: 1.1rem;
+  }
+
+  .hero-phone-number {
+    font-size: 1.2rem;
+    padding: 0.6rem 1.25rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .section-card-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .schedule-row {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+/* ============================================
+   CONFIRMATION MODAL
+   ============================================ */
+.hotline-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out forwards;
+  padding: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.hotline-modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+  text-align: center;
+  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px) scale(0.95); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.hotline-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #F1F5F9;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hotline-modal-close:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+.hotline-modal-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);
+  animation: pulse-icon 2s infinite ease-in-out;
+}
+
+@keyframes pulse-icon {
+  0% { transform: scale(1); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 12px 32px rgba(220, 38, 38, 0.4); }
+  100% { transform: scale(1); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3); }
+}
+
+.hotline-modal-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 0.5rem;
+}
+
+.hotline-modal-message {
+  font-size: 0.95rem;
+  color: #64748B;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.hotline-modal-message strong {
+  color: #0F172A;
+  font-weight: 700;
+}
+
+.hotline-modal-number {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #DC2626;
+  background: #FEF2F2;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  letter-spacing: 0.05em;
+  border: 1px solid #FECACA;
+}
+
+.hotline-modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.hotline-btn-cancel,
+.hotline-btn-call {
+  flex: 1;
+  padding: 0.85rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.hotline-btn-cancel {
+  background: white;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+}
+
+.hotline-btn-cancel:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+.hotline-btn-call {
+  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.hotline-btn-call:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+}
+
+@media (max-width: 480px) {
+  .hotline-modal-content {
+    padding: 2rem 1.5rem;
+  }
+  
+  .hotline-modal-actions {
+    flex-direction: column;
+  }
+  
+  .hotline-btn-cancel,
+  .hotline-btn-call {
+    width: 100%;
+  }
+}
+

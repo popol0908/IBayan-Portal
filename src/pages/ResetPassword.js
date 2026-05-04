@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   KeyRound,
-} from "lucide-react";
+} from '../components/Icons';
 import "./ResetPassword.css";
 
 const ResetPassword = () => {
