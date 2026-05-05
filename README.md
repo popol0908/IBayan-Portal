@@ -13,7 +13,6 @@
   <img src="https://img.shields.io/badge/Vite-5.1-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Firebase-12.4-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
   <img src="https://img.shields.io/badge/Gemini_AI-Integrated-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini AI" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
 </p>
 
 <p align="center">
@@ -34,7 +33,6 @@
 - [Deployment](#deployment)
 - [Contributing](#contributing)
 - [Data Privacy](#data-privacy)
-- [License](#license)
 
 ---
 
@@ -333,12 +331,6 @@ iBayan Portal is designed in compliance with the **Data Privacy Act of 2012 (RA 
 - No personal information is sold or shared with third parties.
 - Users can view and manage their own data through the Profile page.
 - Terms of Service and Privacy Policy are accessible from the landing page.
-
----
-
-## License
-
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
 ---
 
