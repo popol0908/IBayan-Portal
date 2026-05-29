@@ -165,7 +165,6 @@ const HouseholdProfile = () => {
         householdNo,
         submittedBy: currentUser.uid,
         submittedByEmail: currentUser.email,
-        status: 'pending',
         region: 'III',
         province: 'Zambales',
         city: 'Olongapo',
@@ -237,12 +236,8 @@ const HouseholdProfile = () => {
           {household && (
             <div className="hp-submitted-card">
               {/* Status Banner */}
-              <div className={`hp-status-banner ${household.status}`}>
-                {household.status === 'pending' ? (
-                  <><Clock size={20} strokeWidth={1.8} /> Your household profile has been submitted and is pending review by the barangay admin.</>
-                ) : (
-                  <><CheckCircle size={20} strokeWidth={1.8} /> Your household profile has been approved by the barangay admin.</>
-                )}
+              <div className="hp-status-banner approved">
+                <><CheckCircle size={20} strokeWidth={1.8} /> Your household profile has been successfully submitted to the barangay.</>
               </div>
 
               {/* Household Info */}
@@ -250,12 +245,6 @@ const HouseholdProfile = () => {
                 <div className="hp-info-item">
                   <span className="hp-info-label">Household No.</span>
                   <span className="hp-info-value">{household.householdNo}</span>
-                </div>
-                <div className="hp-info-item">
-                  <span className="hp-info-label">Status</span>
-                  <span className={`hp-status-badge ${household.status}`}>
-                    {household.status === 'pending' ? 'Pending Review' : 'Approved'}
-                  </span>
                 </div>
                 <div className="hp-info-item">
                   <span className="hp-info-label">Region</span>

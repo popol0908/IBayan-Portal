@@ -38,7 +38,6 @@ const HouseholdProfiling = () => {
   const [households, setHouseholds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [purokFilter, setPurokFilter] = useState('all');
 
   // Submitter names cache: uid -> fullName
@@ -47,7 +46,6 @@ const HouseholdProfiling = () => {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState(null);
 
   // PSG code inline edit (inside view modal)
@@ -98,8 +96,6 @@ const HouseholdProfiling = () => {
 
   /* ── Derived data ── */
   const totalMembers = households.reduce((sum, h) => sum + (h.members?.length || 0), 0);
-  const pendingCount = households.filter((h) => h.status === 'pending').length;
-  const approvedCount = households.filter((h) => h.status === 'approved').length;
 
   const filteredHouseholds = households.filter((h) => {
     const name = submitterNames[h.submittedBy] || '';
@@ -109,9 +105,8 @@ const HouseholdProfiling = () => {
       (h.street || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (h.purok || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || h.status === statusFilter;
     const matchesPurok = purokFilter === 'all' || h.purok === purokFilter;
-    return matchesSearch && matchesStatus && matchesPurok;
+    return matchesSearch && matchesPurok;
   });
 
   /* ── Actions ── */
@@ -124,45 +119,6 @@ const HouseholdProfiling = () => {
   const openDeleteDialog = (household) => {
     setSelectedHousehold(household);
     setShowDeleteDialog(true);
-  };
-
-  const openApproveDialog = (household) => {
-    setSelectedHousehold(household);
-    setShowApproveDialog(true);
-  };
-
-  const handleApprove = async () => {
-    if (!selectedHousehold) return;
-    try {
-      await updateDoc(doc(db, 'households', selectedHousehold.id), { status: 'approved' });
-      showToast('Household approved successfully!', 'success');
-      addActivityLog('approved', 'households', `Approved household "${selectedHousehold.householdNo}"`, { uid: currentUser?.uid, displayName: userProfile?.fullName || currentUser?.displayName });
-      
-      // Notify the submitter
-      if (selectedHousehold.submittedBy) {
-        try {
-          const notifRef = doc(collection(db, 'notifications'));
-          await setDoc(notifRef, {
-            userId: selectedHousehold.submittedBy,
-            role: 'resident',
-            title: 'Household Approved',
-            message: 'Your household profile has been approved.',
-            type: 'household',
-            read: false,
-            createdAt: serverTimestamp(),
-            link: '/household-profile',
-          });
-        } catch (notifErr) {
-          console.error('Error sending approval notification:', notifErr);
-        }
-      }
-
-      setShowApproveDialog(false);
-      setSelectedHousehold(null);
-    } catch (error) {
-      console.error('Error approving household:', error);
-      showToast('Failed to approve household.', 'error');
-    }
   };
 
   const handleDelete = async () => {
@@ -224,18 +180,11 @@ const HouseholdProfiling = () => {
                 <p className="hh-stat-label">Total Households</p>
               </div>
             </div>
-            <div className="admin-card hh-stat-card hh-stat-amber">
-              <IconBox variant="amber" size="sm"><Clock size={20} strokeWidth={1.8} /></IconBox>
+            <div className="admin-card hh-stat-card">
+              <IconBox variant="green" size="sm"><Users size={20} strokeWidth={1.8} /></IconBox>
               <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{pendingCount}</h3>
-                <p className="hh-stat-label">Pending Review</p>
-              </div>
-            </div>
-            <div className="admin-card hh-stat-card hh-stat-green">
-              <IconBox variant="green" size="sm"><CheckCircle size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{approvedCount}</h3>
-                <p className="hh-stat-label">Approved</p>
+                <h3 className="hh-stat-number">{totalMembers}</h3>
+                <p className="hh-stat-label">Total Members</p>
               </div>
             </div>
           </div>
@@ -249,11 +198,6 @@ const HouseholdProfiling = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <select className="hh-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-            </select>
             <select className="hh-filter-select" value={purokFilter} onChange={(e) => setPurokFilter(e.target.value)}>
               <option value="all">All Puroks</option>
               {PUROK_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -281,7 +225,6 @@ const HouseholdProfiling = () => {
                       <th>Purok</th>
                       <th>Members</th>
                       <th>Date Accomplished</th>
-                      <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -295,7 +238,7 @@ const HouseholdProfiling = () => {
                             </div>
                             <h3>No Households Found</h3>
                             <p>
-                              {searchQuery || statusFilter !== 'all' || purokFilter !== 'all'
+                              {searchQuery || purokFilter !== 'all'
                                 ? 'Try adjusting your search or filter criteria.'
                                 : 'No households have been submitted by residents yet.'}
                             </p>
@@ -317,20 +260,10 @@ const HouseholdProfiling = () => {
                           </td>
                           <td>{formatDate(h.dateAccomplished)}</td>
                           <td>
-                            <span className={`badge-pill ${h.status === 'pending' ? 'badge-amber' : 'badge-green'}`}>
-                              {h.status === 'pending' ? 'Pending' : 'Approved'}
-                            </span>
-                          </td>
-                          <td>
                             <div className="hh-actions">
                               <button className="action-icon-btn view" title="View Details" onClick={() => openViewModal(h)}>
                                 <Eye size={16} strokeWidth={1.8} />
                               </button>
-                              {h.status === 'pending' && (
-                                <button className="action-icon-btn approve" title="Approve" onClick={() => openApproveDialog(h)}>
-                                  <CheckCircle size={16} strokeWidth={1.8} />
-                                </button>
-                              )}
                               <button className="action-icon-btn delete" title="Delete" onClick={() => openDeleteDialog(h)}>
                                 <Trash2 size={16} strokeWidth={1.8} />
                               </button>
@@ -366,12 +299,6 @@ const HouseholdProfiling = () => {
                     <div className="hh-view-info-item">
                       <span className="hh-view-info-label">Household No.</span>
                       <span className="hh-view-info-value">{selectedHousehold.householdNo}</span>
-                    </div>
-                    <div className="hh-view-info-item">
-                      <span className="hh-view-info-label">Status</span>
-                      <span className={`hh-status-badge ${selectedHousehold.status}`}>
-                        {selectedHousehold.status === 'pending' ? 'Pending' : 'Approved'}
-                      </span>
                     </div>
                     <div className="hh-view-info-item">
                       <span className="hh-view-info-label">Region</span>
@@ -503,30 +430,6 @@ const HouseholdProfiling = () => {
 
           {/* Hidden Print Component */}
           <HouseholdPrintView ref={printRef} household={selectedHousehold} />
-
-          {/* ================================================================
-             APPROVE CONFIRMATION DIALOG
-             ================================================================ */}
-          {showApproveDialog && selectedHousehold && (
-            <div className="modal-overlay" onClick={() => setShowApproveDialog(false)}>
-              <div className="modal-dialog hh-delete-dialog" onClick={(e) => e.stopPropagation()}>
-                <h3 className="hh-dialog-title">
-                  <span className="hh-approve-icon"><CheckCircle size={28} strokeWidth={1.8} /></span>
-                  Approve Household
-                </h3>
-                <p className="hh-dialog-message">
-                  Are you sure you want to approve this household profile?
-                </p>
-                <p className="hh-dialog-highlight">
-                  {selectedHousehold.householdNo} — {submitterNames[selectedHousehold.submittedBy] || ''}
-                </p>
-                <div className="hh-dialog-actions">
-                  <button className="btn btn-secondary" onClick={() => setShowApproveDialog(false)}>Cancel</button>
-                  <button className="btn btn-success" onClick={handleApprove}>Approve</button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* ================================================================
              DELETE CONFIRMATION DIALOG

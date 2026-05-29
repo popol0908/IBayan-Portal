@@ -805,3 +805,66 @@
     font-size: 0.55rem;
   }
 }
+
+/* ============================================
+   GREEN THEME OVERRIDES (Admin Navbar)
+   ============================================ */
+.admin-sidebar {
+  background: linear-gradient(160deg, #166534 0%, #14532d 100%);
+  color: #ffffff;
+  border-right: none;
+  box-shadow: 4px 0 24px rgba(20, 83, 45, 0.2);
+}
+.admin-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top right, rgba(255,255,255,0.06) 0%, transparent 50%),
+              radial-gradient(circle at bottom left, rgba(0,0,0,0.2) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.sidebar-header, .sidebar-nav, .sidebar-footer {
+  position: relative;
+  z-index: 1;
+}
+.sidebar-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
+.brand-text { color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.sidebar-toggle { color: rgba(255,255,255,0.8); }
+.sidebar-toggle:hover { background: rgba(255,255,255,0.1); color: #ffffff; }
+.sidebar-expand-btn { color: rgba(255,255,255,0.8); }
+.sidebar-expand-btn:hover { background: rgba(255,255,255,0.1); color: #ffffff; }
+
+.sidebar-nav-item, .sidebar-logout-btn, .dropdown-item { 
+  border: 1px solid transparent; 
+  transition: all 0.3s ease;
+}
+.sidebar-nav-item { color: rgba(255,255,255,0.85); }
+.sidebar-nav-item:hover, .dropdown-item:hover { 
+  background: rgba(255,255,255,0.1); 
+  color: #ffffff; 
+  transform: translateX(4px);
+}
+.sidebar-nav-item.active, .dropdown-item.active { 
+  background: rgba(255,255,255,0.15); 
+  color: #ffffff; 
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1), inset 1px 1px 0 rgba(255,255,255,0.05);
+}
+.nav-icon { color: rgba(255,255,255,0.75); }
+.sidebar-nav-item:hover .nav-icon, .sidebar-nav-item.active .nav-icon { color: #ffffff; }
+.sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logout-btn { color: rgba(255,255,255,0.85); }
+.sidebar-logout-btn:hover { 
+  background: rgba(239, 68, 68, 0.2); 
+  color: #ffffff; 
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.logout-icon { color: rgba(255,255,255,0.8); }
+.sidebar-logout-btn:hover .logout-icon { color: #ffffff; }
+.admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
+.admin-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+.dropdown-item { color: rgba(255,255,255,0.85); }
+.dropdown-item .nav-icon { color: rgba(255,255,255,0.75); }
+.dropdown-item:hover .nav-icon, .dropdown-item.active .nav-icon { color: #ffffff; }
+.dropdown-chevron { color: rgba(255,255,255,0.75); }

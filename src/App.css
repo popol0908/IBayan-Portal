@@ -79,7 +79,7 @@ body.sidebar-collapsed .App {
 
 /* Offset for fixed top header */
 .main-content.has-top-header {
-  padding-top: calc(64px + 2rem);
+  padding-top: calc(64px + 2rem) !important;
 }
 
 /* ============================================
@@ -195,7 +195,7 @@ body.sidebar-collapsed .App {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 99999;
   animation: fadeIn 0.3s ease;
 }
 

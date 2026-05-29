@@ -543,6 +543,7 @@ const ManageEvents = () => {
                         className={`form-input ${errors.eventDate ? 'input-error' : ''}`}
                         value={formData.eventDate}
                         onChange={handleChange}
+                        min={new Date().toISOString().split('T')[0]}
                       />
                       {errors.eventDate && <span className="field-error">{errors.eventDate}</span>}
                     </div>
@@ -555,7 +556,7 @@ const ManageEvents = () => {
                         className="form-input"
                         value={formData.eventDateEnd}
                         onChange={handleChange}
-                        min={formData.eventDate || ''}
+                        min={formData.eventDate || new Date().toISOString().split('T')[0]}
                       />
                     </div>
                   </div>

@@ -70,8 +70,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-      <section className="announcements-section">
-        <div className="quick-actions">
+      <div className="dash-two-col">
+        <div className="dash-main-col">
+          <section className="announcements-section">
+            <div className="quick-actions">
           <div className="section-header">
             <h2 className="section-title">Recent Announcements</h2>
             <Link to="/announcements" className="view-all-link">
@@ -184,70 +186,37 @@ const Dashboard = () => {
         )}
         </div>
       </section>
+    </div>
 
-      {}
-      <section className="quick-actions-section">
-        <div className="quick-actions">
-          <h2 className="section-title">Quick Actions</h2>
-          
-          {/* Community Information */}
-          <div className="action-group">
-            <h3 className="action-group-title">
-              <span className="group-icon"><Megaphone {...iconProps} /></span>
-              Community Information
-            </h3>
-            <div className="action-buttons">
-              <Link to="/announcements" className="action-card action-primary">
-                <IconBox variant="blue" size="sm" className="action-card-icon"><Megaphone size={24} strokeWidth={1.8} /></IconBox>
-                <div className="action-card-content">
-                  <h4 className="action-card-title">Announcements</h4>
-                  <p className="action-card-description">Browse all community announcements and updates</p>
-                </div>
-                <div className="action-card-arrow"><ArrowRight size={20} strokeWidth={2} /></div>
-              </Link>
-              
-              <Link to="/events" className="action-card action-warning">
-                <IconBox variant="amber" size="sm" className="action-card-icon"><Calendar size={24} strokeWidth={1.8} /></IconBox>
-                <div className="action-card-content">
-                  <h4 className="action-card-title">Community Events</h4>
-                  <p className="action-card-description">View and join upcoming community events</p>
-                </div>
-                <div className="action-card-arrow"><ArrowRight size={20} strokeWidth={2} /></div>
-              </Link>
-            </div>
+      <div className="dash-sidebar-col">
+        <div className="sidebar-card">
+          <div className="sidebar-card-header">
+            <h2 className="sidebar-card-title">Quick Actions</h2>
           </div>
-
-          {/* Personal */}
-          <div className="action-group">
-            <h3 className="action-group-title">
-              <span className="group-icon"><User {...iconProps} /></span>
-              Personal
-            </h3>
-            <div className="action-buttons">
-              <Link to="/profile" className="action-card action-info">
-                <IconBox variant="blue" size="sm" className="action-card-icon"><User size={24} strokeWidth={1.8} /></IconBox>
-                <div className="action-card-content">
-                  <h4 className="action-card-title">My Profile</h4>
-                  <p className="action-card-description">View and manage your account information</p>
-                </div>
-                <div className="action-card-arrow"><ArrowRight size={20} strokeWidth={2} /></div>
-              </Link>
-
-              <Link to="/household-profile" className="action-card action-success">
-                <IconBox variant="green" size="sm" className="action-card-icon"><Home size={24} strokeWidth={1.8} /></IconBox>
-                <div className="action-card-content">
-                  <h4 className="action-card-title">Household Profile</h4>
-                  <p className="action-card-description">Submit and view your household profile information</p>
-                </div>
-                <div className="action-card-arrow"><ArrowRight size={20} strokeWidth={2} /></div>
-              </Link>
-            </div>
+          <div className="sidebar-quick-actions">
+            <Link to="/announcements" className="sidebar-qa-btn">
+              <div className="qa-icon-wrap qa-blue"><Megaphone size={22} strokeWidth={2} /></div>
+              <span className="qa-label">Announcements</span>
+            </Link>
+            <Link to="/events" className="sidebar-qa-btn">
+              <div className="qa-icon-wrap qa-purple"><Calendar size={22} strokeWidth={2} /></div>
+              <span className="qa-label">Events & Programs</span>
+            </Link>
+            <Link to="/profile" className="sidebar-qa-btn">
+              <div className="qa-icon-wrap qa-amber"><User size={22} strokeWidth={2} /></div>
+              <span className="qa-label">My Profile</span>
+            </Link>
+            <Link to="/household-profile" className="sidebar-qa-btn">
+              <div className="qa-icon-wrap qa-green"><Home size={22} strokeWidth={2} /></div>
+              <span className="qa-label">Household Profiling</span>
+            </Link>
           </div>
         </div>
-      </section>
       </div>
-      </div>
-    </PageLoader>
+  </div>
+</div>
+</div>
+</PageLoader>
   );
 };
 
