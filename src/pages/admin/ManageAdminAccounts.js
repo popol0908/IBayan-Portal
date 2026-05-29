@@ -73,7 +73,7 @@ const ManageAdminAccounts = () => {
   const EMPTY_CREATE = {
     fullName: '', email: '', password: '', confirmPassword: '',
     subRole: '', permissions: {},
-    status: 'Active', mustChangePassword: true
+    status: 'Active'
   };
   const [createForm, setCreateForm] = useState({ ...EMPTY_CREATE });
   const [editForm, setEditForm] = useState({ subRole: '', permissions: {}, status: 'Active' });
@@ -149,7 +149,7 @@ const ManageAdminAccounts = () => {
       const payload = {
         fullName: createForm.fullName, email: createForm.email, role: 'admin',
         subRole: createForm.subRole, permissions: createForm.permissions,
-        status: createForm.status, mustChangePassword: createForm.mustChangePassword,
+        status: createForm.status,
         createdAt: new Date().toISOString(),
         createdBy: currentUser?.uid || null,
         createdByEmail: currentUser?.email || userProfile?.email || null
@@ -422,12 +422,7 @@ const ManageAdminAccounts = () => {
                   })}
                 </div>
               </div>
-              <div className="form-group">
-                <label className="permission-item">
-                  <input type="checkbox" checked={createForm.mustChangePassword} onChange={e => setCreateForm(p => ({ ...p, mustChangePassword: e.target.checked }))} disabled={loading} />
-                  <span>Force password change on first login</span>
-                </label>
-              </div>
+
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={closeCreateModal} disabled={loading}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create Admin Account'}</button>
@@ -456,7 +451,7 @@ const ManageAdminAccounts = () => {
               <div className="details-grid">
                 <div className="detail-item"><span className="detail-label">Role</span><span className={`role-badge ${getRoleMeta(selectedAdmin.subRole).className}`}>{getRoleMeta(selectedAdmin.subRole).label}</span></div>
                 <div className="detail-item"><span className="detail-label">Status</span><span className={`status-badge status-${String(selectedAdmin.status || 'Active').toLowerCase()}`}>{selectedAdmin.status || 'Active'}</span></div>
-                <div className="detail-item"><span className="detail-label">Must Change Password</span><span>{selectedAdmin.mustChangePassword ? 'Yes' : 'No'}</span></div>
+
                 <div className="detail-item"><span className="detail-label">Created At</span><span>{selectedAdmin.createdAt ? new Date(selectedAdmin.createdAt).toLocaleString() : 'N/A'}</span></div>
                 <div className="detail-item"><span className="detail-label">Created By</span><span>{selectedAdmin.createdByEmail || 'N/A'}</span></div>
                 <div className="detail-item"><span className="detail-label">Last Updated</span><span>{selectedAdmin.updatedAt ? new Date(selectedAdmin.updatedAt).toLocaleString() : 'N/A'}</span></div>
