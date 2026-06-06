@@ -30,34 +30,67 @@
 .admin-page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 1.75rem;
   gap: 1.25rem;
   flex-wrap: wrap;
+  background: linear-gradient(135deg, #166534 0%, #15803d 60%, #16a34a 100%);
+  padding: 1.75rem 2rem;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(22, 101, 52, 0.18);
+}
+
+.admin-page-header::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -20px;
+  width: 160px;
+  height: 160px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.admin-page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  right: 80px;
+  width: 100px;
+  height: 100px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .admin-page-header > div {
   flex: 1;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .admin-page-title {
   font-size: 1.65rem;
-  font-weight: 700;
-  color: var(--admin-text-main);
+  font-weight: 800;
+  color: #ffffff;
   margin: 0 0 0.35rem 0;
   letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .admin-page-subtitle {
-  font-size: 0.95rem;
-  color: var(--admin-text-muted);
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.8);
   margin: 0;
   font-weight: 400;
   line-height: 1.5;
 }
 
-/* Unified Add button - Teal filled */
+/* Unified Add button - Glassmorphism style for green banner */
 .admin-add-btn {
   display: inline-flex;
   align-items: center;
@@ -67,19 +100,24 @@
   font-size: 0.95rem;
   font-weight: 600;
   border-radius: 8px;
-  border: none;
-  background: var(--admin-accent);
-  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .admin-add-btn:hover {
-  background: var(--admin-accent-hover);
+  background: rgba(255,255,255,0.3);
+  border-color: rgba(255,255,255,0.4);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(29, 158, 117, 0.25);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .admin-add-btn:active {

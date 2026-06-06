@@ -198,6 +198,18 @@ const ManageEvents = () => {
       return;
     }
 
+    // Duplicate Event Validation
+    const isDuplicate = events.some(ev => 
+      ev.title.trim().toLowerCase() === formData.title.trim().toLowerCase() && 
+      ev.eventDate === formData.eventDate &&
+      (!selectedEvent || ev.id !== selectedEvent.id)
+    );
+
+    if (isDuplicate) {
+      showToast('A record with the same title and date already exists. Please review before submitting.', 'error');
+      return;
+    }
+
     try {
       if (selectedEvent) {
         // Update existing event

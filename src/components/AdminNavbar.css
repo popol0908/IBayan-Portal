@@ -24,6 +24,31 @@
   overflow-x: hidden;
 }
 
+.admin-sidebar::after {
+  content: '';
+  position: fixed;
+  bottom: 50px;
+  left: 55px; /* Offset to center when expanded */
+  width: 150px;
+  height: 150px;
+  background-image: url('/logo.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.admin-sidebar.collapsed::after {
+  left: 10px;
+  width: 50px;
+  height: 50px;
+  bottom: 80px;
+  opacity: 0.08;
+}
+
 .admin-sidebar.open {
   width: 260px;
 }

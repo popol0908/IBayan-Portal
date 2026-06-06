@@ -56,8 +56,9 @@ const Events = () => {
 
   const getFilteredEvents = () => {
     return events.filter(event => {
-      if (statusFilter === 'all') return true;
       const status = getEventStatus(event);
+      if (status === 'past') return false;
+      if (statusFilter === 'all') return true;
       return status === statusFilter;
     });
   };
@@ -204,7 +205,6 @@ const Events = () => {
             <option value="all">All Events</option>
             <option value="upcoming">Upcoming</option>
             <option value="today">Today</option>
-            <option value="past">Past</option>
           </select>
         </div>
 

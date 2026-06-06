@@ -86,8 +86,10 @@ body.sidebar-collapsed .App {
    CSS VARIABLES
    ============================================ */
 :root {
-  --primary-color: #0052cc;
-  --primary-dark: #0047b2;
+  --primary-color: #16a34a;
+  --primary-dark: #15803d;
+  --accent-color: #facc15;
+  --accent-dark: #eab308;
   --success-color: #4caf50;
   --danger-color: #dc3545;
   --warning-color: #ffc107;
@@ -151,7 +153,7 @@ body.sidebar-collapsed .App {
 .form-select:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 .form-input.input-error,
@@ -602,25 +604,27 @@ body.sidebar-collapsed .App {
 
 /* Primary Button */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #0066ff 100%);
-  color: white;
+  background: linear-gradient(135deg, #22c55e 0%, var(--primary-color) 100%);
+  color: #ffffff;
   border-color: var(--primary-color);
-  box-shadow: 0 4px 12px rgba(0, 82, 204, 0.3);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .btn-primary:hover:not(:disabled):not(.disabled) {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--accent-color);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 82, 204, 0.4);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
 }
 
 .btn-primary:active:not(:disabled):not(.disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 82, 204, 0.3);
+  color: var(--accent-color);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
 }
 
 .btn-primary:focus {
-  box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.25), 0 4px 12px rgba(0, 82, 204, 0.3);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25), 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 /* Secondary Button */
@@ -750,9 +754,9 @@ body.sidebar-collapsed .App {
 
 .btn-outline-primary:hover:not(:disabled):not(.disabled) {
   background: var(--primary-color);
-  color: white;
+  color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 82, 204, 0.3);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .btn-outline-secondary {
@@ -814,7 +818,7 @@ body.sidebar-collapsed .App {
 }
 
 /* Tinted backgrounds matching icon stroke color */
-.icon-box-blue { background: #EFF6FF; color: #3B82F6; }
+.icon-box-blue { background: #fef9c3; color: #eab308; } /* Transformed to yellow */
 .icon-box-teal { background: #F0FDFA; color: #14B8A6; }
 .icon-box-red { background: #FEF2F2; color: #EF4444; }
 .icon-box-amber { background: #FFFBEB; color: #F59E0B; }
@@ -1073,7 +1077,7 @@ body.sidebar-collapsed .App {
 
 /* Keyboard navigation improvements */
 .btn:focus-visible {
-  outline: 3px solid rgba(0, 82, 204, 0.5);
+  outline: 3px solid rgba(22, 163, 74, 0.5);
   outline-offset: 2px;
 }
 

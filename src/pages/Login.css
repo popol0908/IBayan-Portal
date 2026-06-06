@@ -114,7 +114,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #6366f1;
+  color: #16a34a;
   flex-shrink: 0;
   margin-right: 8px;
   position: relative;
@@ -139,9 +139,9 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: #16a34a;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.1);
 }
 
 .password-input-wrapper {
@@ -169,7 +169,7 @@
 }
 
 .password-toggle-btn:hover {
-  color: #6366f1;
+  color: #16a34a;
 }
 
 .password-toggle-btn:focus {
@@ -217,14 +217,14 @@
 .checkbox-container input {
   width: 16px;
   height: 16px;
-  accent-color: #6366f1;
+  accent-color: #16a34a;
   cursor: pointer;
 }
 
 .forgot-password-link {
   background: none;
   border: none;
-  color: #6366f1;
+  color: #15803d;
   font-weight: 500;
   font-size: 0.85rem;
   cursor: pointer;
@@ -238,7 +238,7 @@
 }
 
 .forgot-password-link:hover {
-  color: #4f46e5;
+  color: #166534;
   text-decoration: underline;
 }
 
@@ -251,10 +251,10 @@
 .btn-primary {
   width: 100%;
   padding: 0.8rem 1.5rem;
-  background: #6366f1;
+  background: #16a34a;
   border: none;
   border-radius: 10px;
-  color: #fff;
+  color: #ffffff;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -268,8 +268,8 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #4f46e5;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  background: #15803d;
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.3);
   transform: translateY(-1px);
 }
 
@@ -313,14 +313,14 @@
 }
 
 .signup-link {
-  color: #6366f1;
+  color: #15803d;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .signup-link:hover {
-  color: #4f46e5;
+  color: #166534;
   text-decoration: underline;
 }
 
@@ -331,7 +331,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #818cf8 100%);
+  background: linear-gradient(135deg, #166534 0%, #16a34a 50%, #22c55e 100%);
 }
 
 .login-info-backdrop {

@@ -38,8 +38,8 @@
 
 .date-input:focus {
     outline: none;
-    border-color: #0052cc;
-    box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+    border-color: #16A34A;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 .quick-filters {
@@ -63,8 +63,8 @@
 
 .quick-filter-btn:hover {
     background: #e9ecef;
-    border-color: #0052cc;
-    color: #0052cc;
+    border-color: #16A34A;
+    color: #16A34A;
 }
 
 .quick-filter-btn:active {

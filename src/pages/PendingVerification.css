@@ -27,7 +27,7 @@
   margin-bottom: 1.5rem;
   background: #eff6ff;
   border-radius: 50%;
-  color: #3b82f6;
+  color: #22c55e;
 }
 
 .pending-icon {
@@ -111,13 +111,13 @@
 }
 
 .pending-actions .btn-primary {
-  background: #3b82f6;
+  background: #22c55e;
   color: #ffffff;
   border: none;
 }
 
 .pending-actions .btn-primary:hover {
-  background: #2563eb;
+  background: #16a34a;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }

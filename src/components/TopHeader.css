@@ -32,7 +32,7 @@ body.sidebar-collapsed .top-header { left: 72px; }
 .top-header-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #0F172A;
+  color: white;
   margin: 0;
   white-space: nowrap;
 }
@@ -49,8 +49,8 @@ body.sidebar-collapsed .top-header { left: 72px; }
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0052CC 0%, #0066FF 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+  color: #1a1a2e;
   font-size: 0.9rem;
   font-weight: 700;
   display: flex;
@@ -59,12 +59,12 @@ body.sidebar-collapsed .top-header { left: 72px; }
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 82, 204, 0.25);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
 }
 
 .top-header-avatar:hover {
   transform: scale(1.08);
-  box-shadow: 0 3px 10px rgba(0, 82, 204, 0.35);
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.35);
 }
 
 /* ── Responsive ── */

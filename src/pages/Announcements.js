@@ -34,7 +34,7 @@ const getCategoryConfig = (type) => {
 // Get the active color for category tabs
 const getCategoryTabColor = (cat) => {
   switch (cat) {
-    case 'All': return '#0F172A';
+    case 'All': return '#eab308';
     case 'Environment': return '#16A34A';
     case 'Health': return '#2563EB';
     case 'Safety': return '#DC2626';
@@ -113,7 +113,7 @@ const Announcements = () => {
                   style={isActive ? {
                     background: tabColor,
                     borderColor: tabColor,
-                    color: '#ffffff',
+                    color: cat === 'All' ? '#0f172a' : '#ffffff',
                     boxShadow: `0 2px 8px ${tabColor}33`
                   } : {
                     borderColor: `${tabColor}30`,

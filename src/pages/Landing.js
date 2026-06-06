@@ -39,7 +39,7 @@ const faqData = [
   { q: 'What documents are accepted as proof of residency?', a: 'We accept Barangay Certificate of Residency, government-issued IDs with home address (PhilSys ID, Voter\'s ID, Driver\'s License), lease or rental contracts, and land titles or tax declarations.' },
   { q: 'How long does verification take?', a: 'The verification process typically takes 1-3 business days. You will receive a notification once your account has been approved or if additional information is needed.' },
   { q: 'Is my personal data safe?', a: 'Yes. We comply with the Data Privacy Act of 2012 (RA 10173). Your data is encrypted, stored securely, and used exclusively for official barangay purposes. We never sell or share your data with third parties.' },
-  { q: 'Who can I contact for support?', a: 'You can visit the Barangay Mabayuan Hall during office hours or call 602-3900. You can also use the feedback feature within the portal once your account is verified.' },
+  { q: 'Who can I contact for support?', a: 'You can visit the Barangay Mabayuan Hall during office hours or call (047) 602-3900 (Landline). You can also use the feedback feature within the portal once your account is verified.' },
 ];
 
 /* ---- Features Data ---- */
@@ -161,15 +161,28 @@ const Landing = () => {
       {/* ===== HERO ===== */}
       <section className="ibayan-hero" id="hero">
         <div className="ibayan-hero-inner">
-          <span className="ibayan-hero-badge">Barangay Mabayuan Official Portal</span>
+          <span className="ibayan-hero-badge">
+            <MapPin size={14} strokeWidth={2} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+            Barangay Mabayuan · Olongapo City, Zambales
+          </span>
           <h1 className="ibayan-hero-headline">
-            Empowering our Community through{' '}
-            <span className="ibayan-hero-highlight">Digital Innovation</span>
+            Empowering <span className="ibayan-hero-highlight">Barangay Mabayuan</span> through Digital Innovation
           </h1>
           <p className="ibayan-hero-desc">
-            iBayan Portal is your all-in-one digital companion for barangay services.
-            Manage your household, stay updated with news, and report emergencies with ease.
+            Welcome to the official iBayan Portal of Barangay Mabayuan, Olongapo City, Zambales.
+            Your all-in-one digital companion for barangay services — manage your household,
+            stay updated with news, and report emergencies with ease.
           </p>
+          <div className="ibayan-hero-identity">
+            <div className="ibayan-identity-chip">
+              <Phone size={14} strokeWidth={2} />
+              <span>Area Code: <strong>047</strong></span>
+            </div>
+            <div className="ibayan-identity-chip">
+              <MapPin size={14} strokeWidth={2} />
+              <span>Olongapo City, Zambales</span>
+            </div>
+          </div>
           <div className="ibayan-hero-cta">
             <Link to="/login" className="ibayan-btn-primary">Resident Login</Link>
             <Link to="/signup" className="ibayan-btn-outline">Sign Up Now</Link>
@@ -378,8 +391,9 @@ const Landing = () => {
                 <div className="ibayan-location-item">
                   <Phone size={20} strokeWidth={1.8} />
                   <div>
-                    <strong>Contact Number</strong>
-                    <span>602-3900</span>
+                    <strong>Barangay Landline</strong>
+                    <span>(047) 602-3900</span>
+                    <span className="ibayan-contact-type">Landline</span>
                   </div>
                 </div>
               </div>
@@ -453,11 +467,11 @@ const Landing = () => {
             <ul className="ibayan-footer-list ibayan-footer-contact">
               <li>
                 <MapPin size={14} strokeWidth={2} />
-                <span>Barangay Mabayuan, Olongapo City</span>
+                <span>Barangay Mabayuan, Olongapo City, Zambales</span>
               </li>
               <li>
                 <Phone size={14} strokeWidth={2} />
-                <span>602-3900</span>
+                <span>(047) 602-3900 <em className="ibayan-footer-contact-type">(Landline)</em></span>
               </li>
             </ul>
             <div className="ibayan-status-indicator">

@@ -269,6 +269,18 @@ const ManageAnnouncements = () => {
       showToast('Please complete all required fields correctly.', 'error');
       return;
     }
+
+    // Duplicate Announcement Validation
+    const isDuplicate = announcements.some(ann => 
+      ann.title.trim().toLowerCase() === formData.title.trim().toLowerCase() && 
+      (ann.whenDate === formData.whenDate || ann.date === formData.whenDate) &&
+      (!selectedAnnouncement || ann.id !== selectedAnnouncement.id)
+    );
+
+    if (isDuplicate) {
+      showToast('A record with the same title and date already exists. Please review before submitting.', 'error');
+      return;
+    }
     
     try {
       setIsUploading(true);

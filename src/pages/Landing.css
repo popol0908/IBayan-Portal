@@ -58,7 +58,7 @@
   background: rgba(255,255,255,0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #ecfccb;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
@@ -125,12 +125,12 @@
   bottom: 0;
   width: 0;
   height: 2px;
-  background: #1a73e8;
+  background: #16a34a;
   border-radius: 1px;
   transition: width 0.25s ease;
 }
 
-.ibayan-nav-links button:hover { color: #1a73e8; }
+.ibayan-nav-links button:hover { color: #16a34a; }
 .ibayan-nav-links button:hover::after { width: 100%; }
 
 /* Actions (desktop) */
@@ -153,9 +153,9 @@
 }
 
 .ibayan-nav-admin:hover {
-  color: #1a73e8;
-  border-color: #1a73e8;
-  background: rgba(26, 115, 232, 0.04);
+  color: #16a34a;
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.04);
 }
 
 .ibayan-nav-login {
@@ -166,23 +166,23 @@
   transition: color 0.2s ease;
 }
 
-.ibayan-nav-login:hover { color: #1a73e8; }
+.ibayan-nav-login:hover { color: #16a34a; }
 
 .ibayan-nav-signup {
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 600;
   color: #ffffff;
-  background: #1a73e8;
+  background: #16a34a;
   padding: 0.5rem 1.25rem;
   border-radius: 8px;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .ibayan-nav-signup:hover {
-  background: #1557b0;
+  background: #15803d;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 /* Mobile Toggle */
@@ -220,27 +220,33 @@
 }
 
 .ibayan-mobile-menu button:hover,
-.ibayan-mobile-menu a:hover { color: #1a73e8; }
+.ibayan-mobile-menu a:hover { color: #16a34a; }
 
 /* ============================
    2. HERO
    ============================ */
 .ibayan-hero {
-  background: linear-gradient(170deg, #eaf4fd 0%, #dbeafe 40%, #e8f4fd 100%);
+  background: linear-gradient(170deg, #fefce8 0%, #ecfccb 35%, #f0fdf4 70%, #fefce8 100%);
   padding: 6rem 2rem 5rem;
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
+/* Logo watermark background */
 .ibayan-hero::before {
   content: '';
   position: absolute;
-  top: -120px; right: -120px;
-  width: 360px; height: 360px;
-  background: radial-gradient(circle, rgba(26,115,232,0.06) 0%, transparent 70%);
-  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  height: 420px;
+  background: url('/logo.png') no-repeat center center;
+  background-size: contain;
+  opacity: 0.06;
   pointer-events: none;
+  z-index: 0;
 }
 
 .ibayan-hero::after {
@@ -248,7 +254,7 @@
   position: absolute;
   bottom: -80px; left: -80px;
   width: 280px; height: 280px;
-  background: radial-gradient(circle, rgba(26,115,232,0.05) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(22,163,74,0.06) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -261,9 +267,10 @@
 }
 
 .ibayan-hero-badge {
-  display: inline-block;
-  background: rgba(26,115,232,0.1);
-  color: #1a73e8;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(22,163,74,0.1);
+  color: #16a34a;
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.4rem 1rem;
@@ -283,7 +290,7 @@
   animation: ibayan-fadeUp 0.7s ease 0.1s both;
 }
 
-.ibayan-hero-highlight { color: #1a73e8; }
+.ibayan-hero-highlight { color: #16a34a; }
 
 .ibayan-hero-desc {
   font-size: 1.1rem;
@@ -292,6 +299,46 @@
   max-width: 600px;
   margin: 0 auto 2.25rem;
   animation: ibayan-fadeUp 0.7s ease 0.2s both;
+}
+
+.ibayan-hero-identity {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  animation: ibayan-fadeUp 0.7s ease 0.25s both;
+  flex-wrap: wrap;
+}
+
+.ibayan-identity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ibayan-identity-chip:hover {
+  border-color: #86efac;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.12);
+}
+
+.ibayan-identity-chip svg {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.ibayan-identity-chip strong {
+  font-weight: 700;
+  color: #ca8a04;
 }
 
 .ibayan-hero-cta {
@@ -309,16 +356,16 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: #ffffff;
-  background: #1a73e8;
+  background: #16a34a;
   padding: 0.75rem 1.75rem;
   border-radius: 10px;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .ibayan-btn-primary:hover {
-  background: #1557b0;
+  background: #15803d;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(26,115,232,0.35);
+  box-shadow: 0 6px 20px rgba(22,163,74,0.35);
 }
 
 .ibayan-btn-outline {
@@ -336,10 +383,10 @@
 }
 
 .ibayan-btn-outline:hover {
-  border-color: #1a73e8;
-  color: #1a73e8;
+  border-color: #16a34a;
+  color: #16a34a;
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(26,115,232,0.12);
+  box-shadow: 0 4px 16px rgba(22,163,74,0.12);
 }
 
 /* Stats */
@@ -358,7 +405,7 @@
 }
 
 .ibayan-stat { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
-.ibayan-stat-number { font-size: 1.5rem; font-weight: 800; color: #1a73e8; letter-spacing: -0.02em; }
+.ibayan-stat-number { font-size: 1.5rem; font-weight: 800; color: #16a34a; letter-spacing: -0.02em; }
 .ibayan-stat-label { font-size: 0.75rem; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
 .ibayan-stat-divider { width: 1px; height: 36px; background: #e2e8f0; }
 
@@ -408,7 +455,7 @@
   transition: color 0.2s ease;
 }
 
-.ibayan-view-more:hover { color: #1a73e8; }
+.ibayan-view-more:hover { color: #16a34a; }
 .ibayan-view-more svg { transition: transform 0.2s ease; }
 .ibayan-view-more:hover svg { transform: translateX(3px); }
 
@@ -417,8 +464,8 @@
    ============================ */
 .ibayan-features {
   padding: 5rem 2rem;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  background: #fefce8;
+  border-top: 1px solid #fef08a;
 }
 
 .ibayan-features-header {
@@ -445,7 +492,7 @@
 .ibayan-feature-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 16px 40px rgba(0,0,0,0.08);
-  border-color: #dbeafe;
+  border-color: #bbf7d0;
 }
 
 .ibayan-feature-card-icon {
@@ -455,8 +502,8 @@
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: #1a73e8;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #16a34a;
   margin-bottom: 1.25rem;
 }
 
@@ -524,8 +571,8 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #eef2ff, #dbeafe);
-  color: #1a73e8;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  color: #16a34a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -550,8 +597,8 @@
    ============================ */
 .ibayan-location {
   padding: 5rem 2rem;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  background: #f0fdf4;
+  border-top: 1px solid #bbf7d0;
 }
 
 .ibayan-location-grid {
@@ -584,7 +631,7 @@
 
 .ibayan-location-item svg {
   flex-shrink: 0;
-  color: #1a73e8;
+  color: #16a34a;
   margin-top: 2px;
 }
 
@@ -600,6 +647,19 @@
   font-size: 0.88rem;
   color: #64748b;
   line-height: 1.5;
+}
+
+.ibayan-contact-type {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.08);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
 }
 
 /* ============================
@@ -626,12 +686,12 @@
 }
 
 .ibayan-faq-item:hover {
-  border-color: #dbeafe;
+  border-color: #bbf7d0;
 }
 
 .ibayan-faq-item.open {
-  border-color: #bfdbfe;
-  box-shadow: 0 4px 12px rgba(26,115,232,0.06);
+  border-color: #86efac;
+  box-shadow: 0 4px 12px rgba(22,163,74,0.06);
 }
 
 .ibayan-faq-question {
@@ -664,7 +724,7 @@
 
 .ibayan-faq-item.open .ibayan-faq-chevron {
   transform: rotate(180deg);
-  color: #1a73e8;
+  color: #16a34a;
 }
 
 .ibayan-faq-answer {
@@ -690,7 +750,7 @@
    8. FOOTER
    ============================ */
 .ibayan-footer {
-  background: #0f172a;
+  background: #14532d;
   padding: 3.5rem 2rem 0;
   margin-top: auto;
 }
@@ -750,7 +810,7 @@
 }
 
 .ibayan-social-link:hover {
-  background: #1a73e8;
+  background: #16a34a;
   color: #ffffff;
 }
 
@@ -788,7 +848,7 @@
 
 .ibayan-footer-list a:hover,
 .ibayan-footer-list button:hover {
-  color: #60a5fa;
+  color: #86efac;
 }
 
 .ibayan-footer-contact li {
@@ -802,6 +862,13 @@
 .ibayan-footer-contact svg {
   flex-shrink: 0;
   color: #64748b;
+}
+
+.ibayan-footer-contact-type {
+  font-style: italic;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-left: 2px;
 }
 
 .ibayan-status-indicator {

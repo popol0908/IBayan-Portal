@@ -16,7 +16,7 @@
   padding: 48px 40px;
   max-width: 500px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(0, 82, 204, 0.10), 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 8px 32px rgba(22, 163, 74, 0.10), 0 2px 8px rgba(0,0,0,0.04);
   text-align: center;
 }
 
@@ -48,7 +48,7 @@
 .ev-email-badge {
   display: inline-block;
   background: #f0f4ff;
-  color: #0052CC;
+  color: #16a34a;
   font-weight: 600;
   font-size: 0.95rem;
   padding: 8px 18px;
@@ -90,7 +90,7 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #0052CC;
+  background: #16a34a;
   color: #fff;
   font-size: 0.78rem;
   font-weight: 700;
@@ -129,20 +129,20 @@
 }
 
 .ev-btn-primary {
-  background: #0052CC;
+  background: #16a34a;
   color: #ffffff;
 }
 
 .ev-btn-primary:hover:not(:disabled) {
   background: #003d99;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 82, 204, 0.3);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .ev-btn-outline {
   background: transparent;
-  color: #0052CC;
-  border: 2px solid #0052CC;
+  color: #16a34a;
+  border: 2px solid #16a34a;
 }
 
 .ev-btn-outline:hover:not(:disabled) {
@@ -194,7 +194,7 @@
   content: '•';
   position: absolute;
   left: 0;
-  color: #f59e0b;
+  color: #16a34a;
 }
 
 /* ── Polling hint ── */

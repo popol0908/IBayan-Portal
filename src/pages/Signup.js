@@ -8,8 +8,6 @@ import {
   validatePassword,
   validateConfirmPassword,
   validateName,
-  validatePhoneNumber,
-  validateRequired,
 } from "../utils/validation";
 import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "../firebase";
@@ -31,6 +29,8 @@ import {
   CheckCircle,
   Eye,
   EyeOff,
+  ChevronRight,
+  ChevronLeft
 } from '../components/Icons';
 import "./Signup.css";
 
@@ -39,6 +39,7 @@ const CLOUDINARY_CLOUD_NAME = "dypfxfpfz";
 const CLOUDINARY_UPLOAD_PRESET = "barangay_proofs";
 
 const Signup = () => {
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -47,7 +48,6 @@ const Signup = () => {
     birthday: "",
     permanentAddress: "",
     presentAddress: "",
-    sameAsPermanent: false,
     purok: "",
     contactNumber: "",
     rememberMe: false,
@@ -82,26 +82,10 @@ const Signup = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    setFormData((prev) => {
-      let newData = {
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-      };
-
-      if (name === "sameAsPermanent") {
-        if (checked) {
-          newData.presentAddress = newData.permanentAddress;
-        } else {
-          newData.presentAddress = "";
-        }
-      }
-
-      if (name === "permanentAddress" && newData.sameAsPermanent) {
-        newData.presentAddress = value;
-      }
-
-      return newData;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
 
     if (error) setError("");
     if (errors[name]) {
@@ -150,70 +134,85 @@ const Signup = () => {
     setFileError("");
   };
 
-  const validateForm = () => {
+  const validateStep = (step) => {
     const newErrors = {};
 
-    const nameValidation = validateName(formData.name);
-    if (!nameValidation.isValid) {
-      newErrors.name = nameValidation.error;
-    }
+    if (step === 1) {
+      const nameValidation = validateName(formData.name);
+      if (!nameValidation.isValid) newErrors.name = nameValidation.error;
 
-    const emailValidation = validateEmail(formData.email);
-    if (!emailValidation.isValid) {
-      newErrors.email = emailValidation.error;
-    }
-
-    // Strict Birthday Validation
-    if (!formData.birthday) {
-      newErrors.birthday = "Birthday is required.";
-    } else {
-      const birthDate = new Date(formData.birthday);
-      const today = new Date();
-      
-      if (birthDate > today) {
-        newErrors.birthday = "Birthday cannot be in the future.";
+      if (!formData.birthday) {
+        newErrors.birthday = "Birthday is required.";
       } else {
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
+        const birthDate = new Date(formData.birthday);
+        const today = new Date();
+        if (birthDate > today) {
+          newErrors.birthday = "Birthday cannot be in the future.";
+        } else {
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+          if (age < 18) newErrors.birthday = "You must be at least 18 years old to register.";
         }
-        
-        if (age < 18) {
-          newErrors.birthday = "You must be at least 18 years old to register.";
-        }
+      }
+
+      if (!formData.purok) newErrors.purok = "Purok is required.";
+    }
+
+    if (step === 2) {
+      if (!formData.permanentAddress.trim()) newErrors.permanentAddress = "Permanent Address is required.";
+      if (!formData.presentAddress.trim()) newErrors.presentAddress = "Present Address is required.";
+    }
+
+    if (step === 3) {
+      if (!formData.contactNumber.trim()) newErrors.contactNumber = "Contact number is required.";
+      
+      const emailValidation = validateEmail(formData.email);
+      if (!emailValidation.isValid) newErrors.email = emailValidation.error;
+
+      const passwordValidation = validatePassword(formData.password);
+      if (!passwordValidation.isValid) newErrors.password = passwordValidation.error;
+
+      const confirmPasswordValidation = validateConfirmPassword(formData.password, formData.confirmPassword);
+      if (!confirmPasswordValidation.isValid) newErrors.confirmPassword = confirmPasswordValidation.error;
+    }
+
+    if (step === 4) {
+      if (!proofFile) {
+        newErrors.proofFile = "Proof of residency is required.";
+      } else if (fileError) {
+        newErrors.proofFile = fileError;
       }
     }
 
-    const passwordValidation = validatePassword(formData.password);
-    if (!passwordValidation.isValid) {
-      newErrors.password = passwordValidation.error;
-    }
-
-    const confirmPasswordValidation = validateConfirmPassword(
-      formData.password,
-      formData.confirmPassword,
-    );
-    if (!confirmPasswordValidation.isValid) {
-      newErrors.confirmPassword = confirmPasswordValidation.error;
-    }
-
-    setErrors(newErrors);
+    setErrors(prev => ({...prev, ...newErrors}));
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      showToast("Please fill in all required fields correctly.", "error");
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep(prev => prev - 1);
   };
 
   const uploadToCloudinary = async (file) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-      formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      formDataUpload.append("cloud_name", CLOUDINARY_CLOUD_NAME);
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
         {
           method: "POST",
-          body: formData,
+          body: formDataUpload,
         },
       );
 
@@ -232,14 +231,48 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      showToast("Please fix the errors in the form.", "error");
+    if (!validateStep(5)) {
       return;
     }
 
     try {
       setLoading(true);
       setError("");
+
+      // Validate Duplicate Account (Contact/Email)
+      const usersRef = collection(db, "users");
+      const emailQuery = query(usersRef, where("email", "==", formData.email));
+      const contactQuery = query(usersRef, where("contactNumber", "==", formData.contactNumber));
+      
+      const [emailSnap, contactSnap] = await Promise.all([
+        getDocs(emailQuery),
+        getDocs(contactQuery)
+      ]);
+
+      if (!emailSnap.empty || !contactSnap.empty) {
+        setLoading(false);
+        showToast("This email/contact number is already linked to an existing account.", "error");
+        setCurrentStep(3);
+        return;
+      }
+
+      // Validate Duplicate Resident (Full Name + DOB)
+      // Query by birthday to make it efficient, then check name case-insensitively
+      const dobQuery = query(usersRef, where("birthday", "==", formData.birthday));
+      const dobSnap = await getDocs(dobQuery);
+      
+      const isDuplicateResident = dobSnap.docs.some(doc => {
+        const data = doc.data();
+        return data.fullName && data.fullName.trim().toLowerCase() === formData.name.trim().toLowerCase();
+      });
+
+      if (isDuplicateResident) {
+        setLoading(false);
+        showToast("A resident with this Full Name and Date of Birth is already registered.", "error");
+        setCurrentStep(1);
+        return;
+      }
+
       const result = await signup(
         formData.email,
         formData.password,
@@ -247,7 +280,6 @@ const Signup = () => {
       );
       const { user } = result;
 
-      // Send email verification link immediately after account creation
       await sendVerificationEmail();
 
       let proofUrl = "";
@@ -255,12 +287,14 @@ const Signup = () => {
         proofUrl = await uploadToCloudinary(proofFile);
       }
 
+      const fullPresentAddress = `${formData.presentAddress}, Mabayuan, Olongapo City, Philippines`;
+
       await setDoc(doc(db, "users", user.uid), {
         fullName: formData.name,
         email: formData.email,
         birthday: formData.birthday,
         permanentAddress: formData.permanentAddress,
-        presentAddress: formData.presentAddress,
+        presentAddress: fullPresentAddress,
         purok: formData.purok,
         contactNumber: formData.contactNumber,
         proofUrl,
@@ -268,7 +302,6 @@ const Signup = () => {
         createdAt: serverTimestamp(),
       });
 
-      // Notify all admins about the new registration
       try {
         const adminsSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'admin')));
         if (!adminsSnap.empty) {
@@ -308,17 +341,21 @@ const Signup = () => {
           ...prev,
           email: "This email is already registered.",
         }));
+        setCurrentStep(3); // Go back to email step
       } else if (error.code === "auth/invalid-email") {
         showToast("Please enter a valid email address.", "error");
         setErrors((prev) => ({
           ...prev,
           email: "Please enter a valid email address.",
         }));
+        setCurrentStep(3);
       } else if (error.code === "auth/weak-password") {
         showToast("Password is too weak.", "error");
         setErrors((prev) => ({ ...prev, password: "Password is too weak." }));
+        setCurrentStep(3);
       } else if (error.message.includes("upload")) {
         showToast(error.message, "error");
+        setCurrentStep(4); // Go back to upload step
       } else {
         showToast("Signup failed. Please try again.", "error");
         setError("An error occurred. Please try again.");
@@ -328,19 +365,9 @@ const Signup = () => {
     }
   };
 
-  const isFormValid =
-    formData.name.trim() !== "" &&
-    formData.email.trim() !== "" &&
-    formData.password.trim() !== "" &&
-    formData.confirmPassword.trim() !== "" &&
-    formData.birthday.trim() !== "" &&
-    formData.permanentAddress.trim() !== "" &&
-    formData.presentAddress.trim() !== "" &&
-    formData.purok.trim() !== "" &&
-    formData.contactNumber.trim() !== "" &&
-    !!proofFile &&
-    !fileError &&
-    agreedToTerms;
+  // Calculate the max date (must be at least 18 years old)
+  const todayDate = new Date();
+  const maxBirthdayDate = new Date(todayDate.getFullYear() - 18, todayDate.getMonth(), todayDate.getDate()).toISOString().split('T')[0];
 
   return (
     <div className="signup-container">
@@ -367,312 +394,403 @@ const Signup = () => {
             </div>
           )}
 
+          <div className="signup-progress">
+            <div className="progress-text">Step {currentStep} of 5</div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${(currentStep / 5) * 100}%` }}></div>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="signup-form">
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <User size={14} strokeWidth={2} />
-                </span>
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`form-input ${errors.name ? "input-error" : ""}`}
-                placeholder="Enter your full name"
-                disabled={loading}
-              />
-              {errors.name && (
-                <span className="field-error">{errors.name}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <Calendar size={14} strokeWidth={2} />
-                </span>
-                Birthday
-              </label>
-              <input
-                type="date"
-                name="birthday"
-                value={formData.birthday}
-                onChange={handleChange}
-                className={`form-input ${errors.birthday ? "input-error" : ""}`}
-                disabled={loading}
-              />
-              {errors.birthday && (
-                <span className="field-error">{errors.birthday}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <MapPin size={14} strokeWidth={2} />
-                </span>
-                Permanent Address
-              </label>
-              <input
-                type="text"
-                name="permanentAddress"
-                value={formData.permanentAddress}
-                onChange={handleChange}
-                className={`form-input ${errors.permanentAddress ? "input-error" : ""}`}
-                placeholder="Enter your full permanent address"
-                disabled={loading}
-              />
-              {errors.permanentAddress && (
-                <span className="field-error">{errors.permanentAddress}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <Home size={14} strokeWidth={2} />
-                </span>
-                Present Address
-              </label>
-              <input
-                type="text"
-                name="presentAddress"
-                value={formData.presentAddress}
-                onChange={handleChange}
-                className={`form-input ${errors.presentAddress ? "input-error" : ""}`}
-                placeholder="Enter your present address"
-                disabled={loading || formData.sameAsPermanent}
-              />
-              <div style={{ marginTop: "10px", marginBottom: "5px" }}>
-                <label className="checkbox-container" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", color: "#4b5563", cursor: "pointer" }}>
+            
+            {/* STEP 1: Personal Information */}
+            {currentStep === 1 && (
+              <div className="form-step slide-in">
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <User size={14} strokeWidth={2} />
+                    </span>
+                    Full Name
+                  </label>
                   <input
-                    type="checkbox"
-                    name="sameAsPermanent"
-                    checked={formData.sameAsPermanent}
+                    type="text"
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
+                    className={`form-input ${errors.name ? "input-error" : ""}`}
+                    placeholder="Enter your full name"
                     disabled={loading}
                   />
-                  Same as Permanent Address
-                </label>
+                  {errors.name && (
+                    <span className="field-error">{errors.name}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <Calendar size={14} strokeWidth={2} />
+                    </span>
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="birthday"
+                    value={formData.birthday}
+                    onChange={handleChange}
+                    max={maxBirthdayDate}
+                    className={`form-input ${errors.birthday ? "input-error" : ""}`}
+                    disabled={loading}
+                  />
+                  {errors.birthday && (
+                    <span className="field-error">{errors.birthday}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <MapPin size={14} strokeWidth={2} />
+                    </span>
+                    Purok
+                  </label>
+                  <select
+                    name="purok"
+                    value={formData.purok}
+                    onChange={handleChange}
+                    className={`form-input ${errors.purok ? "input-error" : ""}`}
+                    disabled={loading}
+                  >
+                    <option value="" disabled>Select Purok</option>
+                    <option value="Purok 1">Purok 1</option>
+                    <option value="Purok 2">Purok 2</option>
+                    <option value="Purok 3">Purok 3</option>
+                    <option value="Purok 4">Purok 4</option>
+                    <option value="Purok 5">Purok 5</option>
+                    <option value="Purok 6">Purok 6</option>
+                    <option value="Purok 7">Purok 7</option>
+                  </select>
+                  {errors.purok && (
+                    <span className="field-error">{errors.purok}</span>
+                  )}
+                </div>
               </div>
-              {errors.presentAddress && (
-                <span className="field-error">{errors.presentAddress}</span>
-              )}
-            </div>
+            )}
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <MapPin size={14} strokeWidth={2} />
-                </span>
-                Purok
-              </label>
-              <select
-                name="purok"
-                value={formData.purok}
-                onChange={handleChange}
-                className={`form-input ${errors.purok ? "input-error" : ""}`}
-                disabled={loading}
-                required
-              >
-                <option value="" disabled>Select Purok</option>
-                <option value="Purok 1">Purok 1</option>
-                <option value="Purok 2">Purok 2</option>
-                <option value="Purok 3">Purok 3</option>
-                <option value="Purok 4">Purok 4</option>
-                <option value="Purok 5">Purok 5</option>
-                <option value="Purok 6">Purok 6</option>
-                <option value="Purok 7">Purok 7</option>
-              </select>
-              {errors.purok && (
-                <span className="field-error">{errors.purok}</span>
-              )}
-            </div>
+            {/* STEP 2: Address Details */}
+            {currentStep === 2 && (
+              <div className="form-step slide-in">
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <MapPin size={14} strokeWidth={2} />
+                    </span>
+                    Permanent Address
+                  </label>
+                  <input
+                    type="text"
+                    name="permanentAddress"
+                    value={formData.permanentAddress}
+                    onChange={handleChange}
+                    className={`form-input ${errors.permanentAddress ? "input-error" : ""}`}
+                    placeholder="Enter your full permanent address"
+                    disabled={loading}
+                  />
+                  {errors.permanentAddress && (
+                    <span className="field-error">{errors.permanentAddress}</span>
+                  )}
+                </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <Phone size={14} strokeWidth={2} />
-                </span>
-                Contact Number
-              </label>
-              <input
-                type="tel"
-                name="contactNumber"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                className={`form-input ${errors.contactNumber ? "input-error" : ""}`}
-                placeholder="09XXXXXXXXX"
-                disabled={loading}
-              />
-              {errors.contactNumber && (
-                <span className="field-error">{errors.contactNumber}</span>
-              )}
-            </div>
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <Home size={14} strokeWidth={2} />
+                    </span>
+                    Present Address
+                  </label>
+                  <div className="address-input-group">
+                    <input
+                      type="text"
+                      name="presentAddress"
+                      value={formData.presentAddress}
+                      onChange={handleChange}
+                      className={`form-input address-prefix-input ${errors.presentAddress ? "input-error" : ""}`}
+                      placeholder="House No. / Street / Purok"
+                      disabled={loading}
+                    />
+                    <span className="address-suffix">, Mabayuan, Olongapo City, Philippines</span>
+                  </div>
+                  {errors.presentAddress && (
+                    <span className="field-error">{errors.presentAddress}</span>
+                  )}
+                </div>
+              </div>
+            )}
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <Mail size={14} strokeWidth={2} />
-                </span>
-                Email Address
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`form-input ${errors.email ? "input-error" : ""}`}
-                placeholder="Enter your email"
-                disabled={loading}
-              />
-              {errors.email && (
-                <span className="field-error">{errors.email}</span>
-              )}
-            </div>
+            {/* STEP 3: Contact & Account */}
+            {currentStep === 3 && (
+              <div className="form-step slide-in">
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <Phone size={14} strokeWidth={2} />
+                    </span>
+                    Contact Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="contactNumber"
+                    value={formData.contactNumber}
+                    onChange={handleChange}
+                    className={`form-input ${errors.contactNumber ? "input-error" : ""}`}
+                    placeholder="09XXXXXXXXX"
+                    disabled={loading}
+                  />
+                  {errors.contactNumber && (
+                    <span className="field-error">{errors.contactNumber}</span>
+                  )}
+                </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <Lock size={14} strokeWidth={2} />
-                </span>
-                Password
-              </label>
-              <div className="password-input-wrapper">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`form-input form-input-password ${errors.password ? "input-error" : ""}`}
-                  placeholder="Create a password (min. 8 characters)"
-                  disabled={loading}
-                />
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <Mail size={14} strokeWidth={2} />
+                    </span>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={`form-input ${errors.email ? "input-error" : ""}`}
+                    placeholder="Enter your email"
+                    disabled={loading}
+                  />
+                  {errors.email && (
+                    <span className="field-error">{errors.email}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <Lock size={14} strokeWidth={2} />
+                    </span>
+                    Password
+                  </label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className={`form-input form-input-password ${errors.password ? "input-error" : ""}`}
+                      placeholder="Create a password (min. 8 characters)"
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex="-1"
+                      disabled={loading}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <span className="field-error">{errors.password}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <ShieldCheck size={14} strokeWidth={2} />
+                    </span>
+                    Confirm Password
+                  </label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className={`form-input form-input-password ${errors.confirmPassword ? "input-error" : ""}`}
+                      placeholder="Confirm your password"
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      tabIndex="-1"
+                      disabled={loading}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <span className="field-error">{errors.confirmPassword}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Proof of Residency */}
+            {currentStep === 4 && (
+              <div className="form-step slide-in">
+                <div className="form-group">
+                  <label className="form-label">
+                    <span className="label-icon">
+                      <Upload size={14} strokeWidth={2} />
+                    </span>
+                    Proof of Residency (JPG, PNG, PDF, max 5MB)
+                  </label>
+                  <div style={{ marginBottom: "0.5rem" }}>
+                    <button
+                      type="button"
+                      className="btn-guidelines-trigger"
+                      onClick={() => setIsModalOpen(true)}
+                    >
+                      <Info size={14} strokeWidth={2} /> What documents are accepted?
+                    </button>
+                  </div>
+                  <input
+                    type="file"
+                    name="proofFile"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={handleFileChange}
+                    className={`form-input ${errors.proofFile ? "input-error" : ""}`}
+                    disabled={loading}
+                  />
+                  <p className="no-id-note">
+                    Don't have an ID or accepted document? Please visit the Barangay Mabayuan Hall for assistance with your registration.
+                  </p>
+                  {errors.proofFile && (
+                    <span className="field-error">{errors.proofFile}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: Review & Confirm */}
+            {currentStep === 5 && (
+              <div className="form-step slide-in">
+                <div className="summary-container">
+                  <div className="summary-section">
+                    <h4 className="summary-title">Personal Information</h4>
+                    <div className="summary-row">
+                      <span className="summary-label">Full Name</span>
+                      <span className="summary-value">{formData.name}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span className="summary-label">Date of Birth</span>
+                      <span className="summary-value">{formData.birthday}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span className="summary-label">Purok</span>
+                      <span className="summary-value">{formData.purok}</span>
+                    </div>
+                  </div>
+
+                  <div className="summary-section">
+                    <h4 className="summary-title">Address</h4>
+                    <div className="summary-row">
+                      <span className="summary-label">Permanent Address</span>
+                      <span className="summary-value">{formData.permanentAddress}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span className="summary-label">Present Address</span>
+                      <span className="summary-value">{formData.presentAddress}, Mabayuan, Olongapo City, Philippines</span>
+                    </div>
+                  </div>
+
+                  <div className="summary-section">
+                    <h4 className="summary-title">Contact</h4>
+                    <div className="summary-row">
+                      <span className="summary-label">Contact Number</span>
+                      <span className="summary-value">{formData.contactNumber}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span className="summary-label">Email Address</span>
+                      <span className="summary-value">{formData.email}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-options">
+                  <label className="checkbox-container">
+                    <input
+                      type="checkbox"
+                      name="rememberMe"
+                      checked={formData.rememberMe}
+                      onChange={handleChange}
+                      disabled={loading}
+                    />
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="form-options terms-options">
+                  <label className="checkbox-container terms-checkbox-container">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      disabled={loading}
+                    />
+                    <span className="terms-text">
+                      I agree to the <button type="button" className="text-link" onClick={() => setShowTermsModal(true)}>Terms & Conditions</button> and <button type="button" className="text-link" onClick={() => setShowPrivacyModal(true)}>Privacy Policy</button>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Form Actions */}
+            <div className="multi-step-actions">
+              {currentStep > 1 && (
                 <button
                   type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex="-1"
+                  className="btn btn-outline"
+                  onClick={handleBack}
                   disabled={loading}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  <ChevronLeft size={18} /> Back
                 </button>
-              </div>
-              {errors.password && (
-                <span className="field-error">{errors.password}</span>
               )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <ShieldCheck size={14} strokeWidth={2} />
-                </span>
-                Confirm Password
-              </label>
-              <div className="password-input-wrapper">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className={`form-input form-input-password ${errors.confirmPassword ? "input-error" : ""}`}
-                  placeholder="Confirm your password"
-                  disabled={loading}
-                />
+              
+              {currentStep < 5 ? (
                 <button
                   type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  tabIndex="-1"
-                  disabled={loading}
+                  className="btn btn-primary"
+                  onClick={handleNext}
                 >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  Next <ChevronRight size={18} />
                 </button>
-              </div>
-              {errors.confirmPassword && (
-                <span className="field-error">{errors.confirmPassword}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">
-                  <Upload size={14} strokeWidth={2} />
-                </span>
-                Proof of Residency (JPG, PNG, PDF, max 5MB)
-              </label>
-              <div style={{ marginBottom: "0.5rem" }}>
-                <button
-                  type="button"
-                  className="btn-guidelines-trigger"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  <Info size={14} strokeWidth={2} /> What documents are accepted?
-                </button>
-              </div>
-              <input
-                type="file"
-                name="proofFile"
-                accept=".jpg,.jpeg,.png,.pdf"
-                onChange={handleFileChange}
-                className={`form-input ${errors.proofFile ? "input-error" : ""}`}
-                disabled={loading}
-              />
-              {errors.proofFile && (
-                <span className="field-error">{errors.proofFile}</span>
-              )}
-            </div>
-
-            <div className="form-options">
-              <label className="checkbox-container">
-                <input
-                  type="checkbox"
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                Remember me
-              </label>
-            </div>
-
-            <div className="form-options terms-options">
-              <label className="checkbox-container terms-checkbox-container">
-                <input
-                  type="checkbox"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  disabled={loading}
-                />
-                <span className="terms-text">
-                  I agree to the <button type="button" className="text-link" onClick={() => setShowTermsModal(true)}>Terms & Conditions</button> and <button type="button" className="text-link" onClick={() => setShowPrivacyModal(true)}>Privacy Policy</button>
-                </span>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full"
-              disabled={loading || !isFormValid}
-            >
-              {loading ? (
-                <>
-                  <span className="btn-loading"></span>
-                  Creating Account...
-                </>
               ) : (
-                <>
-                  <span className="btn-icon">
-                    <ShieldCheck size={18} strokeWidth={2} />
-                  </span>
-                  Create Account
-                </>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-submit-step"
+                  disabled={loading || !agreedToTerms}
+                >
+                  {loading ? (
+                    <>
+                      <span className="btn-loading"></span>
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck size={18} strokeWidth={2} />
+                      Create Account
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
 
             <div className="login-prompt">
               <p>

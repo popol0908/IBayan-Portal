@@ -8,6 +8,7 @@
 }
 
 /* Sidebar */
+
 .sidebar {
   position: fixed;
   left: 0;
@@ -23,6 +24,37 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+.sidebar::after {
+  content: '';
+  position: fixed;
+  bottom: 50px;
+  left: 55px; /* Offset to center when expanded */
+  width: 150px;
+  height: 150px;
+  background-image: url('/logo.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.sidebar.collapsed::after {
+  left: 10px;
+  width: 50px;
+  height: 50px;
+  bottom: 80px;
+  opacity: 0.08;
+}
+
+.sidebar-nav, .sidebar-header, .sidebar-footer {
+  position: relative;
+  z-index: 1;
+}
+
 
 .sidebar.open {
   width: 260px;
@@ -62,7 +94,7 @@
 .brand-text {
   font-weight: 700;
   font-size: 1.05rem;
-  color: #0052CC;
+  color: #16A34A;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -141,7 +173,7 @@
 
 .sidebar-nav-item.active {
   background: #F1F5F9;
-  color: #0F172A;
+  color: white;
   font-weight: 600;
 }
 
@@ -160,9 +192,11 @@
   color: #64748B;
 }
 
-.sidebar-nav-item:hover .nav-icon,
+.sidebar-nav-item:hover .nav-icon {
+  color: #d97706;
+}
 .sidebar-nav-item.active .nav-icon {
-  color: #0052CC;
+  color: #0f172a;
 }
 
 .nav-label {
@@ -231,7 +265,7 @@
 
 .sidebar-profile-btn.active {
   background: #F1F5F9;
-  color: #0F172A;
+  color: white;
   font-weight: 600;
 }
 
@@ -265,9 +299,11 @@
   color: #64748B;
 }
 
-.sidebar-profile-btn:hover .profile-icon,
+.sidebar-profile-btn:hover .profile-icon {
+  color: #16A34A;
+}
 .sidebar-profile-btn.active .profile-icon {
-  color: #0052CC;
+  color: #0f172a;
 }
 
 .profile-label {
@@ -489,7 +525,7 @@
 
 .dropdown-item.active {
   background: #F1F5F9;
-  color: #0052CC;
+  color: #16A34A;
   font-weight: 600;
 }
 
@@ -502,7 +538,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #0052CC;
+  background: #16A34A;
 }
 
 .dropdown-item .nav-icon {
@@ -510,9 +546,11 @@
   color: #64748B;
 }
 
-.dropdown-item:hover .nav-icon,
+.dropdown-item:hover .nav-icon {
+  color: #16A34A;
+}
 .dropdown-item.active .nav-icon {
-  color: #0052CC;
+  color: #0f172a;
 }
 
 .dropdown-item .nav-label {
@@ -813,10 +851,10 @@
    BLUE THEME OVERRIDES (Resident Navbar)
    ============================================ */
 .sidebar {
-  background: linear-gradient(160deg, #1e3a8a 0%, #172554 100%);
+  background: linear-gradient(160deg, #16a34a 0%, #14532d 100%);
   color: #ffffff;
   border-right: none;
-  box-shadow: 4px 0 24px rgba(30, 58, 138, 0.2);
+  box-shadow: 4px 0 24px rgba(22, 163, 74, 0.2);
 }
 .sidebar::before {
   content: '';
@@ -849,14 +887,20 @@
   transform: translateX(4px);
 }
 .sidebar-nav-item.active, .dropdown-item.active, .sidebar-profile-btn.active { 
-  background: rgba(255,255,255,0.15); 
-  color: #ffffff; 
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1), inset 1px 1px 0 rgba(255,255,255,0.05);
+  background: #eab308; 
+  color: #0f172a; 
+  border: 1px solid #facc15;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3), inset 1px 1px 0 rgba(255,255,255,0.2);
 }
 .nav-icon, .profile-icon { color: rgba(255,255,255,0.75); }
-.sidebar-nav-item:hover .nav-icon, .sidebar-nav-item.active .nav-icon { color: #ffffff; }
-.sidebar-profile-btn:hover .profile-icon, .sidebar-profile-btn.active .profile-icon { color: #ffffff; }
+.sidebar-nav-item:hover .nav-icon,
+.dropdown-item:hover .nav-icon,
+.sidebar-profile-btn:hover .profile-icon {
+  color: #facc15; }
+.sidebar-nav-item.active .nav-icon,
+.dropdown-item.active .nav-icon,
+.sidebar-profile-btn.active .profile-icon {
+  color: #0f172a; }
 .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); }
 .sidebar-logout-btn { color: rgba(255,255,255,0.85); }
 .sidebar-logout-btn:hover { 
@@ -870,5 +914,6 @@
 .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
 .dropdown-item { color: rgba(255,255,255,0.85); }
 .dropdown-item .nav-icon { color: rgba(255,255,255,0.75); }
-.dropdown-item:hover .nav-icon, .dropdown-item.active .nav-icon { color: #ffffff; }
+.dropdown-item:hover .nav-icon { color: #facc15; }
+.dropdown-item.active .nav-icon { color: #0f172a; }
 .dropdown-chevron { color: rgba(255,255,255,0.75); }

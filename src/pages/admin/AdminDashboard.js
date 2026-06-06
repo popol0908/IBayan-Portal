@@ -89,20 +89,35 @@ const getActionLabel = (action) => {
   }
 };
 
-const isWithinFilter = (dateStrOrTimestamp, filter) => {
+const getFilterBounds = (filter, customRange) => {
+  const now = new Date();
+  let from = new Date(now);
+  from.setHours(0, 0, 0, 0);
+  let to = new Date(now);
+  to.setHours(23, 59, 59, 999);
+
+  if (filter === 'custom' && customRange) {
+    from = new Date(customRange.from + 'T00:00:00');
+    to = new Date(customRange.to + 'T23:59:59');
+  } else if (filter === 'thisWeek') {
+    from.setDate(now.getDate() - now.getDay()); // Sunday
+  } else if (filter === 'thisMonth') {
+    from.setDate(1); // 1st of month
+  } else if (filter === 'thisYear') {
+    from.setMonth(0, 1); // Jan 1st
+  } else if (filter === 'all') {
+    from = new Date(0); // 1970
+  }
+  return { from, to };
+};
+
+const isWithinFilter = (dateStrOrTimestamp, filter, customRange) => {
   if (filter === 'all' || !dateStrOrTimestamp) return true;
   const date = dateStrOrTimestamp.toDate ? dateStrOrTimestamp.toDate() : new Date(dateStrOrTimestamp);
   if (isNaN(date.getTime())) return true;
-  const now = new Date();
-  const diffTime = now.getTime() - date.getTime();
-  if (diffTime < 0) return true; // Include future dates (like upcoming events)
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
   
-  if (filter === '7days') return diffDays <= 7;
-  if (filter === '14days') return diffDays <= 14;
-  if (filter === '1month') return diffDays <= 30;
-  if (filter === '1year') return diffDays <= 365;
-  return true;
+  const { from, to } = getFilterBounds(filter, customRange);
+  return date >= from && date <= to;
 };
 
 /* ── Chart defaults ── */
@@ -149,6 +164,13 @@ const AdminDashboard = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('all');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
+
+  // Memoize the custom range object so it can be used stably in useMemo deps
+  const customRange = (timeFilter === 'custom' && customDateFrom && customDateTo)
+    ? { from: customDateFrom, to: customDateTo }
+    : null;
 
   /* ── Print ref ── */
   const printRef = useRef();
@@ -201,18 +223,26 @@ const AdminDashboard = () => {
   /* ── Chart Data: Resident Growth (Dynamic) ── */
   const residentGrowthData = useMemo(() => {
     let dataPoints = [];
-    const isDaily = timeFilter === '7days' || timeFilter === '14days' || timeFilter === '1month';
+    const isDaily = timeFilter === 'today' || timeFilter === 'thisWeek' || timeFilter === 'thisMonth' || (timeFilter === 'custom' && customRange);
     const now = new Date();
 
     const filteredUsers = allUsers.filter(u => {
       if (u.status !== 'verified' || !u.verifiedAt) return false;
-      return isWithinFilter(u.verifiedAt, timeFilter);
+      return isWithinFilter(u.verifiedAt, timeFilter, customRange);
     });
 
     if (isDaily) {
-      const daysCount = timeFilter === '7days' ? 7 : timeFilter === '14days' ? 14 : 30;
-      for (let i = daysCount - 1; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const { from, to } = getFilterBounds(timeFilter, customRange);
+      const diffTime = Math.abs(to - from);
+      let daysCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (daysCount === 0) daysCount = 1;
+      if (daysCount > 90) daysCount = 90; // cap for performance
+      
+      for (let i = 0; i < daysCount; i++) {
+        const d = new Date(from);
+        d.setDate(from.getDate() + i);
+        if (d > new Date()) break; // don't show future dates on chart
+        
         dataPoints.push({
           label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           year: d.getFullYear(),
@@ -221,7 +251,7 @@ const AdminDashboard = () => {
         });
       }
     } else {
-      const monthsCount = timeFilter === '1year' ? 12 : 6;
+      const monthsCount = timeFilter === 'thisYear' ? 12 : 6;
       for (let i = monthsCount - 1; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         dataPoints.push({
@@ -248,6 +278,7 @@ const AdminDashboard = () => {
     let total = allUsers.filter(u => {
       if (u.status !== 'verified' || !u.verifiedAt) return false;
       const d = u.verifiedAt.toDate ? u.verifiedAt.toDate() : new Date(u.verifiedAt);
+      if (dataPoints.length === 0) return false;
       const firstPoint = dataPoints[0];
       if (isDaily) {
         return d < new Date(firstPoint.year, firstPoint.month, firstPoint.date);
@@ -274,11 +305,11 @@ const AdminDashboard = () => {
         pointHoverRadius: 7,
       }],
     };
-  }, [allUsers, timeFilter]);
+  }, [allUsers, timeFilter, customRange]);
 
   /* ── Chart Data: User Status Distribution ── */
   const statusDistData = useMemo(() => {
-    const filtered = allUsers.filter(u => isWithinFilter(u.verifiedAt || u.createdAt, timeFilter));
+    const filtered = allUsers.filter(u => isWithinFilter(u.verifiedAt || u.createdAt, timeFilter, customRange));
     const verified = filtered.filter(u => u.status === 'verified').length;
     const pending = filtered.filter(u => u.status === 'pending').length;
     const declined = filtered.filter(u => u.status === 'declined').length;
@@ -292,12 +323,12 @@ const AdminDashboard = () => {
         hoverOffset: 6,
       }],
     };
-  }, [allUsers, timeFilter]);
+  }, [allUsers, timeFilter, customRange]);
 
   /* ── Chart Data: Households by Purok ── */
   const householdByPurokData = useMemo(() => {
     const purokMap = {};
-    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
     filtered.forEach(h => {
       const p = h.purok || 'Unknown';
       purokMap[p] = (purokMap[p] || 0) + 1;
@@ -317,14 +348,14 @@ const AdminDashboard = () => {
         borderSkipped: false,
       }],
     };
-  }, [households, timeFilter]);
+  }, [households, timeFilter, customRange]);
 
   /* ── Chart Data: Events Overview ── */
   const eventsOverviewData = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const filteredEvents = events.filter(e => isWithinFilter(e.createdAt || e.eventDate, timeFilter));
-    const filteredRegs = registrations.filter(r => isWithinFilter(r.registrationDate, timeFilter));
+    const filteredEvents = events.filter(e => isWithinFilter(e.createdAt || e.eventDate, timeFilter, customRange));
+    const filteredRegs = registrations.filter(r => isWithinFilter(r.registrationDate, timeFilter, customRange));
     
     const upcoming = filteredEvents.filter(e => new Date(e.eventDate) >= today).length;
     const past = filteredEvents.filter(e => new Date(e.eventDate) < today).length;
@@ -339,11 +370,11 @@ const AdminDashboard = () => {
         borderSkipped: false,
       }],
     };
-  }, [events, registrations, timeFilter]);
+  }, [events, registrations, timeFilter, customRange]);
 
   /* ── Chart Data: Announcements by Category ── */
   const announcementsCategoryData = useMemo(() => {
-    const filtered = announcements.filter(a => isWithinFilter(a.createdAt || a.datePosted, timeFilter));
+    const filtered = announcements.filter(a => isWithinFilter(a.createdAt || a.datePosted, timeFilter, customRange));
     const catCounts = {
       Environment: 0,
       Health: 0,
@@ -382,12 +413,12 @@ const AdminDashboard = () => {
         hoverOffset: 6,
       }],
     };
-  }, [announcements, timeFilter]);
+  }, [announcements, timeFilter, customRange]);
 
   /* ── Chart Data: Household Members by Age Group ── */
   const ageGroupData = useMemo(() => {
     const groups = { '0-17': 0, '18-30': 0, '31-45': 0, '46-60': 0, '60+': 0 };
-    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
     filtered.forEach(h => {
       (h.members || []).forEach(m => {
         if (!m.dateOfBirth) return;
@@ -409,12 +440,12 @@ const AdminDashboard = () => {
         borderRadius: 8, borderSkipped: false,
       }],
     };
-  }, [households, timeFilter]);
+  }, [households, timeFilter, customRange]);
 
   /* ── Chart Data: Civil Status ── */
   const civilStatusData = useMemo(() => {
     const map = {};
-    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
     filtered.forEach(h => {
       (h.members || []).forEach(m => {
         const cs = m.civilStatus || 'Unknown';
@@ -430,12 +461,12 @@ const AdminDashboard = () => {
         borderColor: '#fff', borderWidth: 3, hoverOffset: 6,
       }],
     };
-  }, [households, timeFilter]);
+  }, [households, timeFilter, customRange]);
 
   /* ── Chart Data: Citizenship ── */
   const citizenshipData = useMemo(() => {
     const map = {};
-    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
     filtered.forEach(h => {
       (h.members || []).forEach(m => {
         const c = m.citizenship || 'Unknown';
@@ -450,12 +481,12 @@ const AdminDashboard = () => {
         borderColor: '#fff', borderWidth: 3, hoverOffset: 6,
       }],
     };
-  }, [households, timeFilter]);
+  }, [households, timeFilter, customRange]);
 
   /* ── Chart Data: Top Occupations ── */
   const occupationData = useMemo(() => {
     const map = {};
-    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
     filtered.forEach(h => {
       (h.members || []).forEach(m => {
         const occ = (m.occupation || '').trim();
@@ -473,12 +504,12 @@ const AdminDashboard = () => {
         borderRadius: 8, borderSkipped: false,
       }],
     };
-  }, [households, timeFilter]);
+  }, [households, timeFilter, customRange]);
 
   /* ── Chart Data: Gender Distribution ── */
   const genderData = useMemo(() => {
     const map = {};
-    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
+    const filtered = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
     filtered.forEach(h => {
       (h.members || []).forEach(m => {
         const g = m.gender || 'Unknown';
@@ -493,22 +524,42 @@ const AdminDashboard = () => {
         borderColor: '#fff', borderWidth: 3, hoverOffset: 6,
       }],
     };
-  }, [households, timeFilter]);  /* ── Export PDF Report ── */
-  const handleExportPDF = () => {
-    const filteredUsers = allUsers.filter(u => isWithinFilter(u.verifiedAt || u.createdAt, timeFilter));
-    const filteredEvents = events.filter(e => isWithinFilter(e.createdAt || e.eventDate, timeFilter));
-    const filteredAnnouncements = announcements.filter(a => isWithinFilter(a.createdAt || a.datePosted, timeFilter));
-    const filteredRegs = registrations.filter(r => isWithinFilter(r.registrationDate, timeFilter));
-    const filteredHouseholds = households.filter(h => isWithinFilter(h.createdAt, timeFilter));
-    const filteredLogs = activityLogs.filter(l => isWithinFilter(l.timestamp, timeFilter));
+  }, [households, timeFilter, customRange]);
 
-    const filterLabel = {
-      '7days': 'Past 7 Days',
-      '14days': 'Past 14 Days',
-      '1month': 'Past 1 Month',
-      '1year': 'Past 1 Year',
-      'all': 'All Time'
-    }[timeFilter];
+  /* ── Export PDF Report ── */
+  const handleExportPDF = () => {
+    const filteredUsers = allUsers.filter(u => isWithinFilter(u.verifiedAt || u.createdAt, timeFilter, customRange));
+    const filteredEvents = events.filter(e => isWithinFilter(e.createdAt || e.eventDate, timeFilter, customRange));
+    const filteredAnnouncements = announcements.filter(a => isWithinFilter(a.createdAt || a.datePosted, timeFilter, customRange));
+    const filteredRegs = registrations.filter(r => isWithinFilter(r.registrationDate, timeFilter, customRange));
+    const filteredHouseholds = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
+    const filteredLogs = activityLogs.filter(l => isWithinFilter(l.timestamp, timeFilter, customRange));
+
+    const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    let periodString;
+
+    if (timeFilter === 'all') {
+      const allDates = [
+        ...allUsers.map(u => u.createdAt || u.verifiedAt),
+        ...events.map(e => e.createdAt || e.eventDate),
+        ...announcements.map(a => a.createdAt || a.datePosted),
+        ...registrations.map(r => r.registrationDate),
+        ...households.map(h => h.createdAt),
+        ...activityLogs.map(l => l.timestamp)
+      ].filter(Boolean).map(d => {
+        if (d.toDate) return d.toDate();
+        return new Date(d);
+      }).filter(d => !isNaN(d.getTime()));
+      
+      const earliestDate = allDates.length > 0 ? new Date(Math.min(...allDates)) : new Date();
+      periodString = `${formatDate(earliestDate)} – ${formatDate(new Date())}`;
+    } else {
+      const { from, to } = getFilterBounds(timeFilter, customRange);
+      // For PDF, if the "to" date is in the future, we can cap it at "Today" for display, or show the actual bounds.
+      // E.g., if "This Year", it shows Jan 1 - Dec 31, or Jan 1 - Today. The user prefers Jan 1 - Today.
+      const displayTo = to > new Date() ? new Date() : to;
+      periodString = `${formatDate(from)} – ${formatDate(displayTo)}`;
+    }
 
     const generatePDF = (logoImg = null) => {
       const doc = new jsPDF();
@@ -529,8 +580,13 @@ const AdminDashboard = () => {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 116, 139); // slate-500
-      doc.text(`Period: ${filterLabel}`, 42, 30);
+      doc.text(`Period: ${periodString}`, 42, 30);
       doc.text(`Generated: ${new Date().toLocaleString()}`, 42, 35);
+
+      const tableStyles = {
+        headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontSize: 11, fontStyle: 'bold', lineWidth: 0.1, lineColor: [203, 213, 225] },
+        styles: { fontSize: 9.5, cellPadding: 4, textColor: [51, 65, 85], lineWidth: 0.1, lineColor: [203, 213, 225] }
+      };
 
       // Key Metrics Table
       autoTable(doc, {
@@ -544,8 +600,7 @@ const AdminDashboard = () => {
           ['Announcements in Period', filteredAnnouncements.length.toString()],
           ['Event Registrations in Period', filteredRegs.length.toString()],
         ],
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 }, // Teal
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
         margin: { top: 10 },
       });
 
@@ -558,8 +613,7 @@ const AdminDashboard = () => {
           ['Pending', filteredUsers.filter(u => u.status === 'pending').length.toString()],
           ['Declined', filteredUsers.filter(u => u.status === 'declined').length.toString()],
         ],
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
       });
 
       // Households by Purok Table
@@ -571,8 +625,7 @@ const AdminDashboard = () => {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Purok', 'Household Count']],
         body: purokRows,
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
       });
 
       // Events Overview Table
@@ -580,8 +633,7 @@ const AdminDashboard = () => {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Events Overview', 'Count']],
         body: eventsOverviewData.labels.map((label, idx) => [label, eventsOverviewData.datasets[0].data[idx].toString()]),
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
       });
 
       // Announcements by Category Table
@@ -590,8 +642,7 @@ const AdminDashboard = () => {
           startY: doc.lastAutoTable.finalY + 10,
           head: [['Announcement Category', 'Count']],
           body: announcementsCategoryData.labels.map((label, idx) => [label, announcementsCategoryData.datasets[0].data[idx].toString()]),
-          headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-          styles: { fontSize: 9.5, cellPadding: 4 },
+          ...tableStyles,
         });
       }
 
@@ -600,8 +651,7 @@ const AdminDashboard = () => {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Age Group', 'Members Count']],
         body: ageGroupData.labels.map((label, idx) => [label, ageGroupData.datasets[0].data[idx].toString()]),
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
       });
 
       // Civil Status Table
@@ -609,8 +659,7 @@ const AdminDashboard = () => {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Civil Status', 'Count']],
         body: civilStatusData.labels.map((label, idx) => [label, civilStatusData.datasets[0].data[idx].toString()]),
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
       });
 
       // Citizenship Table
@@ -618,8 +667,7 @@ const AdminDashboard = () => {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Citizenship', 'Count']],
         body: citizenshipData.labels.map((label, idx) => [label, citizenshipData.datasets[0].data[idx].toString()]),
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
       });
 
       // Gender Distribution Table
@@ -627,8 +675,7 @@ const AdminDashboard = () => {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Gender', 'Count']],
         body: genderData.labels.map((label, idx) => [label, genderData.datasets[0].data[idx].toString()]),
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 9.5, cellPadding: 4 },
+        ...tableStyles,
       });
 
       // Top Occupations Table
@@ -637,8 +684,7 @@ const AdminDashboard = () => {
           startY: doc.lastAutoTable.finalY + 10,
           head: [['Top Occupations', 'Count']],
           body: occupationData.labels.map((label, idx) => [label, occupationData.datasets[0].data[idx].toString()]),
-          headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-          styles: { fontSize: 9.5, cellPadding: 4 },
+          ...tableStyles,
         });
       }
 
@@ -652,8 +698,8 @@ const AdminDashboard = () => {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Time', 'Action', 'Module', 'Description', 'Admin']],
         body: logRows,
-        headStyles: { fillColor: [29, 158, 117], fontSize: 11 },
-        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontSize: 11, fontStyle: 'bold', lineWidth: 0.1, lineColor: [203, 213, 225] },
+        styles: { fontSize: 8, cellPadding: 3, textColor: [51, 65, 85], lineWidth: 0.1, lineColor: [203, 213, 225] },
         columnStyles: {
           0: { cellWidth: 32 },
           3: { cellWidth: 'auto' }
@@ -748,21 +794,49 @@ const AdminDashboard = () => {
                 <p className="dash-subtitle">Welcome back, {userName}. Here is what is happening in Barangay Mabayuan today.</p>
               </div>
               <div className="dash-header-right">
-                <select 
-                  className="dash-time-filter"
-                  value={timeFilter}
-                  onChange={(e) => setTimeFilter(e.target.value)}
-                >
-                  <option value="7days">Past 7 Days</option>
-                  <option value="14days">Past 14 Days</option>
-                  <option value="1month">Past 1 Month</option>
-                  <option value="1year">Past 1 Year</option>
-                  <option value="all">All Time</option>
-                </select>
-                  <button className="export-btn" onClick={handleExportPDF} title="Export Dashboard Report to PDF">
-                    <FileText size={16} strokeWidth={2} />
-                    <span>Export PDF</span>
-                  </button>
+                <div className="dash-filter-group">
+                  <select 
+                    className="dash-time-filter"
+                    value={timeFilter}
+                    onChange={(e) => setTimeFilter(e.target.value)}
+                  >
+                    <option value="today">Today</option>
+                    <option value="thisWeek">This Week</option>
+                    <option value="thisMonth">This Month</option>
+                    <option value="thisYear">This Year</option>
+                    <option value="all">All Time</option>
+                    <option value="custom">Custom Range</option>
+                  </select>
+                  {timeFilter === 'custom' && (
+                    <div className="custom-date-range">
+                      <div className="date-range-field">
+                        <label className="date-range-label">From</label>
+                        <input
+                          type="date"
+                          className="date-range-input"
+                          value={customDateFrom}
+                          onChange={(e) => setCustomDateFrom(e.target.value)}
+                          max={customDateTo || undefined}
+                        />
+                      </div>
+                      <span className="date-range-separator">–</span>
+                      <div className="date-range-field">
+                        <label className="date-range-label">To</label>
+                        <input
+                          type="date"
+                          className="date-range-input"
+                          value={customDateTo}
+                          onChange={(e) => setCustomDateTo(e.target.value)}
+                          min={customDateFrom || undefined}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button className="export-btn" onClick={handleExportPDF} title="Export Dashboard Report to PDF" disabled={timeFilter === 'custom' && (!customDateFrom || !customDateTo)}>
+                  <FileText size={16} strokeWidth={2} />
+                  <span>Export PDF</span>
+                </button>
               </div>
             </div>
 
@@ -833,9 +907,11 @@ const AdminDashboard = () => {
                     </h2>
                     <span className="chart-period-badge">
                       {timeFilter === 'all' ? 'All Time' : 
-                       timeFilter === '1year' ? 'Past 1 Year' : 
-                       timeFilter === '1month' ? 'Past 1 Month' : 
-                       timeFilter === '14days' ? 'Past 14 Days' : 'Past 7 Days'}
+                       timeFilter === 'thisYear' ? 'This Year' : 
+                       timeFilter === 'thisMonth' ? 'This Month' : 
+                       timeFilter === 'thisWeek' ? 'This Week' : 
+                       timeFilter === 'today' ? 'Today' : 
+                       'Custom Range'}
                     </span>
                   </div>
                   <div className="chart-container chart-container-line">

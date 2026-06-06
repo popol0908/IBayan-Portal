@@ -127,7 +127,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #6366f1;
+    color: #16a34a;
     flex-shrink: 0;
     margin-right: 8px;
     position: relative;
@@ -152,9 +152,9 @@
 
 .form-input:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: #16a34a;
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 .form-input.input-error {
@@ -164,6 +164,66 @@
 .form-input.input-error:focus {
     border-color: #ef4444;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.address-input-group {
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.address-input-group:focus-within {
+    border-color: #16a34a;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.address-input-group .input-error {
+    border-color: transparent !important;
+}
+
+.address-input-group:has(.input-error) {
+    border-color: #ef4444;
+}
+
+.address-input-group .address-prefix-input {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding-right: 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.address-input-group .address-prefix-input:focus {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.address-suffix {
+    padding: 0.65rem 1rem 0.65rem 0.5rem;
+    color: #6b7280;
+    font-size: 0.93rem;
+    white-space: nowrap;
+    background: transparent;
+    user-select: none;
+}
+
+.no-id-note {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    line-height: 1.4;
+    background-color: #f3f4f6;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid #16a34a;
 }
 
 .password-input-wrapper {
@@ -191,7 +251,7 @@
 }
 
 .password-toggle-btn:hover {
-  color: #6366f1;
+  color: #16a34a;
 }
 
 .password-toggle-btn:focus {
@@ -210,9 +270,9 @@
 }
 
 .form-input[type="file"]::-webkit-file-upload-button {
-    background: #eef2ff;
-    border: 1px solid #e0e7ff;
-    color: #6366f1;
+    background: #FFFBEB;
+    border: 1px solid #FEF3C7;
+    color: #16a34a;
     padding: 0.35rem 0.75rem;
     border-radius: 8px;
     font-size: 0.82rem;
@@ -223,7 +283,7 @@
 }
 
 .form-input[type="file"]::-webkit-file-upload-button:hover {
-    background: #e0e7ff;
+    background: #FEF3C7;
 }
 
 .field-error {
@@ -253,7 +313,7 @@
 .checkbox-container input {
     width: 16px;
     height: 16px;
-    accent-color: #6366f1;
+    accent-color: #16a34a;
     cursor: pointer;
 }
 
@@ -261,10 +321,10 @@
 .btn-primary {
     width: 100%;
     padding: 0.75rem 1.5rem;
-    background: #6366f1;
+    background: #16a34a;
     border: none;
     border-radius: 10px;
-    color: #fff;
+    color: #ffffff;
     font-size: 0.93rem;
     font-weight: 600;
     cursor: pointer;
@@ -278,8 +338,8 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #4f46e5;
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+    background: #15803d;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
     transform: translateY(-1px);
 }
 
@@ -325,14 +385,14 @@
 }
 
 .login-link {
-    color: #6366f1;
+    color: #16a34a;
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s ease;
 }
 
 .login-link:hover {
-    color: #4f46e5;
+    color: #15803d;
     text-decoration: underline;
 }
 
@@ -343,7 +403,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #818cf8 100%);
+    background: linear-gradient(135deg, #166534 0%, #16a34a 50%, #22c55e 100%);
 }
 
 .signup-info-backdrop {
@@ -582,24 +642,24 @@
 }
 
 .resubmit-instructions {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-    border-left: 4px solid #2196f3;
+    border-left: 4px solid #16a34a;
 }
 
 .instructions-title {
     margin: 0 0 1rem 0;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1565c0;
+    color: #166534;
 }
 
 .instructions-list {
     margin: 0;
     padding-left: 1.5rem;
-    color: #1565c0;
+    color: #166534;
 }
 
 .instructions-list li {
@@ -652,8 +712,8 @@
 }
 
 .file-label:hover {
-    border-color: #6366f1;
-    background: #eef2ff;
+    border-color: #16a34a;
+    background: #FFFBEB;
 }
 
 .file-label.input-error {
@@ -663,7 +723,7 @@
 
 .file-icon {
     font-size: 1.5rem;
-    color: #6366f1;
+    color: #16a34a;
 }
 
 .file-text {
@@ -677,7 +737,7 @@
 
 .file-button {
     padding: 0.5rem 1rem;
-    background: #6366f1;
+    background: #16a34a;
     color: white;
     border-radius: 8px;
     font-size: 0.9rem;
@@ -686,7 +746,7 @@
 }
 
 .file-label:hover .file-button {
-    background: #4f46e5;
+    background: #15803d;
 }
 
 .file-help-text {
@@ -881,7 +941,7 @@
 
 .guidelines-warning {
     background: #fffbeb;
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid #16a34a;
     padding: 0.85rem 1rem;
     border-radius: 6px;
     font-size: 0.85rem;
@@ -901,7 +961,7 @@
 
 .btn-modal-close {
     padding: 0.6rem 1.5rem;
-    background: #6366f1;
+    background: #16a34a;
     color: white;
     border: none;
     border-radius: 8px;
@@ -912,7 +972,7 @@
 }
 
 .btn-modal-close:hover {
-    background: #4f46e5;
+    background: #15803d;
 }
 
 /* Button Trigger */
@@ -922,7 +982,7 @@
     gap: 0.4rem;
     background: transparent;
     border: none;
-    color: #3b82f6;
+    color: #16a34a;
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
@@ -931,7 +991,7 @@
 }
 
 .btn-guidelines-trigger:hover {
-    color: #2563eb;
+    color: #15803d;
     text-decoration: underline;
 }
 
@@ -963,7 +1023,7 @@
   background: none;
   border: none;
   padding: 0;
-  color: #3B82F6;
+  color: #F59E0B;;
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
@@ -972,7 +1032,7 @@
 }
 
 .text-link:hover {
-  color: #2563EB;
+  color: #D97706;;
 }
 
 .terms-modal {
@@ -1004,3 +1064,125 @@
   line-height: 1.6;
   margin: 0;
 }
+
+/* ============================================
+   MULTI-STEP WIZARD STYLES
+   ============================================ */
+
+.signup-progress {
+  margin-bottom: 2rem;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  text-align: right;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #16a34a;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.form-step {
+  display: flex;
+  flex-direction: column;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.multi-step-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.multi-step-actions .btn {
+  flex: 1;
+  margin-bottom: 0;
+  justify-content: center;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid #d1d5db;
+  color: #374151;
+}
+
+.btn-outline:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* Review & Confirm Summary */
+.summary-container {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-section {
+  margin-bottom: 1.25rem;
+}
+
+.summary-section:last-child {
+  margin-bottom: 0;
+}
+
+.summary-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.4rem;
+}
+
+.summary-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.summary-value {
+  font-size: 0.95rem;
+  color: #1a1a2e;
+  font-weight: 500;
+  word-break: break-word;
+}
+
