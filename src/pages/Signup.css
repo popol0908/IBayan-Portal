@@ -210,7 +210,7 @@
     padding: 0.65rem 1rem 0.65rem 0.5rem;
     color: #6b7280;
     font-size: 0.93rem;
-    white-space: nowrap;
+    white-space: normal; /* Fix: allow wrapping on small screens */
     background: transparent;
     user-select: none;
 }
@@ -546,6 +546,21 @@
     .signup-logo img {
         width: 48px;
         height: 48px;
+    }
+
+    /* Multi-step actions responsiveness */
+    .multi-step-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .multi-step-actions .btn {
+        width: 100%;
+    }
+
+    /* Fix summary container */
+    .summary-container {
+        padding: 1rem;
     }
 }
 

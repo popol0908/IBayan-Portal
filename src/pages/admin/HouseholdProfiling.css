@@ -842,73 +842,7 @@
   background: #F8FAFC;
 }
 
-/* PSG Code inline edit (view modal) */
-.hh-psg-inline {
-  margin-bottom: 1.5rem;
-  padding: 1rem 1.25rem;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-radius: 10px;
-}
 
-.hh-psg-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #92400E;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.5rem;
-  display: block;
-}
-
-.hh-psg-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.hh-psg-input {
-  width: 160px;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  background: #ffffff;
-  color: #0F172A;
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
-
-.hh-psg-input:focus {
-  outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-.hh-psg-save-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 8px;
-  border: none;
-  background: #16A34A;
-  color: white;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.hh-psg-save-btn:hover:not(:disabled) {
-  background: #15803D;
-}
-
-.hh-psg-save-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* Approve dialog icon */
 .hh-approve-icon {

@@ -161,31 +161,36 @@ const Landing = () => {
       {/* ===== HERO ===== */}
       <section className="ibayan-hero" id="hero">
         <div className="ibayan-hero-inner">
-          <span className="ibayan-hero-badge">
-            <MapPin size={14} strokeWidth={2} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-            Barangay Mabayuan · Olongapo City, Zambales
-          </span>
-          <h1 className="ibayan-hero-headline">
-            Empowering <span className="ibayan-hero-highlight">Barangay Mabayuan</span> through Digital Innovation
-          </h1>
-          <p className="ibayan-hero-desc">
-            Welcome to the official iBayan Portal of Barangay Mabayuan, Olongapo City, Zambales.
-            Your all-in-one digital companion for barangay services — manage your household,
-            stay updated with news, and report emergencies with ease.
-          </p>
-          <div className="ibayan-hero-identity">
-            <div className="ibayan-identity-chip">
-              <Phone size={14} strokeWidth={2} />
-              <span>Area Code: <strong>047</strong></span>
+          <div className="ibayan-hero-content">
+            <span className="ibayan-hero-badge">
+              <MapPin size={14} strokeWidth={2} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+              Barangay Mabayuan · Olongapo City, Zambales
+            </span>
+            <h1 className="ibayan-hero-headline">
+              Empowering <span className="ibayan-hero-highlight">Barangay Mabayuan</span> through Digital Innovation
+            </h1>
+            <p className="ibayan-hero-desc">
+              Welcome to the official iBayan Portal of Barangay Mabayuan, Olongapo City, Zambales.
+              Your all-in-one digital companion for barangay services — manage your household,
+              stay updated with news, and report emergencies with ease.
+            </p>
+            <div className="ibayan-hero-identity">
+              <div className="ibayan-identity-chip">
+                <Phone size={14} strokeWidth={2} />
+                <span>Area Code: <strong>047</strong></span>
+              </div>
+              <div className="ibayan-identity-chip">
+                <MapPin size={14} strokeWidth={2} />
+                <span>Olongapo City, Zambales</span>
+              </div>
             </div>
-            <div className="ibayan-identity-chip">
-              <MapPin size={14} strokeWidth={2} />
-              <span>Olongapo City, Zambales</span>
+            <div className="ibayan-hero-cta">
+              <Link to="/login" className="ibayan-btn-primary">Resident Login</Link>
+              <Link to="/signup" className="ibayan-btn-outline">Sign Up Now</Link>
             </div>
           </div>
-          <div className="ibayan-hero-cta">
-            <Link to="/login" className="ibayan-btn-primary">Resident Login</Link>
-            <Link to="/signup" className="ibayan-btn-outline">Sign Up Now</Link>
+          <div className="ibayan-hero-image">
+            <img src="/hero-mockup.png" alt="iBayan Portal Interface on Desktop and Mobile" />
           </div>
         </div>
       </section>

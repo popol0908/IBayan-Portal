@@ -86,13 +86,13 @@ body.sidebar-collapsed .top-header { left: 72px; }
 @media (max-width: 768px) {
   .top-header {
     left: 0 !important;
-    padding: 0 16px 0 60px; /* leave room for hamburger */
+    padding: 0 16px 0 64px; /* leave room for hamburger */
   }
 }
 
 @media (max-width: 480px) {
   .top-header {
-    padding: 0 12px 0 56px;
+    padding: 0 12px 0 60px;
   }
 
   .top-header-title {

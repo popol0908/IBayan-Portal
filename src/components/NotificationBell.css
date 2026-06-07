@@ -92,7 +92,7 @@
 .notif-dropdown-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: white;
+  color: #1E293B;
   margin: 0;
 }
 
@@ -181,7 +181,7 @@
 .notif-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: white;
+  color: #1E293B;
   margin: 0 0 2px 0;
   line-height: 1.3;
 }

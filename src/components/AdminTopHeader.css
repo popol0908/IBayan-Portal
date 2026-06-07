@@ -115,25 +115,35 @@ body.sidebar-collapsed .admin-top-header { left: 72px; }
 @media (max-width: 768px) {
   .admin-top-header {
     left: 0 !important;
-    padding: 0 16px 0 60px;
+    padding: 0 16px 0 64px;
   }
 
   .admin-top-header-name {
     display: none;
   }
 
+  .admin-top-search-wrap {
+    width: 100%;
+  }
+
   .admin-top-search-input {
-    width: 160px;
+    width: 100%;
+    max-width: none;
   }
 }
 
 @media (max-width: 480px) {
   .admin-top-header {
-    padding: 0 12px 0 56px;
+    padding: 0 12px 0 60px;
+  }
+
+  .admin-top-search-wrap {
+    width: 100%;
   }
 
   .admin-top-search-input {
-    width: 120px;
+    width: 100%;
     font-size: 0.8rem;
+    max-width: none;
   }
 }

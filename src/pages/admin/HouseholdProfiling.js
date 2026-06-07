@@ -48,10 +48,6 @@ const HouseholdProfiling = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState(null);
 
-  // PSG code inline edit (inside view modal)
-  const [psgCode, setPsgCode] = useState('');
-  const [savingPsg, setSavingPsg] = useState(false);
-
   // Print
   const printRef = useRef();
   const handlePrint = useReactToPrint({
@@ -112,7 +108,6 @@ const HouseholdProfiling = () => {
   /* ── Actions ── */
   const openViewModal = (household) => {
     setSelectedHousehold(household);
-    setPsgCode(household.psgCode || '');
     setShowViewModal(true);
   };
 
@@ -132,22 +127,6 @@ const HouseholdProfiling = () => {
     } catch (error) {
       console.error('Error deleting household:', error);
       showToast('Failed to delete household.', 'error');
-    }
-  };
-
-  const handleSavePsgCode = async () => {
-    if (!selectedHousehold) return;
-    setSavingPsg(true);
-    try {
-      await updateDoc(doc(db, 'households', selectedHousehold.id), { psgCode });
-      // Update local state so print shows the new value
-      setSelectedHousehold((prev) => prev ? { ...prev, psgCode } : prev);
-      showToast('PSG Code updated.', 'success');
-    } catch (error) {
-      console.error('Error saving PSG code:', error);
-      showToast('Failed to save PSG Code.', 'error');
-    } finally {
-      setSavingPsg(false);
     }
   };
 
@@ -335,25 +314,6 @@ const HouseholdProfiling = () => {
                         <br />
                         <small style={{ color: '#64748B', fontWeight: 400 }}>{selectedHousehold.submittedByEmail}</small>
                       </span>
-                    </div>
-                  </div>
-
-                  {/* PSG Code — admin-only editable field */}
-                  <div className="hh-psg-inline">
-                    <label className="hh-psg-label">PSG Code</label>
-                    <div className="hh-psg-row">
-                      <input
-                        type="text"
-                        value={psgCode}
-                        onChange={(e) => setPsgCode(e.target.value)}
-                        placeholder="Enter PSG Code"
-                        maxLength={10}
-                        className="hh-psg-input"
-                      />
-                      <button className="hh-psg-save-btn" onClick={handleSavePsgCode} disabled={savingPsg}>
-                        <Save size={14} strokeWidth={2} />
-                        {savingPsg ? 'Saving...' : 'Save'}
-                      </button>
                     </div>
                   </div>
 

@@ -56,7 +56,7 @@ const AdminNavbar = () => {
   const navigate = useNavigate();
   const { startLoading } = useLoading();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 768);
 
   // Determine the user's sub-role (normalised)
   const subRole = (userProfile?.subRole || '').trim().toLowerCase();
@@ -132,16 +132,18 @@ const AdminNavbar = () => {
   return (
     <>
       {/* Mobile Hamburger Button */}
-      <button
-        className="mobile-hamburger"
-        onClick={() => setIsSidebarOpen(true)}
-        aria-label="Toggle navigation menu"
-        title="Menu"
-      >
-        <span className="hamburger-line"></span>
-        <span className="hamburger-line"></span>
-        <span className="hamburger-line"></span>
-      </button>
+      {!isSidebarOpen && (
+        <button
+          className="mobile-hamburger"
+          onClick={() => setIsSidebarOpen(true)}
+          aria-label="Toggle navigation menu"
+          title="Menu"
+        >
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+        </button>
+      )}
 
       <div className="admin-sidebar-wrapper">
         {/* Sidebar */}
@@ -150,7 +152,12 @@ const AdminNavbar = () => {
           <div className="sidebar-header">
             <div className="sidebar-brand">
               <img src="/logo.png" alt="Barangay Mabayuan Seal" className="brand-logo" />
-              {isSidebarOpen && <span className="brand-text">iBayan Portal</span>}
+              {isSidebarOpen && (
+                <div className="brand-text-container">
+                  <span className="brand-text">iBayan Portal</span>
+                  <span className="role-badge admin-badge">Admin Portal</span>
+                </div>
+              )}
             </div>
             {isSidebarOpen && (
               <button

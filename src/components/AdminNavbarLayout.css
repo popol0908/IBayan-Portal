@@ -107,7 +107,7 @@ body.sidebar-collapsed .admin-dashboard {
 @media (max-width: 992px) {
   body.sidebar-expanded .admin-dashboard,
   body.sidebar-collapsed .admin-dashboard {
-    padding-left: 220px !important; /* adjust for tablet sidebar width if needed, or stick to 240 */
+    padding-left: 220px !important;
   }
 
   .admin-navbar {
@@ -135,6 +135,13 @@ body.sidebar-collapsed .admin-dashboard {
 
   .admin-menu-toggle {
     display: flex;
+  }
+}
+
+@media (max-width: 768px) {
+  body.sidebar-expanded .admin-dashboard,
+  body.sidebar-collapsed .admin-dashboard {
+    padding-left: 0 !important;
   }
 }
 
