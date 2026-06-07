@@ -25,6 +25,8 @@ service cloud.firestore {
       allow read: if isOwner(userId);
       // Admins can read all profiles
       allow read: if isAdmin();
+      // Allow any authenticated user to query for admins (needed for sending notifications)
+      allow read: if isAuthenticated() && resource.data.role == 'admin';
       // Users can create their own profile during signup
       allow create: if isOwner(userId);
       // Users can update their own profile

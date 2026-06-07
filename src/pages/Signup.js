@@ -239,39 +239,9 @@ const Signup = () => {
       setLoading(true);
       setError("");
 
-      // Validate Duplicate Account (Contact/Email)
-      const usersRef = collection(db, "users");
-      const emailQuery = query(usersRef, where("email", "==", formData.email));
-      const contactQuery = query(usersRef, where("contactNumber", "==", formData.contactNumber));
-      
-      const [emailSnap, contactSnap] = await Promise.all([
-        getDocs(emailQuery),
-        getDocs(contactQuery)
-      ]);
-
-      if (!emailSnap.empty || !contactSnap.empty) {
-        setLoading(false);
-        showToast("This email/contact number is already linked to an existing account.", "error");
-        setCurrentStep(3);
-        return;
-      }
-
-      // Validate Duplicate Resident (Full Name + DOB)
-      // Query by birthday to make it efficient, then check name case-insensitively
-      const dobQuery = query(usersRef, where("birthday", "==", formData.birthday));
-      const dobSnap = await getDocs(dobQuery);
-      
-      const isDuplicateResident = dobSnap.docs.some(doc => {
-        const data = doc.data();
-        return data.fullName && data.fullName.trim().toLowerCase() === formData.name.trim().toLowerCase();
-      });
-
-      if (isDuplicateResident) {
-        setLoading(false);
-        showToast("A resident with this Full Name and Date of Birth is already registered.", "error");
-        setCurrentStep(1);
-        return;
-      }
+      // Note: We removed the client-side duplicate checking for contactNumber and birthday
+      // because Firebase Security Rules correctly prevent unauthenticated users from querying
+      // the users collection. Duplicate emails are still handled automatically by Firebase Auth below.
 
       const result = await signup(
         formData.email,
@@ -353,12 +323,13 @@ const Signup = () => {
         showToast("Password is too weak.", "error");
         setErrors((prev) => ({ ...prev, password: "Password is too weak." }));
         setCurrentStep(3);
-      } else if (error.message.includes("upload")) {
-        showToast(error.message, "error");
-        setCurrentStep(4); // Go back to upload step
+      } else if (error.message && error.message.includes("upload")) {
+        showToast("Failed to upload image. If you have an adblocker or Brave Shields enabled, please disable it and try again.", "error");
+        setError("Image upload blocked. Please disable adblockers.");
+        setCurrentStep(4);
       } else {
         showToast("Signup failed. Please try again.", "error");
-        setError("An error occurred. Please try again.");
+        setError(error.message || "An error occurred. Please try again.");
       }
     } finally {
       setLoading(false);

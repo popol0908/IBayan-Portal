@@ -5,6 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { validatePhoneNumber, validateRequired } from '../utils/validation';
+import { XCircle } from '../components/Icons';
 import './Signup.css';
 
 // Cloudinary configuration
@@ -188,7 +189,7 @@ const VerificationDeclined = () => {
           {/* Header with Icon */}
           <div className="verification-declined-header">
             <div className="decline-icon-wrapper">
-              <span className="decline-icon">❌</span>
+              <span className="decline-icon"><XCircle size={48} strokeWidth={2} color="#DC2626" /></span>
             </div>
             <h1 className="signup-title decline-title">Verification Declined</h1>
             <p className="signup-subtitle decline-subtitle">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Users } from '../components/Icons';
+import { Calendar, Clock, MapPin, Users, X } from '../components/Icons';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToChanges, addItem } from '../services/dataService';
 import { useToast } from '../contexts/ToastContext';
@@ -314,7 +314,7 @@ const Events = () => {
                   className="modal-close"
                   onClick={() => setShowRegistrationModal(false)}
                 >
-                  ✖️
+                  <X size={20} strokeWidth={2} />
                 </button>
               </div>
               <div className="modal-body">

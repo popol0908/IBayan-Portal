@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { sendChatMessage, saveMessageToFirestore } from '../services/chatService';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import { X, Bot, MessageSquare, Send, Loader2 } from './Icons';
+import ReactMarkdown from 'react-markdown';
 import './ChatAssistant.css';
 
 const ChatAssistant = () => {
@@ -219,9 +221,9 @@ const ChatAssistant = () => {
         id="chat-toggle-btn"
       >
         {isOpen ? (
-          <span className="chat-icon">✕</span>
+          <X size={24} strokeWidth={2} />
         ) : (
-          <span className="chat-icon">💬</span>
+          <MessageSquare size={24} strokeWidth={2} />
         )}
       </button>
 
@@ -231,7 +233,7 @@ const ChatAssistant = () => {
           <div className="chat-header">
             <div className="chat-header-content">
               <div className="chat-avatar-wrapper">
-                <div className="chat-avatar">🤖</div>
+                <div className="chat-avatar"><Bot size={24} strokeWidth={1.5} /></div>
                 <span className="online-dot"></span>
               </div>
               <div className="chat-header-text">
@@ -247,7 +249,7 @@ const ChatAssistant = () => {
               aria-label="Close chat"
               id="chat-close-btn"
             >
-              ✕
+              <X size={20} strokeWidth={2} />
             </button>
           </div>
 
@@ -259,17 +261,10 @@ const ChatAssistant = () => {
               >
                 {message.role === 'assistant' && (
                   <div className="message-row">
-                    <div className="message-avatar">🤖</div>
+                    <div className="message-avatar"><Bot size={18} strokeWidth={1.5} /></div>
                     <div className="message-bubble-wrapper">
-                      <div className="message-content">
-                        {message.content.split('\n').map((line, idx) => (
-                          <React.Fragment key={idx}>
-                            {line}
-                            {idx < message.content.split('\n').length - 1 && (
-                              <br />
-                            )}
-                          </React.Fragment>
-                        ))}
+                      <div className="message-content markdown-content">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                       <div className="message-time">
                         {message.timestamp instanceof Date
@@ -309,7 +304,7 @@ const ChatAssistant = () => {
             {isSending && (
               <div className="chat-message assistant">
                 <div className="message-row">
-                  <div className="message-avatar">🤖</div>
+                  <div className="message-avatar"><Bot size={18} strokeWidth={1.5} /></div>
                   <div className="message-bubble-wrapper">
                     <div className="message-content">
                       <div className="typing-indicator">
@@ -346,9 +341,9 @@ const ChatAssistant = () => {
                 id="chat-send-btn"
               >
                 {isSending ? (
-                  <span className="send-icon">⏳</span>
+                  <Loader2 size={18} strokeWidth={2} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
                 ) : (
-                  <span className="send-icon">➤</span>
+                  <Send size={18} strokeWidth={2} />
                 )}
               </button>
             </div>
