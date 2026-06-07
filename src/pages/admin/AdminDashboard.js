@@ -567,7 +567,7 @@ const AdminDashboard = () => {
       const pageHeight = doc.internal.pageSize.height;
       
       // Header
-      let startY = 45;
+      let startY = 55; // Increased from 45 to add space between header and first table
       if (logoImg) {
         doc.addImage(logoImg, 'PNG', 14, 15, 24, 24);
       }
@@ -588,123 +588,71 @@ const AdminDashboard = () => {
         styles: { fontSize: 9.5, cellPadding: 4, textColor: [51, 65, 85], lineWidth: 0.1, lineColor: [203, 213, 225] }
       };
 
-      // Key Metrics Table
-      autoTable(doc, {
-        startY: startY,
-        head: [['Key Metrics', 'Value']],
-        body: [
-          ['Total Verified Residents (All-Time)', stats.totalResidents.toString()],
-          ['Total Households (All-Time)', stats.totalHouseholds.toString()],
-          ['Pending Verification (Current)', stats.pendingVerification.toString()],
-          ['Events in Period', filteredEvents.length.toString()],
-          ['Announcements in Period', filteredAnnouncements.length.toString()],
-          ['Event Registrations in Period', filteredRegs.length.toString()],
-        ],
-        ...tableStyles,
-        margin: { top: 10 },
-      });
+      const renderTable = (title, head, body) => {
+        if (!body || body.length === 0) return;
+        
+        let currentY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 12 : startY;
+        if (currentY > pageHeight - 30) {
+          doc.addPage();
+          currentY = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42); // slate-900
+        doc.text(title, 14, currentY);
+        
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: head,
+          body: body,
+          ...tableStyles
+        });
+      };
 
-      // User Status Table
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['User Status', 'Count']],
-        body: [
-          ['Verified', filteredUsers.filter(u => u.status === 'verified').length.toString()],
-          ['Pending', filteredUsers.filter(u => u.status === 'pending').length.toString()],
-          ['Declined', filteredUsers.filter(u => u.status === 'declined').length.toString()],
-        ],
-        ...tableStyles,
-      });
+      // 1. Key Metrics
+      renderTable('Key Metrics', [['Metric', 'Value']], [
+        ['Total Verified Residents (All-Time)', stats.totalResidents.toString()],
+        ['Total Households (All-Time)', stats.totalHouseholds.toString()],
+        ['Pending Verification (Current)', stats.pendingVerification.toString()],
+        ['Events in Period', filteredEvents.length.toString()],
+        ['Announcements in Period', filteredAnnouncements.length.toString()],
+        ['Event Registrations in Period', filteredRegs.length.toString()],
+      ]);
 
-      // Households by Purok Table
+      // 2. User Status
+      renderTable('User Verification Status', [['Status', 'Count']], [
+        ['Verified', filteredUsers.filter(u => u.status === 'verified').length.toString()],
+        ['Pending', filteredUsers.filter(u => u.status === 'pending').length.toString()],
+        ['Declined', filteredUsers.filter(u => u.status === 'declined').length.toString()],
+      ]);
+
+      // 3. Households by Purok
       const purokMap = {};
       filteredHouseholds.forEach(h => { const p = h.purok || 'Unknown'; purokMap[p] = (purokMap[p] || 0) + 1; });
       const purokRows = Object.entries(purokMap).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => [k, v.toString()]);
-      
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Purok', 'Household Count']],
-        body: purokRows,
-        ...tableStyles,
-      });
+      renderTable('Households by Purok', [['Purok', 'Household Count']], purokRows);
 
-      // Events Overview Table
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Events Overview', 'Count']],
-        body: eventsOverviewData.labels.map((label, idx) => [label, eventsOverviewData.datasets[0].data[idx].toString()]),
-        ...tableStyles,
-      });
+      // 4. Events Overview
+      renderTable('Events Overview', [['Status', 'Count']], eventsOverviewData.labels.map((label, idx) => [label, eventsOverviewData.datasets[0].data[idx].toString()]));
 
-      // Announcements by Category Table
-      if (announcementsCategoryData.labels.length > 0) {
-        autoTable(doc, {
-          startY: doc.lastAutoTable.finalY + 10,
-          head: [['Announcement Category', 'Count']],
-          body: announcementsCategoryData.labels.map((label, idx) => [label, announcementsCategoryData.datasets[0].data[idx].toString()]),
-          ...tableStyles,
-        });
-      }
+      // 5. Announcements by Category
+      renderTable('Announcements by Category', [['Category', 'Count']], announcementsCategoryData.labels.map((label, idx) => [label, announcementsCategoryData.datasets[0].data[idx].toString()]));
 
-      // Household Members by Age Group Table
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Age Group', 'Members Count']],
-        body: ageGroupData.labels.map((label, idx) => [label, ageGroupData.datasets[0].data[idx].toString()]),
-        ...tableStyles,
-      });
+      // 6. Household Members by Age Group
+      renderTable('Household Members by Age Group', [['Age Group', 'Count']], ageGroupData.labels.map((label, idx) => [label, ageGroupData.datasets[0].data[idx].toString()]));
 
-      // Civil Status Table
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Civil Status', 'Count']],
-        body: civilStatusData.labels.map((label, idx) => [label, civilStatusData.datasets[0].data[idx].toString()]),
-        ...tableStyles,
-      });
+      // 7. Civil Status
+      renderTable('Civil Status Distribution', [['Civil Status', 'Count']], civilStatusData.labels.map((label, idx) => [label, civilStatusData.datasets[0].data[idx].toString()]));
 
-      // Citizenship Table
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Citizenship', 'Count']],
-        body: citizenshipData.labels.map((label, idx) => [label, citizenshipData.datasets[0].data[idx].toString()]),
-        ...tableStyles,
-      });
+      // 8. Citizenship
+      renderTable('Citizenship Distribution', [['Citizenship', 'Count']], citizenshipData.labels.map((label, idx) => [label, citizenshipData.datasets[0].data[idx].toString()]));
 
-      // Gender Distribution Table
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Gender', 'Count']],
-        body: genderData.labels.map((label, idx) => [label, genderData.datasets[0].data[idx].toString()]),
-        ...tableStyles,
-      });
+      // 9. Gender
+      renderTable('Gender Distribution', [['Gender', 'Count']], genderData.labels.map((label, idx) => [label, genderData.datasets[0].data[idx].toString()]));
 
-      // Top Occupations Table
-      if (occupationData.labels.length > 0) {
-        autoTable(doc, {
-          startY: doc.lastAutoTable.finalY + 10,
-          head: [['Top Occupations', 'Count']],
-          body: occupationData.labels.map((label, idx) => [label, occupationData.datasets[0].data[idx].toString()]),
-          ...tableStyles,
-        });
-      }
-
-      // Recent Activity Table
-      const logRows = filteredLogs.map(log => {
-        const ts = log.timestamp ? (log.timestamp.toDate ? log.timestamp.toDate() : new Date(log.timestamp)).toLocaleString() : '';
-        return [ts, log.action, log.module, log.description, log.performedByName];
-      });
-
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Time', 'Action', 'Module', 'Description', 'Admin']],
-        body: logRows,
-        headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontSize: 11, fontStyle: 'bold', lineWidth: 0.1, lineColor: [203, 213, 225] },
-        styles: { fontSize: 8, cellPadding: 3, textColor: [51, 65, 85], lineWidth: 0.1, lineColor: [203, 213, 225] },
-        columnStyles: {
-          0: { cellWidth: 32 },
-          3: { cellWidth: 'auto' }
-        }
-      });
+      // 10. Top Occupations
+      renderTable('Top Occupations', [['Occupation', 'Count']], occupationData.labels.map((label, idx) => [label, occupationData.datasets[0].data[idx].toString()]));
 
       // Footer
       const pageCount = doc.internal.getNumberOfPages();
