@@ -210,7 +210,7 @@ export const clearAllListeners = () => {
  * Legacy function for compatibility - returns cached data
  */
 export const getAllData = async () => {
-  const sections = ['announcements', 'emergencyAlerts', 'feedback', 'voting', 'userVotes'];
+  const sections = ['announcements'];
   const allData = {};
   
   for (const section of sections) {

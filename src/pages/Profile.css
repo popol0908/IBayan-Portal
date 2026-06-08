@@ -48,7 +48,7 @@
 .profile-name-large {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #1E293B;
   margin: 0 0 4px 0;
   line-height: 1.2;
 }
@@ -109,7 +109,7 @@
 .profile-card-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #1E293B;
   margin: 0;
   display: flex;
   align-items: center;
