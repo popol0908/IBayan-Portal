@@ -82,13 +82,13 @@
 .hp-info-value {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #0F172A;
 }
 
 .hp-members-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #0F172A;
   margin: 0 0 1rem 0;
   display: flex;
   align-items: center;
@@ -156,7 +156,7 @@
 .hp-form-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #0F172A;
   margin: 0 0 0.35rem 0;
   display: flex;
   align-items: center;
@@ -233,8 +233,13 @@
   font-size: 0.95rem;
   transition: all 0.2s ease;
   background: #ffffff;
-  color: #ffffff;
+  color: #1a1a1a;
   font-family: inherit;
+}
+
+.hp-form-input::placeholder,
+.hp-form-select::placeholder {
+  color: #9ca3af;
 }
 
 .hp-form-input:focus,
@@ -266,7 +271,7 @@
 .hp-section-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #0F172A;
   margin: 0 0 0.35rem 0;
   display: flex;
   align-items: center;
@@ -319,7 +324,7 @@
 .hp-preview-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #0F172A;
   margin: 0;
 }
 
@@ -435,6 +440,197 @@
   cursor: not-allowed;
 }
 
+/* ── Edit Button ── */
+.hp-edit-btn-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.hp-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid #FDE68A;
+  background: #FFFBEB;
+  color: #92400E;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hp-edit-btn:hover {
+  background: #FEF3C7;
+  border-color: #FCD34D;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+/* ── Edit Mode Actions ── */
+.hp-edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.hp-cancel-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  background: #ffffff;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hp-cancel-btn:hover:not(:disabled) {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #334155;
+}
+
+.hp-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hp-update-btn {
+  flex: 2;
+}
+
+/* ── Read-only HH Number in edit mode ── */
+.hp-readonly-hh {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* ── Special Categories Section ── */
+.hp-special-categories {
+  margin: 1.25rem 0 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.hp-sc-title {
+  margin-bottom: 0.75rem;
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hp-sc-toggles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.hp-sc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.hp-sc-toggle span:first-of-type {
+  flex: 1;
+  text-align: left;
+}
+
+.hp-sc-toggle:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.hp-sc-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease;
+}
+
+.hp-sc-toggle.hp-sc-active {
+  background: #f0fdf4;
+  border-color: #16a34a;
+  color: #166534;
+  box-shadow: 0 1px 4px rgba(22, 163, 74, 0.15);
+}
+
+.hp-sc-toggle.hp-sc-active .hp-sc-badge {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+/* ── Special Category Tags in Tables ── */
+.hp-sc-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.hp-sc-tag {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+  white-space: nowrap;
+}
+
+.hp-sc-tag:nth-child(2) {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.hp-sc-tag:nth-child(3) {
+  background: #fce7f3;
+  color: #be185d;
+  border-color: #fbcfe8;
+}
+
+.hp-sc-tag:nth-child(4) {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .hp-form-row,
@@ -446,4 +642,18 @@
   .hp-submitted-card {
     padding: 1.25rem;
   }
+
+  .hp-edit-actions {
+    flex-direction: column;
+  }
+
+  .hp-update-btn {
+    flex: 1;
+  }
+
+  .hp-sc-toggles {
+    grid-template-columns: 1fr;
+  }
 }
+
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, User, Trash2, AlertTriangle, X, Eye, Pencil, CheckCircle, Home, Megaphone, Calendar } from '../../components/Icons';
+import { Plus, User, Trash2, AlertTriangle, X, Eye, Pencil, CheckCircle, Home, Megaphone, Calendar, Search } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
@@ -82,6 +82,36 @@ const ManageAdminAccounts = () => {
 
   const mySubRole = normalizeSubRole(userProfile?.subRole);
   const canManage = userProfile?.role === 'admin' && (!mySubRole || mySubRole === 'secretary');
+
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const otherAdmins = useMemo(() => {
+    return adminAccounts.filter(a => a.id !== currentUser?.uid);
+  }, [adminAccounts, currentUser?.uid]);
+
+  const totalAdminsCount = otherAdmins.length;
+  const activeAdminsCount = otherAdmins.filter(a => (a.status || 'Active').toLowerCase() === 'active').length;
+  const inactiveAdminsCount = otherAdmins.filter(a => (a.status || 'Active').toLowerCase() !== 'active').length;
+
+  const filteredAdmins = useMemo(() => {
+    return otherAdmins.filter(a => {
+      const rm = getRoleMeta(a.subRole);
+      const matchesSearch =
+        !searchQuery ||
+        (a.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (a.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        rm.label.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const status = (a.status || 'Active').toLowerCase();
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && status === 'active') ||
+        (statusFilter === 'inactive' && status !== 'active');
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [otherAdmins, searchQuery, statusFilter]);
 
   useEffect(() => { loadAdminAccounts(); }, []);
 
@@ -267,34 +297,118 @@ const ManageAdminAccounts = () => {
             )}
           </div>
 
-          {/* Statistics */}
-          <div className="hh-stats-grid">
-            <div className="admin-card hh-stat-card">
-              <IconBox variant="blue" size="sm"><User size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{adminAccounts.filter(a => a.id !== currentUser?.uid).length}</h3>
-                <p className="hh-stat-label">Total Admins</p>
+          {/* ── 3 Stat Cards (Special Categories Demographics Style) ── */}
+          <div className="sc-kpi-grid">
+            <div
+              className={`sc-kpi-card sc-kpi-blue ${statusFilter === 'all' && !searchQuery ? 'sc-kpi-active' : ''}`}
+              onClick={() => { setStatusFilter('all'); setSearchQuery(''); }}
+              title="Show all admin accounts"
+            >
+              <div className="sc-kpi-top">
+                <div className="sc-kpi-icon sc-kpi-icon-blue">
+                  <User size={20} strokeWidth={2} />
+                </div>
+                <span className="sc-kpi-badge">Total</span>
+              </div>
+              <div className="sc-kpi-num">{totalAdminsCount}</div>
+              <div className="sc-kpi-title">Total Admins</div>
+              <div className="sc-kpi-pct">Registered system administrators</div>
+            </div>
+
+            <div
+              className={`sc-kpi-card sc-kpi-teal ${statusFilter === 'active' ? 'sc-kpi-active' : ''}`}
+              onClick={() => setStatusFilter(prev => prev === 'active' ? 'all' : 'active')}
+              title="Click to filter by active accounts"
+            >
+              <div className="sc-kpi-top">
+                <div className="sc-kpi-icon sc-kpi-icon-teal">
+                  <CheckCircle size={20} strokeWidth={2} />
+                </div>
+                <span className="sc-kpi-badge">Active</span>
+              </div>
+              <div className="sc-kpi-num">{activeAdminsCount}</div>
+              <div className="sc-kpi-title">Active Accounts</div>
+              <div className="sc-kpi-pct">
+                {totalAdminsCount > 0
+                  ? `${((activeAdminsCount / totalAdminsCount) * 100).toFixed(0)}% of total accounts`
+                  : 'All operational'}
               </div>
             </div>
-            <div className="admin-card hh-stat-card hh-stat-green">
-              <IconBox variant="green" size="sm"><CheckCircle size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{adminAccounts.filter(a => a.id !== currentUser?.uid && (a.status || 'Active').toLowerCase() === 'active').length}</h3>
-                <p className="hh-stat-label">Active</p>
+
+            <div
+              className={`sc-kpi-card sc-kpi-rose ${statusFilter === 'inactive' ? 'sc-kpi-active' : ''}`}
+              onClick={() => setStatusFilter(prev => prev === 'inactive' ? 'all' : 'inactive')}
+              title="Click to filter by inactive/suspended accounts"
+            >
+              <div className="sc-kpi-top">
+                <div className="sc-kpi-icon sc-kpi-icon-rose">
+                  <AlertTriangle size={20} strokeWidth={2} />
+                </div>
+                <span className="sc-kpi-badge">Inactive</span>
               </div>
-            </div>
-            <div className="admin-card hh-stat-card hh-stat-red">
-              <IconBox variant="red" size="sm"><X size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{adminAccounts.filter(a => a.id !== currentUser?.uid && (a.status || 'Active').toLowerCase() !== 'active').length}</h3>
-                <p className="hh-stat-label">Inactive</p>
-              </div>
+              <div className="sc-kpi-num">{inactiveAdminsCount}</div>
+              <div className="sc-kpi-title">Inactive / Suspended</div>
+              <div className="sc-kpi-pct">Restricted or pending accounts</div>
             </div>
           </div>
 
-          {/* ── Table ── */}
+          {/* ── Table Card ── */}
           <div className="admin-card accounts-card">
-            <h2 className="admin-card-title">Admin Accounts</h2>
+            <div className="table-card-header">
+              <div className="table-card-title-group">
+                <h2 className="table-card-title">Admin Accounts</h2>
+                <span className="table-card-count">
+                  {filteredAdmins.length} {filteredAdmins.length === 1 ? 'account' : 'accounts'}
+                </span>
+              </div>
+
+              <div className="hh-card-controls">
+                <div className="hh-search-wrap">
+                  <Search size={14} className="hh-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search name, email, role..."
+                    className="hh-search-input-refined"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button className="hh-search-clear" onClick={() => setSearchQuery('')} title="Clear search">
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="admin-filter-tabs">
+              <button
+                className={`admin-filter-tab ${statusFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
+                <User size={13} strokeWidth={2} />
+                <span>All Admins</span>
+                <span className="admin-filter-tab-count">{totalAdminsCount}</span>
+              </button>
+              <button
+                className={`admin-filter-tab tab-teal ${statusFilter === 'active' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('active')}
+              >
+                <CheckCircle size={13} strokeWidth={2} />
+                <span>Active</span>
+                <span className="admin-filter-tab-count">{activeAdminsCount}</span>
+              </button>
+              <button
+                className={`admin-filter-tab tab-red ${statusFilter === 'inactive' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('inactive')}
+              >
+                <AlertTriangle size={13} strokeWidth={2} />
+                <span>Inactive</span>
+                <span className="admin-filter-tab-count">{inactiveAdminsCount}</span>
+              </button>
+            </div>
+
             <div className="table-responsive">
               <table className="accounts-table admin-table">
                 <thead>
@@ -303,7 +417,7 @@ const ManageAdminAccounts = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {adminAccounts.filter(a => a.id !== currentUser?.uid).map(a => {
+                  {filteredAdmins.map(a => {
                     const rm = getRoleMeta(a.subRole);
                     const isMain = rm.className === 'role-main-admin';
                     const isStaff = !isMain && a.permissions && Object.values(a.permissions).some(v => v);
@@ -339,10 +453,10 @@ const ManageAdminAccounts = () => {
                   })}
                 </tbody>
               </table>
-              {adminAccounts.filter(a => a.id !== currentUser?.uid).length === 0 && (
+              {filteredAdmins.length === 0 && (
                 <div className="empty-table">
                   <span className="empty-icon"><User size={48} strokeWidth={1.5} /></span>
-                  <p>No admin accounts created yet</p>
+                  <p>{searchQuery || statusFilter !== 'all' ? 'No admin accounts match your filter criteria' : 'No admin accounts created yet'}</p>
                 </div>
               )}
             </div>

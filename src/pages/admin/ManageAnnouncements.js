@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Megaphone, Calendar, FileText, Pencil, Trash2, X, Save, Sparkles, AlertTriangle, Plus, Upload, ImageIcon, Pin, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping } from '../../components/Icons';
+import { Megaphone, Calendar, FileText, Pencil, Trash2, X, Save, Sparkles, AlertTriangle, Plus, Upload, ImageIcon, Pin, Leaf, HeartPulse, ShieldAlert, CalendarHeart, HandHelping, Clock, Filter } from '../../components/Icons';
 import IconBox from '../../components/IconBox';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSharedData, addItem, updateItem, deleteItem, subscribeToChanges } from '../../services/dataService';
@@ -33,6 +33,18 @@ const getCategoryTabColor = (cat) => {
     case 'Events': return '#7C3AED';
     case 'Services': return '#EA580C';
     default: return '#0F172A';
+  }
+};
+
+const getCategoryIcon = (cat) => {
+  switch (cat) {
+    case 'All': return <Megaphone size={13} strokeWidth={2} />;
+    case 'Environment': return <Leaf size={13} strokeWidth={2} />;
+    case 'Health': return <HeartPulse size={13} strokeWidth={2} />;
+    case 'Safety': return <ShieldAlert size={13} strokeWidth={2} />;
+    case 'Events': return <CalendarHeart size={13} strokeWidth={2} />;
+    case 'Services': return <HandHelping size={13} strokeWidth={2} />;
+    default: return <Megaphone size={13} strokeWidth={2} />;
   }
 };
 
@@ -148,6 +160,11 @@ const ManageAnnouncements = () => {
     return { total, upcoming, past };
   };
 
+  const getCategoryCount = (cat) => {
+    if (cat === 'All') return announcements.length;
+    return announcements.filter(a => a.type === cat).length;
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -256,6 +273,20 @@ const ManageAnnouncements = () => {
     const dateValidation = validateDate(formData.whenDate, false);
     if (!dateValidation.isValid) {
       newErrors.whenDate = '⚠️ Invalid Date Selection: Past dates are not allowed. Please select today or a future date.';
+    }
+
+    const validateTimeRange = (timeStr) => {
+      if (!timeStr) return true;
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return (hours >= 7 && (hours < 19 || (hours === 19 && minutes === 0)));
+    };
+
+    if (formData.whenTime && !validateTimeRange(formData.whenTime)) {
+      newErrors.whenTime = "Time must be within office hours (7:00 AM – 7:00 PM) only.";
+    }
+    
+    if (formData.whenTimeEnd && !validateTimeRange(formData.whenTimeEnd)) {
+      newErrors.whenTimeEnd = "Time must be within office hours (7:00 AM – 7:00 PM) only.";
     }
     
     setErrors(newErrors);
@@ -426,57 +457,103 @@ const ManageAnnouncements = () => {
             </button>
           </div>
 
-          {/* Statistics */}
-          {announcements.length > 0 && (
-            <div className="stats-grid">
-              <div className="stat-card stat-total">
-                <IconBox variant="blue" size="sm"><Megaphone size={20} strokeWidth={1.8} /></IconBox>
-                <div className="stat-content">
-                  <div className="stat-value">{getStatistics().total}</div>
-                  <div className="stat-label">Total Announcements</div>
+          {/* ── 3 Stat Cards (Special Categories Demographics Style) ── */}
+          {announcements.length > 0 && (() => {
+            const stats = getStatistics();
+            return (
+              <div className="ann-stats-grid">
+                <div
+                  className={`sc-kpi-card sc-kpi-blue ${dateFilter === 'all' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setDateFilter('all')}
+                  title="Show all announcements"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-blue">
+                      <Megaphone size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Total</span>
+                  </div>
+                  <div className="sc-kpi-num">{stats.total}</div>
+                  <div className="sc-kpi-title">Total Announcements</div>
+                  <div className="sc-kpi-pct">All published notices</div>
                 </div>
-              </div>
-              <div className="stat-card stat-upcoming">
-                <IconBox variant="teal" size="sm"><Calendar size={20} strokeWidth={1.8} /></IconBox>
-                <div className="stat-content">
-                  <div className="stat-value">{getStatistics().upcoming}</div>
-                  <div className="stat-label">Upcoming</div>
-                </div>
-              </div>
-              <div className="stat-card stat-past">
-                <IconBox variant="gray" size="sm"><FileText size={20} strokeWidth={1.8} /></IconBox>
-                <div className="stat-content">
-                  <div className="stat-value">{getStatistics().past}</div>
-                  <div className="stat-label">Past</div>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Filters and Search */}
-          {announcements.length > 0 && (
-            <div className="filters-section">
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Dates</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="past">Past</option>
-              </select>
-            </div>
-          )}
+                <div
+                  className={`sc-kpi-card sc-kpi-teal ${dateFilter === 'upcoming' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setDateFilter((prev) => (prev === 'upcoming' ? 'all' : 'upcoming'))}
+                  title="Click to filter by upcoming announcements"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-teal">
+                      <Calendar size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Upcoming</span>
+                  </div>
+                  <div className="sc-kpi-num">{stats.upcoming}</div>
+                  <div className="sc-kpi-title">Upcoming Announcements</div>
+                  <div className="sc-kpi-pct">
+                    {stats.total > 0
+                      ? `${((stats.upcoming / stats.total) * 100).toFixed(0)}% of total notices`
+                      : 'Active & future'}
+                  </div>
+                </div>
+
+                <div
+                  className={`sc-kpi-card sc-kpi-amber ${dateFilter === 'past' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setDateFilter((prev) => (prev === 'past' ? 'all' : 'past'))}
+                  title="Click to filter by past announcements"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-amber">
+                      <Clock size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Past</span>
+                  </div>
+                  <div className="sc-kpi-num">{stats.past}</div>
+                  <div className="sc-kpi-title">Past Announcements</div>
+                  <div className="sc-kpi-pct">
+                    {stats.total > 0
+                      ? `${((stats.past / stats.total) * 100).toFixed(0)}% of total notices`
+                      : 'Concluded notices'}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Existing Announcements */}
           <div className="alerts-table-card">
-            <h2 className="table-card-title">Existing Announcements</h2>
+            <div className="table-card-header">
+              <div className="table-card-title-group">
+                <h2 className="table-card-title">Existing Announcements</h2>
+                <span className="table-card-count">
+                  {getFilteredAnnouncements().length} {getFilteredAnnouncements().length === 1 ? 'notice' : 'notices'}
+                </span>
+              </div>
+
+              {/* Date Filter Dropdown */}
+              <div className="ann-date-filter-wrap">
+                <span className="ann-date-filter-label">
+                  <Calendar size={13} strokeWidth={2} /> Date Range:
+                </span>
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="ann-date-filter-select"
+                >
+                  <option value="all">All Dates</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="past">Past</option>
+                </select>
+              </div>
+            </div>
 
             {/* Category Filter Tabs */}
             <div className="admin-category-tabs">
               {ADMIN_CATEGORIES.map(cat => {
                 const isActive = categoryFilter === cat;
                 const tabColor = getCategoryTabColor(cat);
+                const count = getCategoryCount(cat);
                 return (
                   <button
                     key={cat}
@@ -486,13 +563,15 @@ const ManageAnnouncements = () => {
                       background: tabColor,
                       borderColor: tabColor,
                       color: '#ffffff',
-                      boxShadow: `0 2px 8px ${tabColor}33`
+                      boxShadow: `0 3px 10px ${tabColor}35`
                     } : {
-                      borderColor: `${tabColor}30`,
+                      borderColor: `${tabColor}35`,
                       color: tabColor
                     }}
                   >
-                    {cat}
+                    <span className="admin-cat-tab-icon">{getCategoryIcon(cat)}</span>
+                    <span>{cat}</span>
+                    <span className="admin-cat-tab-count">{count}</span>
                   </button>
                 );
               })}
@@ -698,8 +777,13 @@ const ManageAnnouncements = () => {
                   name="whenTime"
                   value={formData.whenTime}
                   onChange={handleChange}
-                  className="form-input"
+                  className={`form-input ${errors.whenTime ? 'input-error' : ''}`}
+                  min="07:00"
+                  max="19:00"
                 />
+                {errors.whenTime && (
+                  <span className="field-error">{errors.whenTime}</span>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">End Time (Optional)</label>
@@ -708,9 +792,14 @@ const ManageAnnouncements = () => {
                   name="whenTimeEnd"
                   value={formData.whenTimeEnd}
                   onChange={handleChange}
-                  className="form-input"
+                  className={`form-input ${errors.whenTimeEnd ? 'input-error' : ''}`}
+                  min="07:00"
+                  max="19:00"
                 />
                 <small className="form-hint">Leave blank if no specific end time</small>
+                {errors.whenTimeEnd && (
+                  <span className="field-error">{errors.whenTimeEnd}</span>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">Description *</label>

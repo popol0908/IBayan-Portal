@@ -4,7 +4,8 @@ import {
   Users, Megaphone, Home, ClipboardCheck, TrendingUp,
   FileDown, Activity, Calendar, BarChart3, PieChart,
   Clock, UserCheck, UserX, Trash2, Pencil, Plus,
-  CheckCircle, XCircle, ShieldCheck, FileText, Table
+  CheckCircle, XCircle, ShieldCheck, FileText, Table,
+  Accessibility, UserRound, HeartHandshake, Stethoscope, Download, Filter
 } from '../../components/Icons';
 import {
   Chart as ChartJS,
@@ -28,6 +29,8 @@ ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement,
   BarElement, ArcElement, Tooltip, Legend, Filler,
 );
+
+const PUROK_LIST = ['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6', 'Purok 7'];
 
 const iconProps = { size: 28, strokeWidth: 1.8 };
 const Icons = {
@@ -152,7 +155,7 @@ const AdminDashboard = () => {
   const { currentUser, userProfile } = useAuth();
 
   /* ── Core stats (existing) ── */
-  const [stats, setStats] = useState({ totalResidents: 0, totalHouseholds: 0, pendingVerification: 0 });
+  const [stats, setStats] = useState({ totalResidents: 0, totalHouseholds: 0, totalPopulation: 0, pendingVerification: 0 });
 
   /* ── Analytics data ── */
   const [allUsers, setAllUsers] = useState([]);
@@ -166,6 +169,10 @@ const AdminDashboard = () => {
   const [timeFilter, setTimeFilter] = useState('all');
   const [customDateFrom, setCustomDateFrom] = useState('');
   const [customDateTo, setCustomDateTo] = useState('');
+
+  /* ── Filter state for Special Categories Demographics ── */
+  const [specialCategoryFilter, setSpecialCategoryFilter] = useState('all'); // 'all', 'pwd', 'senior', 'soloParent', 'patient'
+  const [specialPurokFilter, setSpecialPurokFilter] = useState('all'); // 'all', 'Purok 1', ..., 'Purok 7'
 
   // Memoize the custom range object so it can be used stably in useMemo deps
   const customRange = (timeFilter === 'custom' && customDateFrom && customDateTo)
@@ -189,7 +196,8 @@ const AdminDashboard = () => {
     const u2 = onSnapshot(collection(db, 'households'), (s) => {
       const data = s.docs.map(d => ({ id: d.id, ...d.data() }));
       setHouseholds(data);
-      setStats(p => ({ ...p, totalHouseholds: s.size }));
+      const totalPop = data.reduce((sum, h) => sum + (h.members?.length || 0), 0);
+      setStats(p => ({ ...p, totalHouseholds: s.size, totalPopulation: totalPop }));
       check();
     }, () => check());
 
@@ -526,40 +534,210 @@ const AdminDashboard = () => {
     };
   }, [households, timeFilter, customRange]);
 
-  /* ── Export PDF Report ── */
-  const handleExportPDF = () => {
-    const filteredUsers = allUsers.filter(u => isWithinFilter(u.verifiedAt || u.createdAt, timeFilter, customRange));
-    const filteredEvents = events.filter(e => isWithinFilter(e.createdAt || e.eventDate, timeFilter, customRange));
-    const filteredAnnouncements = announcements.filter(a => isWithinFilter(a.createdAt || a.datePosted, timeFilter, customRange));
-    const filteredRegs = registrations.filter(r => isWithinFilter(r.registrationDate, timeFilter, customRange));
-    const filteredHouseholds = households.filter(h => isWithinFilter(h.createdAt, timeFilter, customRange));
-    const filteredLogs = activityLogs.filter(l => isWithinFilter(l.timestamp, timeFilter, customRange));
+  /* ── Special Categories Analytics & Purok Breakdown ── */
+  const specialCategoriesStats = useMemo(() => {
+    let totalPWD = 0;
+    let totalSeniors = 0;
+    let totalSoloParents = 0;
+    let totalPatients = 0;
+    let totalMembersCount = 0;
 
+    const purokBreakdown = {};
+    PUROK_LIST.forEach((p) => {
+      purokBreakdown[p] = { pwd: 0, senior: 0, soloParent: 0, patient: 0, total: 0, members: 0 };
+    });
+
+    const filtered = households.filter((h) => isWithinFilter(h.createdAt, timeFilter, customRange));
+
+    filtered.forEach((h) => {
+      const rawPurok = h.purok || 'Unknown';
+      const pKey = PUROK_LIST.includes(rawPurok) ? rawPurok : null;
+
+      (h.members || []).forEach((m) => {
+        totalMembersCount++;
+        if (pKey) purokBreakdown[pKey].members++;
+
+        let memberSpecialCount = 0;
+        if (m.isPWD) {
+          totalPWD++;
+          if (pKey) purokBreakdown[pKey].pwd++;
+          memberSpecialCount++;
+        }
+        if (m.isSeniorCitizen) {
+          totalSeniors++;
+          if (pKey) purokBreakdown[pKey].senior++;
+          memberSpecialCount++;
+        }
+        if (m.isSoloParent) {
+          totalSoloParents++;
+          if (pKey) purokBreakdown[pKey].soloParent++;
+          memberSpecialCount++;
+        }
+        if (m.isPatient) {
+          totalPatients++;
+          if (pKey) purokBreakdown[pKey].patient++;
+          memberSpecialCount++;
+        }
+        if (memberSpecialCount > 0 && pKey) {
+          purokBreakdown[pKey].total += memberSpecialCount;
+        }
+      });
+    });
+
+    return {
+      totalPWD,
+      totalSeniors,
+      totalSoloParents,
+      totalPatients,
+      totalAllCategories: totalPWD + totalSeniors + totalSoloParents + totalPatients,
+      totalMembersCount,
+      purokBreakdown,
+    };
+  }, [households, timeFilter, customRange]);
+
+  /* ── Chart Data: Special Categories by Purok ── */
+  const specialCategoriesPurokChartData = useMemo(() => {
+    const displayPuroks = specialPurokFilter === 'all'
+      ? PUROK_LIST
+      : PUROK_LIST.filter((p) => p === specialPurokFilter);
+
+    if (specialCategoryFilter === 'pwd') {
+      return {
+        labels: displayPuroks,
+        datasets: [{
+          label: 'PWD Residents',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.pwd || 0),
+          backgroundColor: 'rgba(139, 92, 246, 0.82)',
+          borderRadius: 8,
+          borderSkipped: false,
+        }],
+      };
+    }
+
+    if (specialCategoryFilter === 'senior') {
+      return {
+        labels: displayPuroks,
+        datasets: [{
+          label: 'Senior Citizens (60+)',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.senior || 0),
+          backgroundColor: 'rgba(245, 158, 11, 0.82)',
+          borderRadius: 8,
+          borderSkipped: false,
+        }],
+      };
+    }
+
+    if (specialCategoryFilter === 'soloParent') {
+      return {
+        labels: displayPuroks,
+        datasets: [{
+          label: 'Solo Parents',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.soloParent || 0),
+          backgroundColor: 'rgba(236, 72, 153, 0.82)',
+          borderRadius: 8,
+          borderSkipped: false,
+        }],
+      };
+    }
+
+    if (specialCategoryFilter === 'patient') {
+      return {
+        labels: displayPuroks,
+        datasets: [{
+          label: 'Patients (Chronic Illness)',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.patient || 0),
+          backgroundColor: 'rgba(239, 68, 68, 0.82)',
+          borderRadius: 8,
+          borderSkipped: false,
+        }],
+      };
+    }
+
+    // Default 'all': Grouped bar chart showing all 4 categories side by side per Purok
+    return {
+      labels: displayPuroks,
+      datasets: [
+        {
+          label: 'PWD',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.pwd || 0),
+          backgroundColor: 'rgba(139, 92, 246, 0.82)',
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+        {
+          label: 'Senior Citizens',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.senior || 0),
+          backgroundColor: 'rgba(245, 158, 11, 0.82)',
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+        {
+          label: 'Solo Parents',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.soloParent || 0),
+          backgroundColor: 'rgba(236, 72, 153, 0.82)',
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+        {
+          label: 'Patients',
+          data: displayPuroks.map((p) => specialCategoriesStats.purokBreakdown[p]?.patient || 0),
+          backgroundColor: 'rgba(239, 68, 68, 0.82)',
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+      ],
+    };
+  }, [specialCategoriesStats, specialCategoryFilter, specialPurokFilter]);
+
+  /* ── Chart Data: Special Categories Distribution ── */
+  const specialCategoriesDistData = useMemo(() => {
+    return {
+      labels: ['PWD', 'Senior Citizens', 'Solo Parents', 'Patients'],
+      datasets: [{
+        data: [
+          specialCategoriesStats.totalPWD,
+          specialCategoriesStats.totalSeniors,
+          specialCategoriesStats.totalSoloParents,
+          specialCategoriesStats.totalPatients,
+        ],
+        backgroundColor: ['#8B5CF6', '#F59E0B', '#EC4899', '#EF4444'],
+        borderColor: ['#fff', '#fff', '#fff', '#fff'],
+        borderWidth: 3,
+        hoverOffset: 6,
+      }],
+    };
+  }, [specialCategoriesStats]);
+
+  /* ── Export Helper: Period String ── */
+  const getPeriodString = () => {
     const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    let periodString;
-
     if (timeFilter === 'all') {
       const allDates = [
-        ...allUsers.map(u => u.createdAt || u.verifiedAt),
-        ...events.map(e => e.createdAt || e.eventDate),
-        ...announcements.map(a => a.createdAt || a.datePosted),
-        ...registrations.map(r => r.registrationDate),
-        ...households.map(h => h.createdAt),
-        ...activityLogs.map(l => l.timestamp)
-      ].filter(Boolean).map(d => {
-        if (d.toDate) return d.toDate();
-        return new Date(d);
-      }).filter(d => !isNaN(d.getTime()));
+        ...allUsers.map((u) => u.createdAt || u.verifiedAt),
+        ...events.map((e) => e.createdAt || e.eventDate),
+        ...announcements.map((a) => a.createdAt || a.datePosted),
+        ...registrations.map((r) => r.registrationDate),
+        ...households.map((h) => h.createdAt),
+        ...activityLogs.map((l) => l.timestamp),
+      ].filter(Boolean).map((d) => (d.toDate ? d.toDate() : new Date(d))).filter((d) => !isNaN(d.getTime()));
       
       const earliestDate = allDates.length > 0 ? new Date(Math.min(...allDates)) : new Date();
-      periodString = `${formatDate(earliestDate)} – ${formatDate(new Date())}`;
+      return `${formatDate(earliestDate)} – ${formatDate(new Date())}`;
     } else {
       const { from, to } = getFilterBounds(timeFilter, customRange);
-      // For PDF, if the "to" date is in the future, we can cap it at "Today" for display, or show the actual bounds.
-      // E.g., if "This Year", it shows Jan 1 - Dec 31, or Jan 1 - Today. The user prefers Jan 1 - Today.
       const displayTo = to > new Date() ? new Date() : to;
-      periodString = `${formatDate(from)} – ${formatDate(displayTo)}`;
+      return `${formatDate(from)} – ${formatDate(displayTo)}`;
     }
+  };
+
+  /* ── Export PDF Report ── */
+  const handleExportPDF = () => {
+    const filteredUsers = allUsers.filter((u) => isWithinFilter(u.verifiedAt || u.createdAt, timeFilter, customRange));
+    const filteredEvents = events.filter((e) => isWithinFilter(e.createdAt || e.eventDate, timeFilter, customRange));
+    const filteredAnnouncements = announcements.filter((a) => isWithinFilter(a.createdAt || a.datePosted, timeFilter, customRange));
+    const filteredRegs = registrations.filter((r) => isWithinFilter(r.registrationDate, timeFilter, customRange));
+    const filteredHouseholds = households.filter((h) => isWithinFilter(h.createdAt, timeFilter, customRange));
+    const periodString = getPeriodString();
 
     const generatePDF = (logoImg = null) => {
       const doc = new jsPDF();
@@ -567,7 +745,7 @@ const AdminDashboard = () => {
       const pageHeight = doc.internal.pageSize.height;
       
       // Header
-      let startY = 55; // Increased from 45 to add space between header and first table
+      let startY = 55;
       if (logoImg) {
         doc.addImage(logoImg, 'PNG', 14, 15, 24, 24);
       }
@@ -585,74 +763,132 @@ const AdminDashboard = () => {
 
       const tableStyles = {
         headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontSize: 11, fontStyle: 'bold', lineWidth: 0.1, lineColor: [203, 213, 225] },
-        styles: { fontSize: 9.5, cellPadding: 4, textColor: [51, 65, 85], lineWidth: 0.1, lineColor: [203, 213, 225] }
+        styles: { fontSize: 9.5, cellPadding: 4, textColor: [51, 65, 85], lineWidth: 0.1, lineColor: [203, 213, 225] },
       };
 
+      let tableIndex = 1;
       const renderTable = (title, head, body) => {
         if (!body || body.length === 0) return;
         
         let currentY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 12 : startY;
-        if (currentY > pageHeight - 30) {
+        
+        const rowHeight = 7.5;
+        const headHeight = 9;
+        const titleHeight = 8;
+        const totalTableHeight = titleHeight + 5 + headHeight + (body.length * rowHeight);
+        const maxPageUsableHeight = pageHeight - 40; // ~257mm usable height for A4
+        const availableSpace = pageHeight - 20 - currentY; // reserve 20mm margin for footer
+        
+        // If the table fits on a single page and exceeds remaining space, move entirely to next page.
+        // If it's larger than a single page, ensure at least header + 3 rows fit before starting on this page.
+        const shouldPageBreak = totalTableHeight <= maxPageUsableHeight
+          ? totalTableHeight > availableSpace
+          : availableSpace < (titleHeight + 5 + headHeight + 3 * rowHeight);
+        
+        if (shouldPageBreak) {
           doc.addPage();
           currentY = 20;
         }
+
+        const cleanTitle = title.replace(/^\d+\.\s*/, '');
+        const displayTitle = `${tableIndex}. ${cleanTitle}`;
+        tableIndex++;
         
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(15, 23, 42); // slate-900
-        doc.text(title, 14, currentY);
+        doc.text(displayTitle, 14, currentY);
         
         autoTable(doc, {
           startY: currentY + 5,
           head: head,
           body: body,
-          ...tableStyles
+          margin: { left: 14, right: 14, bottom: 20 },
+          pageBreak: 'auto',
+          rowPageBreak: 'avoid',
+          ...tableStyles,
         });
       };
 
       // 1. Key Metrics
-      renderTable('Key Metrics', [['Metric', 'Value']], [
+      renderTable('1. Key Metrics', [['Metric', 'Value']], [
         ['Total Verified Residents (All-Time)', stats.totalResidents.toString()],
         ['Total Households (All-Time)', stats.totalHouseholds.toString()],
+        ['Total Population (All-Time)', stats.totalPopulation.toString()],
         ['Pending Verification (Current)', stats.pendingVerification.toString()],
         ['Events in Period', filteredEvents.length.toString()],
         ['Announcements in Period', filteredAnnouncements.length.toString()],
         ['Event Registrations in Period', filteredRegs.length.toString()],
       ]);
 
-      // 2. User Status
-      renderTable('User Verification Status', [['Status', 'Count']], [
-        ['Verified', filteredUsers.filter(u => u.status === 'verified').length.toString()],
-        ['Pending', filteredUsers.filter(u => u.status === 'pending').length.toString()],
-        ['Declined', filteredUsers.filter(u => u.status === 'declined').length.toString()],
+      // 2. Special Categories Demographics Summary
+      const scTotalMembers = specialCategoriesStats.totalMembersCount || 1;
+      const calcPct = (cnt) => `${((cnt / scTotalMembers) * 100).toFixed(1)}%`;
+
+      renderTable('2. Special Categories Demographics Summary', [['Category', 'Count', '% of Profiled Population']], [
+        ['Persons with Disability (PWD)', specialCategoriesStats.totalPWD.toString(), calcPct(specialCategoriesStats.totalPWD)],
+        ['Senior Citizens (60+)', specialCategoriesStats.totalSeniors.toString(), calcPct(specialCategoriesStats.totalSeniors)],
+        ['Solo Parents', specialCategoriesStats.totalSoloParents.toString(), calcPct(specialCategoriesStats.totalSoloParents)],
+        ['Patients (Chronic Illness)', specialCategoriesStats.totalPatients.toString(), calcPct(specialCategoriesStats.totalPatients)],
+        ['Total Special Category Instances', specialCategoriesStats.totalAllCategories.toString(), '—'],
       ]);
 
-      // 3. Households by Purok
+      // 3. Special Categories Breakdown by Purok
+      const scPurokRows = PUROK_LIST.map((p) => {
+        const d = specialCategoriesStats.purokBreakdown[p] || { pwd: 0, senior: 0, soloParent: 0, patient: 0 };
+        const rowTotal = d.pwd + d.senior + d.soloParent + d.patient;
+        return [
+          p,
+          d.pwd.toString(),
+          d.senior.toString(),
+          d.soloParent.toString(),
+          d.patient.toString(),
+          rowTotal.toString(),
+        ];
+      });
+      scPurokRows.push([
+        'TOTAL',
+        specialCategoriesStats.totalPWD.toString(),
+        specialCategoriesStats.totalSeniors.toString(),
+        specialCategoriesStats.totalSoloParents.toString(),
+        specialCategoriesStats.totalPatients.toString(),
+        specialCategoriesStats.totalAllCategories.toString(),
+      ]);
+      renderTable('3. Special Categories Breakdown by Purok', [['Purok', 'PWD', 'Senior Citizens', 'Solo Parents', 'Patients', 'Total']], scPurokRows);
+
+      // 4. User Status
+      renderTable('4. User Verification Status', [['Status', 'Count']], [
+        ['Verified', filteredUsers.filter((u) => u.status === 'verified').length.toString()],
+        ['Pending', filteredUsers.filter((u) => u.status === 'pending').length.toString()],
+        ['Declined', filteredUsers.filter((u) => u.status === 'declined').length.toString()],
+      ]);
+
+      // 5. Households by Purok
       const purokMap = {};
-      filteredHouseholds.forEach(h => { const p = h.purok || 'Unknown'; purokMap[p] = (purokMap[p] || 0) + 1; });
+      filteredHouseholds.forEach((h) => { const p = h.purok || 'Unknown'; purokMap[p] = (purokMap[p] || 0) + 1; });
       const purokRows = Object.entries(purokMap).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => [k, v.toString()]);
-      renderTable('Households by Purok', [['Purok', 'Household Count']], purokRows);
+      renderTable('5. Households by Purok', [['Purok', 'Household Count']], purokRows);
 
-      // 4. Events Overview
-      renderTable('Events Overview', [['Status', 'Count']], eventsOverviewData.labels.map((label, idx) => [label, eventsOverviewData.datasets[0].data[idx].toString()]));
+      // 6. Events Overview
+      renderTable('6. Events Overview', [['Status', 'Count']], eventsOverviewData.labels.map((label, idx) => [label, eventsOverviewData.datasets[0].data[idx].toString()]));
 
-      // 5. Announcements by Category
-      renderTable('Announcements by Category', [['Category', 'Count']], announcementsCategoryData.labels.map((label, idx) => [label, announcementsCategoryData.datasets[0].data[idx].toString()]));
+      // 7. Announcements by Category
+      renderTable('7. Announcements by Category', [['Category', 'Count']], announcementsCategoryData.labels.map((label, idx) => [label, announcementsCategoryData.datasets[0].data[idx].toString()]));
 
-      // 6. Household Members by Age Group
-      renderTable('Household Members by Age Group', [['Age Group', 'Count']], ageGroupData.labels.map((label, idx) => [label, ageGroupData.datasets[0].data[idx].toString()]));
+      // 8. Household Members by Age Group
+      renderTable('8. Household Members by Age Group', [['Age Group', 'Count']], ageGroupData.labels.map((label, idx) => [label, ageGroupData.datasets[0].data[idx].toString()]));
 
-      // 7. Civil Status
-      renderTable('Civil Status Distribution', [['Civil Status', 'Count']], civilStatusData.labels.map((label, idx) => [label, civilStatusData.datasets[0].data[idx].toString()]));
+      // 9. Civil Status
+      renderTable('9. Civil Status Distribution', [['Civil Status', 'Count']], civilStatusData.labels.map((label, idx) => [label, civilStatusData.datasets[0].data[idx].toString()]));
 
-      // 8. Citizenship
-      renderTable('Citizenship Distribution', [['Citizenship', 'Count']], citizenshipData.labels.map((label, idx) => [label, citizenshipData.datasets[0].data[idx].toString()]));
+      // 10. Citizenship
+      renderTable('10. Citizenship Distribution', [['Citizenship', 'Count']], citizenshipData.labels.map((label, idx) => [label, citizenshipData.datasets[0].data[idx].toString()]));
 
-      // 9. Gender
-      renderTable('Gender Distribution', [['Gender', 'Count']], genderData.labels.map((label, idx) => [label, genderData.datasets[0].data[idx].toString()]));
+      // 11. Gender
+      renderTable('11. Gender Distribution', [['Gender', 'Count']], genderData.labels.map((label, idx) => [label, genderData.datasets[0].data[idx].toString()]));
 
-      // 10. Top Occupations
-      renderTable('Top Occupations', [['Occupation', 'Count']], occupationData.labels.map((label, idx) => [label, occupationData.datasets[0].data[idx].toString()]));
+      // 12. Top Occupations
+      renderTable('12. Top Occupations', [['Occupation', 'Count']], occupationData.labels.map((label, idx) => [label, occupationData.datasets[0].data[idx].toString()]));
 
       // Footer
       const pageCount = doc.internal.getNumberOfPages();
@@ -666,6 +902,12 @@ const AdminDashboard = () => {
           pageHeight - 10,
           { align: 'center' }
         );
+        doc.text(
+          `Page ${i} of ${pageCount}`,
+          pageWidth - 14,
+          pageHeight - 10,
+          { align: 'right' }
+        );
       }
 
       doc.save(`Dashboard_Report_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -678,9 +920,111 @@ const AdminDashboard = () => {
       generatePDF(img);
     };
     img.onerror = () => {
-      console.warn("Could not load logo for PDF. Generating without logo.");
+      console.warn('Could not load logo for PDF. Generating without logo.');
       generatePDF(null);
     };
+  };
+
+  /* ── Export CSV Report ── */
+  const handleExportCSV = () => {
+    const filteredHouseholds = households.filter((h) => isWithinFilter(h.createdAt, timeFilter, customRange));
+    const periodString = getPeriodString();
+    const scTotalMembers = specialCategoriesStats.totalMembersCount || 1;
+    const calcPct = (cnt) => `${((cnt / scTotalMembers) * 100).toFixed(1)}%`;
+
+    const lines = [];
+    const pushRow = (...cols) => {
+      lines.push(cols.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','));
+    };
+
+    // Header info
+    lines.push('BARANGAY MABAYUAN - ADMIN DASHBOARD REPORT');
+    lines.push(`Period:,"${periodString}"`);
+    lines.push(`Generated:,"${new Date().toLocaleString()}"`);
+    lines.push('');
+
+    // 1. Key Metrics
+    lines.push('--- KEY METRICS ---');
+    pushRow('Metric', 'Value');
+    pushRow('Total Verified Residents (All-Time)', stats.totalResidents);
+    pushRow('Total Households (All-Time)', stats.totalHouseholds);
+    pushRow('Total Population (All-Time)', stats.totalPopulation);
+    pushRow('Pending Verification (Current)', stats.pendingVerification);
+    lines.push('');
+
+    // 2. Special Categories Demographics Summary
+    lines.push('--- SPECIAL CATEGORIES DEMOGRAPHICS SUMMARY ---');
+    pushRow('Category', 'Count', '% of Profiled Population');
+    pushRow('Persons with Disability (PWD)', specialCategoriesStats.totalPWD, calcPct(specialCategoriesStats.totalPWD));
+    pushRow('Senior Citizens (60+)', specialCategoriesStats.totalSeniors, calcPct(specialCategoriesStats.totalSeniors));
+    pushRow('Solo Parents', specialCategoriesStats.totalSoloParents, calcPct(specialCategoriesStats.totalSoloParents));
+    pushRow('Patients (Chronic Illness)', specialCategoriesStats.totalPatients, calcPct(specialCategoriesStats.totalPatients));
+    pushRow('Total Special Category Instances', specialCategoriesStats.totalAllCategories, '—');
+    lines.push('');
+
+    // 3. Special Categories Breakdown by Purok
+    lines.push('--- SPECIAL CATEGORIES BREAKDOWN BY PUROK ---');
+    pushRow('Purok', 'PWD Residents', 'Senior Citizens (60+)', 'Solo Parents', 'Chronic Patients', 'Total Special Needs', 'Profiled Members in Purok');
+    PUROK_LIST.forEach((p) => {
+      const d = specialCategoriesStats.purokBreakdown[p] || { pwd: 0, senior: 0, soloParent: 0, patient: 0, members: 0 };
+      const rowTotal = d.pwd + d.senior + d.soloParent + d.patient;
+      pushRow(p, d.pwd, d.senior, d.soloParent, d.patient, rowTotal, d.members);
+    });
+    pushRow(
+      'TOTAL',
+      specialCategoriesStats.totalPWD,
+      specialCategoriesStats.totalSeniors,
+      specialCategoriesStats.totalSoloParents,
+      specialCategoriesStats.totalPatients,
+      specialCategoriesStats.totalAllCategories,
+      specialCategoriesStats.totalMembersCount
+    );
+    lines.push('');
+
+    // 4. Households by Purok
+    lines.push('--- HOUSEHOLDS BY PUROK ---');
+    pushRow('Purok', 'Household Count');
+    const purokMap = {};
+    filteredHouseholds.forEach((h) => { const p = h.purok || 'Unknown'; purokMap[p] = (purokMap[p] || 0) + 1; });
+    Object.entries(purokMap).sort((a, b) => a[0].localeCompare(b[0])).forEach(([k, v]) => {
+      pushRow(k, v);
+    });
+    lines.push('');
+
+    // 5. Itemized Roster of Special Categories Members
+    lines.push('--- SPECIAL CATEGORIES RESIDENT ROSTER ---');
+    pushRow('Household No.', 'Purok', 'Last Name', 'First Name', 'Middle Name', 'Gender', 'Relationship to Head', 'PWD', 'Senior Citizen', 'Solo Parent', 'Patient (Chronic)');
+    filteredHouseholds.forEach((h) => {
+      (h.members || []).forEach((m) => {
+        if (m.isPWD || m.isSeniorCitizen || m.isSoloParent || m.isPatient) {
+          pushRow(
+            h.householdNo || '—',
+            m.purok || h.purok || '—',
+            m.lastName || '—',
+            m.firstName || '—',
+            m.middleName || '—',
+            m.gender || '—',
+            m.relationshipToHead || '—',
+            m.isPWD ? 'Yes' : 'No',
+            m.isSeniorCitizen ? 'Yes' : 'No',
+            m.isSoloParent ? 'Yes' : 'No',
+            m.isPatient ? 'Yes' : 'No'
+          );
+        }
+      });
+    });
+
+    const csvContent = lines.join('\r\n');
+    // Prepend UTF-8 BOM so Microsoft Excel correctly displays special characters
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Dashboard_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   /* ── Chart Options ── */
@@ -722,6 +1066,35 @@ const AdminDashboard = () => {
       },
     },
     plugins: { ...chartDefaults.plugins, legend: { display: false } },
+  };
+
+  const specialBarOpts = {
+    ...chartDefaults,
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: "'DM Sans', sans-serif", size: 11 }, color: '#94A3B8' },
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: { font: { family: "'DM Sans', sans-serif", size: 11 }, color: '#94A3B8', stepSize: 1 },
+      },
+    },
+    plugins: {
+      ...chartDefaults.plugins,
+      legend: {
+        display: specialCategoryFilter === 'all',
+        position: 'top',
+        labels: {
+          font: { family: "'DM Sans', sans-serif", size: 11, weight: 600 },
+          usePointStyle: true,
+          boxWidth: 8,
+          boxHeight: 8,
+          padding: 12,
+        },
+      },
+    },
   };
 
   /* ================================================
@@ -781,53 +1154,79 @@ const AdminDashboard = () => {
                     </div>
                   )}
                 </div>
-                <button className="export-btn" onClick={handleExportPDF} title="Export Dashboard Report to PDF" disabled={timeFilter === 'custom' && (!customDateFrom || !customDateTo)}>
-                  <FileText size={16} strokeWidth={2} />
-                  <span>Export PDF</span>
-                </button>
+                <div className="export-actions">
+                  <button className="export-btn" onClick={handleExportPDF} title="Export Dashboard Report to PDF" disabled={timeFilter === 'custom' && (!customDateFrom || !customDateTo)}>
+                    <FileText size={16} strokeWidth={2} />
+                    <span>Export PDF</span>
+                  </button>
+                  <button className="export-btn export-btn-csv" onClick={handleExportCSV} title="Export Dashboard Report to CSV" disabled={timeFilter === 'custom' && (!customDateFrom || !customDateTo)}>
+                    <Download size={16} strokeWidth={2} />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* ── KPI Cards Row ── */}
+            {/* ── KPI Cards Row (Unified Clean Style) ── */}
             <div className="kpi-cards-row">
-              <div className="kpi-card kpi-blue">
-                <div className="kpi-icon-wrap kpi-icon-blue">{Icons.people}</div>
-                <div className="kpi-info">
-                  <span className="kpi-label">Total Residents</span>
-                  <span className="kpi-value">{stats.totalResidents.toLocaleString()}</span>
-                  <span className="kpi-badge kpi-badge-green">Verified</span>
+              <div className="sc-kpi-card sc-kpi-blue">
+                <div className="sc-kpi-top">
+                  <div className="sc-kpi-icon sc-kpi-icon-blue">
+                    <Users size={20} strokeWidth={2} />
+                  </div>
+                  <span className="sc-kpi-badge">Verified</span>
                 </div>
+                <div className="sc-kpi-num">{stats.totalResidents.toLocaleString()}</div>
+                <div className="sc-kpi-title">Total Residents</div>
+                <div className="sc-kpi-pct">Registered accounts</div>
               </div>
 
-              <div className="kpi-card kpi-teal">
-                <div className="kpi-icon-wrap kpi-icon-teal">{Icons.home}</div>
-                <div className="kpi-info">
-                  <span className="kpi-label">Total Households</span>
-                  <span className="kpi-value">{stats.totalHouseholds.toLocaleString()}</span>
-                  <span className="kpi-badge kpi-badge-green">Recorded</span>
+              <div className="sc-kpi-card sc-kpi-teal">
+                <div className="sc-kpi-top">
+                  <div className="sc-kpi-icon sc-kpi-icon-teal">
+                    <Home size={20} strokeWidth={2} />
+                  </div>
+                  <span className="sc-kpi-badge">Recorded</span>
                 </div>
+                <div className="sc-kpi-num">{stats.totalHouseholds.toLocaleString()}</div>
+                <div className="sc-kpi-title">Total Households</div>
+                <div className="sc-kpi-pct">Submitted profiles</div>
               </div>
 
-              <div className="kpi-card kpi-amber">
-                <div className="kpi-icon-wrap kpi-icon-amber">{Icons.clipboard}</div>
-                <div className="kpi-info">
-                  <span className="kpi-label">Pending Verification</span>
-                  <span className="kpi-value">{stats.pendingVerification}</span>
-                  {stats.pendingVerification > 0 ? (
-                    <span className="kpi-badge kpi-badge-amber">Awaiting Review</span>
-                  ) : (
-                    <span className="kpi-badge kpi-badge-green">All Reviewed</span>
-                  )}
+              <div className="sc-kpi-card sc-kpi-green">
+                <div className="sc-kpi-top">
+                  <div className="sc-kpi-icon sc-kpi-icon-green">
+                    <UserCheck size={20} strokeWidth={2} />
+                  </div>
+                  <span className="sc-kpi-badge">Population</span>
                 </div>
+                <div className="sc-kpi-num">{stats.totalPopulation.toLocaleString()}</div>
+                <div className="sc-kpi-title">Total Population</div>
+                <div className="sc-kpi-pct">Household members</div>
               </div>
 
-              <div className="kpi-card kpi-purple">
-                <div className="kpi-icon-wrap kpi-icon-purple"><Megaphone {...iconProps} /></div>
-                <div className="kpi-info">
-                  <span className="kpi-label">Announcements</span>
-                  <span className="kpi-value">{announcements.length}</span>
-                  <span className="kpi-badge kpi-badge-green">Published</span>
+              <div className="sc-kpi-card sc-kpi-amber">
+                <div className="sc-kpi-top">
+                  <div className="sc-kpi-icon sc-kpi-icon-amber">
+                    <ClipboardCheck size={20} strokeWidth={2} />
+                  </div>
+                  <span className="sc-kpi-badge">{stats.pendingVerification > 0 ? 'Pending' : 'All Clear'}</span>
                 </div>
+                <div className="sc-kpi-num">{stats.pendingVerification}</div>
+                <div className="sc-kpi-title">Pending Verification</div>
+                <div className="sc-kpi-pct">{stats.pendingVerification > 0 ? 'Awaiting review' : 'All accounts reviewed'}</div>
+              </div>
+
+              <div className="sc-kpi-card sc-kpi-purple">
+                <div className="sc-kpi-top">
+                  <div className="sc-kpi-icon sc-kpi-icon-purple">
+                    <Megaphone size={20} strokeWidth={2} />
+                  </div>
+                  <span className="sc-kpi-badge">Notices</span>
+                </div>
+                <div className="sc-kpi-num">{announcements.length}</div>
+                <div className="sc-kpi-title">Announcements</div>
+                <div className="sc-kpi-pct">Published notices</div>
               </div>
             </div>
 
@@ -930,6 +1329,12 @@ const AdminDashboard = () => {
                   <div className="chart-container chart-container-doughnut">
                     <Doughnut data={civilStatusData} options={doughnutOpts} />
                   </div>
+                  <div className="doughnut-center-label">
+                    <span className="doughnut-center-num">
+                      {civilStatusData.datasets[0]?.data.reduce((a, b) => a + b, 0) || 0}
+                    </span>
+                    <span className="doughnut-center-text">Total</span>
+                  </div>
                 </div>
                 <div className="dash-card chart-card chart-card-half" id="chart-gender">
                   <div className="dash-card-header">
@@ -940,6 +1345,12 @@ const AdminDashboard = () => {
                   </div>
                   <div className="chart-container chart-container-doughnut">
                     <Doughnut data={genderData} options={doughnutOpts} />
+                  </div>
+                  <div className="doughnut-center-label">
+                    <span className="doughnut-center-num">
+                      {genderData.datasets[0]?.data.reduce((a, b) => a + b, 0) || 0}
+                    </span>
+                    <span className="doughnut-center-text">Total</span>
                   </div>
                 </div>
               </div>
@@ -954,6 +1365,12 @@ const AdminDashboard = () => {
                   <div className="chart-container chart-container-doughnut">
                     <Doughnut data={citizenshipData} options={doughnutOpts} />
                   </div>
+                  <div className="doughnut-center-label">
+                    <span className="doughnut-center-num">
+                      {citizenshipData.datasets[0]?.data.reduce((a, b) => a + b, 0) || 0}
+                    </span>
+                    <span className="doughnut-center-text">Total</span>
+                  </div>
                 </div>
                 <div className="dash-card chart-card chart-card-half" id="chart-occupation">
                   <div className="dash-card-header">
@@ -967,6 +1384,177 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* ══════ SECTION: Special Categories Demographics ══════ */}
+            <div className="analytics-section section-special-categories" id="section-special-categories">
+              <div className="section-header section-header-with-filter">
+                <div className="section-header-left">
+                  <div className="section-header-icon section-icon-violet"><Accessibility size={20} strokeWidth={2} /></div>
+                  <div>
+                    <h2 className="section-title">Special Categories Demographics</h2>
+                    <p className="section-desc">Priority sectors & vulnerable resident distribution from household profiling</p>
+                  </div>
+                </div>
+
+                <div className="section-filter-controls">
+                  <div className="section-filter-item">
+                    <span className="section-filter-label"><Filter size={13} strokeWidth={2} /> Category:</span>
+                    <select
+                      className="section-filter-select"
+                      value={specialCategoryFilter}
+                      onChange={(e) => setSpecialCategoryFilter(e.target.value)}
+                    >
+                      <option value="all">All Categories</option>
+                      <option value="pwd">PWD (Persons with Disability)</option>
+                      <option value="senior">Senior Citizens (60+)</option>
+                      <option value="soloParent">Solo Parents</option>
+                      <option value="patient">Patients (Chronic Illness)</option>
+                    </select>
+                  </div>
+                  <div className="section-filter-item">
+                    <span className="section-filter-label">Purok:</span>
+                    <select
+                      className="section-filter-select"
+                      value={specialPurokFilter}
+                      onChange={(e) => setSpecialPurokFilter(e.target.value)}
+                    >
+                      <option value="all">All Puroks</option>
+                      {PUROK_LIST.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4 Mini KPI Cards */}
+              <div className="sc-kpi-grid">
+                <div
+                  className={`sc-kpi-card sc-kpi-violet ${specialCategoryFilter === 'pwd' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setSpecialCategoryFilter((prev) => (prev === 'pwd' ? 'all' : 'pwd'))}
+                  title="Click to filter by PWD"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-violet">
+                      <Accessibility size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">PWD</span>
+                  </div>
+                  <div className="sc-kpi-num">{specialCategoriesStats.totalPWD.toLocaleString()}</div>
+                  <div className="sc-kpi-title">Persons with Disability</div>
+                  <div className="sc-kpi-pct">
+                    {specialCategoriesStats.totalMembersCount > 0
+                      ? `${((specialCategoriesStats.totalPWD / specialCategoriesStats.totalMembersCount) * 100).toFixed(1)}% of population`
+                      : '0%'}
+                  </div>
+                </div>
+
+                <div
+                  className={`sc-kpi-card sc-kpi-amber ${specialCategoryFilter === 'senior' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setSpecialCategoryFilter((prev) => (prev === 'senior' ? 'all' : 'senior'))}
+                  title="Click to filter by Senior Citizens"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-amber">
+                      <UserRound size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">60+ YRS</span>
+                  </div>
+                  <div className="sc-kpi-num">{specialCategoriesStats.totalSeniors.toLocaleString()}</div>
+                  <div className="sc-kpi-title">Senior Citizens</div>
+                  <div className="sc-kpi-pct">
+                    {specialCategoriesStats.totalMembersCount > 0
+                      ? `${((specialCategoriesStats.totalSeniors / specialCategoriesStats.totalMembersCount) * 100).toFixed(1)}% of population`
+                      : '0%'}
+                  </div>
+                </div>
+
+                <div
+                  className={`sc-kpi-card sc-kpi-pink ${specialCategoryFilter === 'soloParent' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setSpecialCategoryFilter((prev) => (prev === 'soloParent' ? 'all' : 'soloParent'))}
+                  title="Click to filter by Solo Parents"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-pink">
+                      <HeartHandshake size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Solo</span>
+                  </div>
+                  <div className="sc-kpi-num">{specialCategoriesStats.totalSoloParents.toLocaleString()}</div>
+                  <div className="sc-kpi-title">Solo Parents</div>
+                  <div className="sc-kpi-pct">
+                    {specialCategoriesStats.totalMembersCount > 0
+                      ? `${((specialCategoriesStats.totalSoloParents / specialCategoriesStats.totalMembersCount) * 100).toFixed(1)}% of population`
+                      : '0%'}
+                  </div>
+                </div>
+
+                <div
+                  className={`sc-kpi-card sc-kpi-red ${specialCategoryFilter === 'patient' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setSpecialCategoryFilter((prev) => (prev === 'patient' ? 'all' : 'patient'))}
+                  title="Click to filter by Chronic Patients"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-red">
+                      <Stethoscope size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Patient</span>
+                  </div>
+                  <div className="sc-kpi-num">{specialCategoriesStats.totalPatients.toLocaleString()}</div>
+                  <div className="sc-kpi-title">Chronic Illness Patients</div>
+                  <div className="sc-kpi-pct">
+                    {specialCategoriesStats.totalMembersCount > 0
+                      ? `${((specialCategoriesStats.totalPatients / specialCategoriesStats.totalMembersCount) * 100).toFixed(1)}% of population`
+                      : '0%'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Charts Row */}
+              <div className="section-charts">
+                <div className="dash-card chart-card chart-card-wide" id="chart-special-purok">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <BarChart3 size={18} strokeWidth={2} className="card-title-icon" />
+                      {specialCategoryFilter === 'all'
+                        ? 'Special Categories Breakdown per Purok'
+                        : `${specialCategoryFilter === 'pwd' ? 'PWD Residents' : specialCategoryFilter === 'senior' ? 'Senior Citizens' : specialCategoryFilter === 'soloParent' ? 'Solo Parents' : 'Patients'} by Purok`}
+                    </h2>
+                    {specialCategoryFilter !== 'all' && (
+                      <button
+                        className="sc-reset-filter-btn"
+                        onClick={() => setSpecialCategoryFilter('all')}
+                      >
+                        Reset Filter
+                      </button>
+                    )}
+                  </div>
+                  <div className="chart-container chart-container-bar">
+                    <Bar data={specialCategoriesPurokChartData} options={specialBarOpts} />
+                  </div>
+                </div>
+
+                <div className="dash-card chart-card chart-card-narrow" id="chart-special-dist">
+                  <div className="dash-card-header">
+                    <h2 className="dash-card-title">
+                      <PieChart size={18} strokeWidth={2} className="card-title-icon" />
+                      Category Distribution
+                    </h2>
+                  </div>
+                  <div className="chart-container chart-container-doughnut">
+                    <Doughnut data={specialCategoriesDistData} options={doughnutOpts} />
+                  </div>
+                  <div className="doughnut-center-label">
+                    <span className="doughnut-center-num">
+                      {specialCategoriesStats.totalAllCategories}
+                    </span>
+                    <span className="doughnut-center-text">Total</span>
+                  </div>
+                </div>
+              </div>
+
+
             </div>
 
             {/* ══════ SECTION: Announcements Analytics ══════ */}

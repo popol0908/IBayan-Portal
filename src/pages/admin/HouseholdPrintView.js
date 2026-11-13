@@ -103,6 +103,7 @@ const HouseholdPrintView = React.forwardRef(({ household }, ref) => {
             <th className="header-group" rowSpan="2">CITIZENSHIP</th>
             <th className="header-group" rowSpan="2">OCCUPATION</th>
             <th className="header-group" rowSpan="2">RELATIONSHIP<br/>TO THE HEAD</th>
+            <th className="header-group" rowSpan="2">SPECIAL<br/>CATEGORIES</th>
           </tr>
           {/* Sub-headers */}
           <tr>
@@ -116,27 +117,37 @@ const HouseholdPrintView = React.forwardRef(({ household }, ref) => {
           </tr>
         </thead>
         <tbody>
-          {members.map((member, index) => (
-            <tr key={index}>
-              <td>{member.lastName || ''}</td>
-              <td>{member.firstName || ''}</td>
-              <td>{member.middleName || ''}</td>
-              <td>{member.extensionName || ''}</td>
-              <td>{household.houseNo || ''}</td>
-              <td>{member.street || household.street || ''}</td>
-              <td>{member.purok || household.purok || ''}</td>
-              <td>{member.placeOfBirth || ''}</td>
-              <td>{formatDOB(member.dateOfBirth)}</td>
-              <td>{member.gender || ''}</td>
-              <td>{member.civilStatus || ''}</td>
-              <td>{member.citizenship || ''}</td>
-              <td>{member.occupation || ''}</td>
-              <td>{member.relationshipToHead || ''}</td>
-            </tr>
-          ))}
+          {members.map((member, index) => {
+            const sc = [
+              member.isPWD && 'PWD',
+              member.isSeniorCitizen && 'Senior',
+              member.isSoloParent && 'Solo Parent',
+              member.isPatient && 'Patient',
+            ].filter(Boolean).join(', ');
+            return (
+              <tr key={index}>
+                <td>{member.lastName || ''}</td>
+                <td>{member.firstName || ''}</td>
+                <td>{member.middleName || ''}</td>
+                <td>{member.extensionName || ''}</td>
+                <td>{household.houseNo || ''}</td>
+                <td>{member.street || household.street || ''}</td>
+                <td>{member.purok || household.purok || ''}</td>
+                <td>{member.placeOfBirth || ''}</td>
+                <td>{formatDOB(member.dateOfBirth)}</td>
+                <td>{member.gender || ''}</td>
+                <td>{member.civilStatus || ''}</td>
+                <td>{member.citizenship || ''}</td>
+                <td>{member.occupation || ''}</td>
+                <td>{member.relationshipToHead || ''}</td>
+                <td>{sc}</td>
+              </tr>
+            );
+          })}
           {/* Empty rows to fill the form */}
           {emptyRows.map((_, index) => (
             <tr key={`empty-${index}`} className="empty-row">
+              <td>&nbsp;</td>
               <td>&nbsp;</td>
               <td>&nbsp;</td>
               <td>&nbsp;</td>

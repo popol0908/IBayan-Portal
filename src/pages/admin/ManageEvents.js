@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, Calendar, Users, X, Pencil, Trash2, ChevronUp, ChevronDown,
   ClipboardList, FileText, User, Clock, Hash, AlertTriangle, Printer,
+  CalendarHeart, Filter, CheckCircle
 } from '../../components/Icons';
 import { useReactToPrint } from 'react-to-print';
 import IconBox from '../../components/IconBox';
@@ -184,6 +185,20 @@ const ManageEvents = () => {
     const dateValidation = validateDate(formData.eventDate, false);
     if (!dateValidation.isValid) {
       newErrors.eventDate = dateValidation.error;
+    }
+
+    const validateTimeRange = (timeStr) => {
+      if (!timeStr) return true;
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return (hours >= 7 && (hours < 19 || (hours === 19 && minutes === 0)));
+    };
+
+    if (formData.eventTime && !validateTimeRange(formData.eventTime)) {
+      newErrors.eventTime = "Time must be within office hours (7:00 AM – 7:00 PM) only.";
+    }
+    
+    if (formData.eventTimeEnd && !validateTimeRange(formData.eventTimeEnd)) {
+      newErrors.eventTimeEnd = "Time must be within office hours (7:00 AM – 7:00 PM) only.";
     }
     
     setErrors(newErrors);
@@ -381,47 +396,131 @@ const ManageEvents = () => {
             </button>
           </div>
 
-          {/* Statistics */}
-          <div className="hh-stats-grid">
-            <div className="admin-card hh-stat-card">
-              <IconBox variant="blue" size="sm"><Calendar size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{events.length}</h3>
-                <p className="hh-stat-label">Total Events</p>
-              </div>
-            </div>
-            <div className="admin-card hh-stat-card hh-stat-teal">
-              <IconBox variant="teal" size="sm"><Calendar size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">
-                  {events.filter(e => getEventStatus(e) === 'upcoming' || getEventStatus(e) === 'today').length}
-                </h3>
-                <p className="hh-stat-label">Upcoming & Ongoing</p>
-              </div>
-            </div>
-            <div className="admin-card hh-stat-card hh-stat-amber">
-              <IconBox variant="amber" size="sm"><Calendar size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">
-                  {events.filter(e => getEventStatus(e) === 'past').length}
-                </h3>
-                <p className="hh-stat-label">Past</p>
-              </div>
-            </div>
-          </div>
+          {/* ── 3 Stat Cards (Special Categories Demographics Style) ── */}
+          {(() => {
+            const totalCount = events.length;
+            const upcomingCount = events.filter(e => getEventStatus(e) === 'upcoming' || getEventStatus(e) === 'today').length;
+            const pastCount = events.filter(e => getEventStatus(e) === 'past').length;
 
-          {/* Filters */}
-          <div className="filters-section">
-            <select
-              className="filter-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Events</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="past">Past</option>
-            </select>
-          </div>
+            return (
+              <div className="sc-kpi-grid">
+                <div
+                  className={`sc-kpi-card sc-kpi-blue ${statusFilter === 'all' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setStatusFilter('all')}
+                  title="Show all events"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-blue">
+                      <Calendar size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Total</span>
+                  </div>
+                  <div className="sc-kpi-num">{totalCount}</div>
+                  <div className="sc-kpi-title">Total Events</div>
+                  <div className="sc-kpi-pct">All community programs</div>
+                </div>
+
+                <div
+                  className={`sc-kpi-card sc-kpi-teal ${statusFilter === 'upcoming' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setStatusFilter(prev => prev === 'upcoming' ? 'all' : 'upcoming')}
+                  title="Click to filter by upcoming events"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-teal">
+                      <CalendarHeart size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Upcoming</span>
+                  </div>
+                  <div className="sc-kpi-num">{upcomingCount}</div>
+                  <div className="sc-kpi-title">Upcoming & Ongoing</div>
+                  <div className="sc-kpi-pct">
+                    {totalCount > 0
+                      ? `${((upcomingCount / totalCount) * 100).toFixed(0)}% of total programs`
+                      : 'Active & scheduled'}
+                  </div>
+                </div>
+
+                <div
+                  className={`sc-kpi-card sc-kpi-amber ${statusFilter === 'past' ? 'sc-kpi-active' : ''}`}
+                  onClick={() => setStatusFilter(prev => prev === 'past' ? 'all' : 'past')}
+                  title="Click to filter by past events"
+                >
+                  <div className="sc-kpi-top">
+                    <div className="sc-kpi-icon sc-kpi-icon-amber">
+                      <Clock size={20} strokeWidth={2} />
+                    </div>
+                    <span className="sc-kpi-badge">Past</span>
+                  </div>
+                  <div className="sc-kpi-num">{pastCount}</div>
+                  <div className="sc-kpi-title">Past Events</div>
+                  <div className="sc-kpi-pct">
+                    {totalCount > 0
+                      ? `${((pastCount / totalCount) * 100).toFixed(0)}% of total programs`
+                      : 'Concluded programs'}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── Events Card Section ── */}
+          <div className="alerts-table-card events-table-card">
+            <div className="table-card-header">
+              <div className="table-card-title-group">
+                <h2 className="table-card-title">Existing Events & Programs</h2>
+                <span className="table-card-count">
+                  {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}
+                </span>
+              </div>
+
+              {/* Status Filter Dropdown */}
+              <div className="ann-date-filter-wrap">
+                <span className="ann-date-filter-label">
+                  <Filter size={13} strokeWidth={2} /> Filter:
+                </span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="ann-date-filter-select"
+                >
+                  <option value="all">All Events</option>
+                  <option value="upcoming">Upcoming & Ongoing</option>
+                  <option value="past">Past</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="admin-filter-tabs">
+              <button
+                className={`admin-filter-tab ${statusFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
+                <Calendar size={13} strokeWidth={2} />
+                <span>All Events</span>
+                <span className="admin-filter-tab-count">{events.length}</span>
+              </button>
+              <button
+                className={`admin-filter-tab tab-teal ${statusFilter === 'upcoming' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('upcoming')}
+              >
+                <CalendarHeart size={13} strokeWidth={2} />
+                <span>Upcoming & Ongoing</span>
+                <span className="admin-filter-tab-count">
+                  {events.filter(e => getEventStatus(e) === 'upcoming' || getEventStatus(e) === 'today').length}
+                </span>
+              </button>
+              <button
+                className={`admin-filter-tab tab-amber ${statusFilter === 'past' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('past')}
+              >
+                <Clock size={13} strokeWidth={2} />
+                <span>Past</span>
+                <span className="admin-filter-tab-count">
+                  {events.filter(e => getEventStatus(e) === 'past').length}
+                </span>
+              </button>
+            </div>
 
           {/* Existing Events & Programs */}
           <div className="events-card-list">
@@ -509,6 +608,7 @@ const ManageEvents = () => {
               })
             )}
           </div>
+          </div>
 
           {/* Create/Edit Modal */}
           {showModal && (
@@ -579,10 +679,13 @@ const ManageEvents = () => {
                       <input
                         type="time"
                         name="eventTime"
-                        className="form-input"
+                        className={`form-input ${errors.eventTime ? 'input-error' : ''}`}
                         value={formData.eventTime}
                         onChange={handleChange}
+                        min="07:00"
+                        max="19:00"
                       />
+                      {errors.eventTime && <span className="field-error">{errors.eventTime}</span>}
                     </div>
 
                     <div className="form-group">
@@ -590,10 +693,13 @@ const ManageEvents = () => {
                       <input
                         type="time"
                         name="eventTimeEnd"
-                        className="form-input"
+                        className={`form-input ${errors.eventTimeEnd ? 'input-error' : ''}`}
                         value={formData.eventTimeEnd}
                         onChange={handleChange}
+                        min="07:00"
+                        max="19:00"
                       />
+                      {errors.eventTimeEnd && <span className="field-error">{errors.eventTimeEnd}</span>}
                     </div>
                   </div>
 

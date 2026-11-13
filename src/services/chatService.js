@@ -32,10 +32,11 @@ GUIDELINES:
 - Use professional but friendly tone
 - Focus on practical, actionable advice
 - If asked about resident features, explain how admins can manage them
-- Do NOT mention features that don't exist (e.g., voting, surveys, feedback, document requests)
+- Do NOT mention features that don't exist in the portal (e.g., online voting, online surveys, online document requests). Clarify that document requests must be done physically at the barangay hall.
 
 KNOWLEDGE BASE:
-${JSON.stringify(knowledgeBase.admin_guides, null, 2)}
+General Info: ${JSON.stringify(knowledgeBase.general_info, null, 2)}
+Admin Guides: ${JSON.stringify(knowledgeBase.admin_guides, null, 2)}
 
 Always be helpful, accurate, and safe. Do not make up information. If you don't know something, say so.`;
   } else {
@@ -59,9 +60,10 @@ GUIDELINES:
 - Provide step-by-step instructions when explaining features
 - Reference the knowledge base for accurate information
 - If you don't know something, direct users to contact the barangay hall
-- Do NOT mention features that don't exist (e.g., voting, surveys, feedback, document requests, barangay clearance)
+- Do NOT mention features that don't exist in the portal (e.g., online voting, online surveys, online document requests). Clarify that document requests must be done physically at the barangay hall.
 
 KNOWLEDGE BASE:
+General Info: ${JSON.stringify(knowledgeBase.general_info, null, 2)}
 FAQ: ${JSON.stringify(knowledgeBase.faq, null, 2)}
 Navigation: ${JSON.stringify(knowledgeBase.navigation, null, 2)}
 

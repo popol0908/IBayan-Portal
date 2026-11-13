@@ -32,6 +32,7 @@ import ManageAnnouncements from "./pages/admin/ManageAnnouncements";
 import ResidentVerification from "./pages/admin/ResidentVerification";
 import ManageAdminAccounts from "./pages/admin/ManageAdminAccounts";
 import HouseholdProfiling from "./pages/admin/HouseholdProfiling";
+import ResidentMap from "./pages/admin/ResidentMap";
 import ChangePassword from "./pages/admin/ChangePassword";
 import HouseholdProfile from "./pages/HouseholdProfile";
 
@@ -270,6 +271,14 @@ function AppContent() {
               element={
                 <AdminProtectedRoute>
                   <HouseholdProfiling />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/map"
+              element={
+                <AdminProtectedRoute>
+                  <ResidentMap />
                 </AdminProtectedRoute>
               }
             />

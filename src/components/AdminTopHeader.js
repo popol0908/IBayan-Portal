@@ -11,6 +11,7 @@ const SEARCH_PLACEHOLDERS = {
   '/admin/dashboard':     'Search dashboard...',
   '/admin/announcements': 'Search announcements...',
   '/admin/residents':     'Search residents...',
+  '/admin/map':           'Search resident map...',
   '/admin/households':    'Search household profiles...',
   '/admin/events':        'Search events & programs...',
   '/admin/accounts':      'Search admin accounts...',

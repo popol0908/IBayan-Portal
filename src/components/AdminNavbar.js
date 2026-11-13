@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  Map,
 } from './Icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLoading } from '../contexts/LoadingContext';
@@ -28,6 +29,7 @@ const icons = {
   home: <Home {...iconProps} />,
   calendar: <Calendar {...iconProps} />,
   gear: <Settings {...iconProps} />,
+  map: <Map {...iconProps} />,
   logout: <LogOut {...iconProps} />,
   chevronLeft: <ChevronLeft {...chevronProps} />,
   chevronRight: <ChevronRight {...chevronProps} />,
@@ -45,6 +47,7 @@ const ALL_NAV_ITEMS = [
   { path: '/admin/dashboard',     label: 'Dashboard',             icon: icons.chart },
   { path: '/admin/announcements', label: 'Announcements',         icon: icons.megaphone,  requiredPermission: 'announcements' },
   { path: '/admin/residents',     label: 'Resident Verification', icon: icons.checkCircle, requiredPermission: 'residentVerification' },
+  { path: '/admin/map',           label: 'Resident Map',          icon: icons.map,         requiredPermission: 'residentVerification' },
   { path: '/admin/households',    label: 'Household Profiling',   icon: icons.home,        requiredPermission: 'householdProfiling' },
   { path: '/admin/events',        label: 'Events & Programs',     icon: icons.calendar,    requiredPermission: 'events' },
   { path: '/admin/accounts',      label: 'Admin Accounts',        icon: icons.gear,        secretaryOnly: true },

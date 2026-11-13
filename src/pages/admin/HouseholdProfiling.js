@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   X, Eye, Trash2, Users, Home, Clock, CheckCircle,
-  AlertTriangle, Printer, Search, Save,
+  AlertTriangle, Printer, Search, Save, RefreshCw, Table, Filter,
 } from '../../components/Icons';
 import { useReactToPrint } from 'react-to-print';
 import {
@@ -39,9 +39,12 @@ const HouseholdProfiling = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [purokFilter, setPurokFilter] = useState('all');
+  const [tableCategoryFilter, setTableCategoryFilter] = useState('all');
+  const [tablePurokFilter, setTablePurokFilter] = useState('all');
 
   // Submitter names cache: uid -> fullName
   const [submitterNames, setSubmitterNames] = useState({});
+  const fetchedUidsRef = useRef(new Set());
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -65,8 +68,15 @@ const HouseholdProfiling = () => {
 
       // Fetch submitter names for any new UIDs
       data.forEach((h) => {
-        if (h.submittedBy && !submitterNames[h.submittedBy]) {
-          fetchSubmitterName(h.submittedBy);
+        if (h.submittedByName) {
+          setSubmitterNames((prev) => ({ ...prev, [h.submittedBy]: h.submittedByName }));
+          fetchedUidsRef.current.add(h.submittedBy);
+        } else if (h.submittedBy && !fetchedUidsRef.current.has(h.submittedBy)) {
+          // Fallback to Head of Household or email if user lookup fails
+          const head = h.members?.find(m => m.relationshipToHead === 'Head');
+          const fallback = head ? `${head.firstName} ${head.lastName}` : h.submittedByEmail;
+          fetchedUidsRef.current.add(h.submittedBy);
+          fetchSubmitterName(h.submittedBy, fallback);
         }
       });
     }, (err) => {
@@ -77,21 +87,81 @@ const HouseholdProfiling = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchSubmitterName = async (uid) => {
+  const fetchSubmitterName = async (uid, fallbackName) => {
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
-        setSubmitterNames((prev) => ({ ...prev, [uid]: userDoc.data().fullName || userDoc.data().email || 'Unknown' }));
+        setSubmitterNames((prev) => ({ ...prev, [uid]: userDoc.data().fullName || userDoc.data().email || fallbackName || 'Unknown' }));
       } else {
-        setSubmitterNames((prev) => ({ ...prev, [uid]: 'Unknown User' }));
+        setSubmitterNames((prev) => ({ ...prev, [uid]: fallbackName || 'Unknown User' }));
       }
     } catch {
-      setSubmitterNames((prev) => ({ ...prev, [uid]: 'Unknown User' }));
+      setSubmitterNames((prev) => ({ ...prev, [uid]: fallbackName || 'Unknown User' }));
     }
   };
 
   /* ── Derived data ── */
   const totalMembers = households.reduce((sum, h) => sum + (h.members?.length || 0), 0);
+  const updatedCount = households.filter((h) => h.isUpdated === true).length;
+
+  /* ── Special Categories Analytics & Purok Breakdown ── */
+  const specialCategoriesStats = useMemo(() => {
+    let totalPWD = 0;
+    let totalSeniors = 0;
+    let totalSoloParents = 0;
+    let totalPatients = 0;
+    let totalMembersCount = 0;
+
+    const purokBreakdown = {};
+    PUROK_OPTIONS.forEach((p) => {
+      purokBreakdown[p] = { pwd: 0, senior: 0, soloParent: 0, patient: 0, total: 0, members: 0 };
+    });
+
+    households.forEach((h) => {
+      const rawPurok = h.purok || 'Unknown';
+      const pKey = PUROK_OPTIONS.includes(rawPurok) ? rawPurok : null;
+
+      (h.members || []).forEach((m) => {
+        totalMembersCount++;
+        if (pKey) purokBreakdown[pKey].members++;
+
+        let memberSpecialCount = 0;
+        if (m.isPWD) {
+          totalPWD++;
+          if (pKey) purokBreakdown[pKey].pwd++;
+          memberSpecialCount++;
+        }
+        if (m.isSeniorCitizen) {
+          totalSeniors++;
+          if (pKey) purokBreakdown[pKey].senior++;
+          memberSpecialCount++;
+        }
+        if (m.isSoloParent) {
+          totalSoloParents++;
+          if (pKey) purokBreakdown[pKey].soloParent++;
+          memberSpecialCount++;
+        }
+        if (m.isPatient) {
+          totalPatients++;
+          if (pKey) purokBreakdown[pKey].patient++;
+          memberSpecialCount++;
+        }
+        if (memberSpecialCount > 0 && pKey) {
+          purokBreakdown[pKey].total += memberSpecialCount;
+        }
+      });
+    });
+
+    return {
+      totalPWD,
+      totalSeniors,
+      totalSoloParents,
+      totalPatients,
+      totalAllCategories: totalPWD + totalSeniors + totalSoloParents + totalPatients,
+      totalMembersCount,
+      purokBreakdown,
+    };
+  }, [households]);
 
   const filteredHouseholds = households.filter((h) => {
     const name = submitterNames[h.submittedBy] || '';
@@ -106,9 +176,17 @@ const HouseholdProfiling = () => {
   });
 
   /* ── Actions ── */
-  const openViewModal = (household) => {
-    setSelectedHousehold(household);
+  const openViewModal = async (h) => {
+    setSelectedHousehold(h);
     setShowViewModal(true);
+    // Clear the "Updated" badge when admin views the profile
+    if (h.isUpdated) {
+      try {
+        await updateDoc(doc(db, 'households', h.id), { isUpdated: false });
+      } catch (err) {
+        console.error('Error clearing isUpdated flag:', err);
+      }
+    }
   };
 
   const openDeleteDialog = (household) => {
@@ -150,37 +228,175 @@ const HouseholdProfiling = () => {
             </div>
           </div>
 
-          {/* ── Stats Row ── */}
-          <div className="hh-stats-grid">
-            <div className="admin-card hh-stat-card">
-              <IconBox variant="blue" size="sm"><Home size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{households.length}</h3>
-                <p className="hh-stat-label">Total Households</p>
+          {/* ── 3 Stat Cards (Special Categories Demographics Style - Static / Informational) ── */}
+          <div className="sc-kpi-grid">
+            <div className="sc-kpi-card sc-kpi-blue sc-kpi-static">
+              <div className="sc-kpi-top">
+                <div className="sc-kpi-icon sc-kpi-icon-blue">
+                  <Home size={20} strokeWidth={2} />
+                </div>
+                <span className="sc-kpi-badge">Households</span>
+              </div>
+              <div className="sc-kpi-num">{households.length}</div>
+              <div className="sc-kpi-title">Total Households</div>
+              <div className="sc-kpi-pct">Registered family units</div>
+            </div>
+
+            <div className="sc-kpi-card sc-kpi-teal sc-kpi-static">
+              <div className="sc-kpi-top">
+                <div className="sc-kpi-icon sc-kpi-icon-teal">
+                  <Users size={20} strokeWidth={2} />
+                </div>
+                <span className="sc-kpi-badge">Population</span>
+              </div>
+              <div className="sc-kpi-num">{totalMembers}</div>
+              <div className="sc-kpi-title">Total Profiled Members</div>
+              <div className="sc-kpi-pct">
+                Avg {households.length > 0 ? (totalMembers / households.length).toFixed(1) : 0} members / household
               </div>
             </div>
-            <div className="admin-card hh-stat-card">
-              <IconBox variant="green" size="sm"><Users size={20} strokeWidth={1.8} /></IconBox>
-              <div className="hh-stat-content">
-                <h3 className="hh-stat-number">{totalMembers}</h3>
-                <p className="hh-stat-label">Total Members</p>
+
+            <div className="sc-kpi-card sc-kpi-amber sc-kpi-static">
+              <div className="sc-kpi-top">
+                <div className="sc-kpi-icon sc-kpi-icon-amber">
+                  <RefreshCw size={20} strokeWidth={2} />
+                </div>
+                <span className="sc-kpi-badge">Updated</span>
+              </div>
+              <div className="sc-kpi-num">{updatedCount}</div>
+              <div className="sc-kpi-title">Recently Updated</div>
+              <div className="sc-kpi-pct">
+                {households.length > 0
+                  ? `${((updatedCount / households.length) * 100).toFixed(0)}% of household records`
+                  : 'All records synced'}
               </div>
             </div>
           </div>
 
-          {/* ── Filters ── */}
-          <div className="hh-filters-section">
-            <input
-              type="text"
-              placeholder="Search by name, street, purok..."
-              className="hh-search-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <select className="hh-filter-select" value={purokFilter} onChange={(e) => setPurokFilter(e.target.value)}>
-              <option value="all">All Puroks</option>
-              {PUROK_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
+          {/* ── Purok Breakdown Data Table ── */}
+          <div className="sc-table-wrap hh-purok-table-wrap">
+            <div className="sc-table-header">
+              <div className="sc-table-title-group">
+                <Table size={16} strokeWidth={2} />
+                <span className="sc-table-title">Purok Breakdown Data Table</span>
+              </div>
+              <div className="sc-table-controls">
+                <div className="section-filter-item">
+                  <span className="section-filter-label"><Filter size={13} strokeWidth={2} /> Category:</span>
+                  <select
+                    className="section-filter-select"
+                    value={tableCategoryFilter}
+                    onChange={(e) => setTableCategoryFilter(e.target.value)}
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="pwd">PWD (Persons with Disability)</option>
+                    <option value="senior">Senior Citizens (60+)</option>
+                    <option value="soloParent">Solo Parents</option>
+                    <option value="patient">Patients (Chronic Illness)</option>
+                  </select>
+                </div>
+                <div className="section-filter-item">
+                  <span className="section-filter-label">Purok:</span>
+                  <select
+                    className="section-filter-select"
+                    value={tablePurokFilter}
+                    onChange={(e) => setTablePurokFilter(e.target.value)}
+                  >
+                    <option value="all">All Puroks</option>
+                    {PUROK_OPTIONS.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="sc-table-responsive">
+              <table className="sc-data-table">
+                <thead>
+                  <tr>
+                    <th>Purok</th>
+                    <th
+                      className={`th-clickable ${tableCategoryFilter === 'pwd' ? 'th-highlight' : ''}`}
+                      onClick={() => setTableCategoryFilter((prev) => (prev === 'pwd' ? 'all' : 'pwd'))}
+                      title="Click to highlight PWD"
+                    >
+                      PWD
+                    </th>
+                    <th
+                      className={`th-clickable ${tableCategoryFilter === 'senior' ? 'th-highlight' : ''}`}
+                      onClick={() => setTableCategoryFilter((prev) => (prev === 'senior' ? 'all' : 'senior'))}
+                      title="Click to highlight Senior Citizens"
+                    >
+                      Senior Citizens (60+)
+                    </th>
+                    <th
+                      className={`th-clickable ${tableCategoryFilter === 'soloParent' ? 'th-highlight' : ''}`}
+                      onClick={() => setTableCategoryFilter((prev) => (prev === 'soloParent' ? 'all' : 'soloParent'))}
+                      title="Click to highlight Solo Parents"
+                    >
+                      Solo Parents
+                    </th>
+                    <th
+                      className={`th-clickable ${tableCategoryFilter === 'patient' ? 'th-highlight' : ''}`}
+                      onClick={() => setTableCategoryFilter((prev) => (prev === 'patient' ? 'all' : 'patient'))}
+                      title="Click to highlight Chronic Patients"
+                    >
+                      Chronic Patients
+                    </th>
+                    <th>Total Special Needs</th>
+                    <th>Profiled Population</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(tablePurokFilter === 'all' ? PUROK_OPTIONS : [tablePurokFilter]).map((p) => {
+                    const d = specialCategoriesStats.purokBreakdown[p] || { pwd: 0, senior: 0, soloParent: 0, patient: 0, members: 0 };
+                    const rowTotal = d.pwd + d.senior + d.soloParent + d.patient;
+                    return (
+                      <tr key={p}>
+                        <td className="td-purok-name">
+                          <span className="sc-purok-badge">{p}</span>
+                        </td>
+                        <td className={tableCategoryFilter === 'pwd' ? 'td-highlight' : ''}>
+                          <span className="sc-cell-num">{d.pwd}</span>
+                        </td>
+                        <td className={tableCategoryFilter === 'senior' ? 'td-highlight' : ''}>
+                          <span className="sc-cell-num">{d.senior}</span>
+                        </td>
+                        <td className={tableCategoryFilter === 'soloParent' ? 'td-highlight' : ''}>
+                          <span className="sc-cell-num">{d.soloParent}</span>
+                        </td>
+                        <td className={tableCategoryFilter === 'patient' ? 'td-highlight' : ''}>
+                          <span className="sc-cell-num">{d.patient}</span>
+                        </td>
+                        <td>
+                          <span className="sc-cell-total">{rowTotal}</span>
+                        </td>
+                        <td className="td-muted">{d.members}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="sc-tfoot-row">
+                    <td>TOTAL</td>
+                    <td className={tableCategoryFilter === 'pwd' ? 'td-highlight' : ''}>
+                      {specialCategoriesStats.totalPWD}
+                    </td>
+                    <td className={tableCategoryFilter === 'senior' ? 'td-highlight' : ''}>
+                      {specialCategoriesStats.totalSeniors}
+                    </td>
+                    <td className={tableCategoryFilter === 'soloParent' ? 'td-highlight' : ''}>
+                      {specialCategoriesStats.totalSoloParents}
+                    </td>
+                    <td className={tableCategoryFilter === 'patient' ? 'td-highlight' : ''}>
+                      {specialCategoriesStats.totalPatients}
+                    </td>
+                    <td className="td-grand-total">{specialCategoriesStats.totalAllCategories}</td>
+                    <td>{specialCategoriesStats.totalMembersCount}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
 
           {/* ── Loading ── */}
@@ -193,7 +409,44 @@ const HouseholdProfiling = () => {
           {/* ── Households Table ── */}
           {!loading && (
             <div className="admin-card hh-table-card">
-              <h2 className="admin-card-title">Submitted Household Profiles</h2>
+              <div className="table-card-header">
+                <div className="table-card-title-group">
+                  <h2 className="table-card-title">Submitted Household Profiles</h2>
+                  <span className="table-card-count">
+                    {filteredHouseholds.length} {filteredHouseholds.length === 1 ? 'profile' : 'profiles'}
+                  </span>
+                </div>
+
+                <div className="hh-card-controls">
+                  <div className="hh-search-wrap">
+                    <Search size={14} className="hh-search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search name, street, purok..."
+                      className="hh-search-input-refined"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <button className="hh-search-clear" onClick={() => setSearchQuery('')} title="Clear search">
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="ann-date-filter-wrap">
+                    <span className="ann-date-filter-label">Purok:</span>
+                    <select
+                      className="ann-date-filter-select"
+                      value={purokFilter}
+                      onChange={(e) => setPurokFilter(e.target.value)}
+                    >
+                      <option value="all">All Puroks</option>
+                      {PUROK_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
               <div className="hh-table-container">
                 <table className="hh-table admin-table">
                   <thead>
@@ -210,7 +463,7 @@ const HouseholdProfiling = () => {
                   <tbody>
                     {filteredHouseholds.length === 0 ? (
                       <tr>
-                        <td colSpan="8">
+                        <td colSpan="7">
                           <div className="hh-empty-state">
                             <div className="hh-empty-icon">
                               <Home size={48} strokeWidth={1.5} />
@@ -227,7 +480,10 @@ const HouseholdProfiling = () => {
                     ) : (
                       filteredHouseholds.map((h) => (
                         <tr key={h.id}>
-                          <td><span className="hh-no-cell">{h.householdNo}</span></td>
+                          <td>
+                            <span className="hh-no-cell">{h.householdNo}</span>
+                            {h.isUpdated && <span className="hh-updated-badge">Updated</span>}
+                          </td>
                           <td>{submitterNames[h.submittedBy] || '...'}</td>
                           <td>{h.street || '—'}</td>
                           <td><span className="badge-pill badge-teal">{h.purok}</span></td>
@@ -340,32 +596,52 @@ const HouseholdProfiling = () => {
                           <th>Citizenship</th>
                           <th>Occupation</th>
                           <th>Relationship</th>
+                          <th>Special Categories</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(selectedHousehold.members || []).map((m, i) => (
-                          <tr key={i}>
-                            <td>{i + 1}</td>
-                            <td>{m.lastName}</td>
-                            <td>{m.firstName}</td>
-                            <td>{m.middleName || '—'}</td>
-                            <td>{m.extensionName || '—'}</td>
-                            <td>{m.street || '—'}</td>
-                            <td>{m.purok || '—'}</td>
-                            <td>{m.placeOfBirth || '—'}</td>
-                            <td>{formatDate(m.dateOfBirth)}</td>
-                            <td>{m.gender}</td>
-                            <td>{m.civilStatus}</td>
-                            <td>{m.citizenship}</td>
-                            <td>{m.occupation || '—'}</td>
-                            <td>
-                              {m.relationshipToHead}
-                              {m.relationshipToHead === 'Head' && (
-                                <span className="hh-head-badge" style={{ marginLeft: '0.4rem' }}>HEAD</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                        {(selectedHousehold.members || []).map((m, i) => {
+                          const tags = [
+                            m.isPWD && 'PWD',
+                            m.isSeniorCitizen && 'Senior Citizen',
+                            m.isSoloParent && 'Solo Parent',
+                            m.isPatient && 'Patient (Chronic)',
+                          ].filter(Boolean);
+                          return (
+                            <tr key={i}>
+                              <td>{i + 1}</td>
+                              <td>{m.lastName}</td>
+                              <td>{m.firstName}</td>
+                              <td>{m.middleName || '—'}</td>
+                              <td>{m.extensionName || '—'}</td>
+                              <td>{m.street || '—'}</td>
+                              <td>{m.purok || '—'}</td>
+                              <td>{m.placeOfBirth || '—'}</td>
+                              <td>{formatDate(m.dateOfBirth)}</td>
+                              <td>{m.gender}</td>
+                              <td>{m.civilStatus}</td>
+                              <td>{m.citizenship}</td>
+                              <td>{m.occupation || '—'}</td>
+                              <td>
+                                {m.relationshipToHead}
+                                {m.relationshipToHead === 'Head' && (
+                                  <span className="hh-head-badge" style={{ marginLeft: '0.4rem' }}>HEAD</span>
+                                )}
+                              </td>
+                              <td>
+                                {tags.length > 0 ? (
+                                  <span className="hh-sc-tags">
+                                    {tags.map((t) => (
+                                      <span key={t} className="hh-sc-tag">{t}</span>
+                                    ))}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: '#94A3B8' }}>—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

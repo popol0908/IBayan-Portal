@@ -9,6 +9,11 @@ import {
   validateConfirmPassword,
   validateName,
 } from "../utils/validation";
+import {
+  getCurrentPosition,
+  isPermissionDeniedError,
+  LOCATION_DENIED_MESSAGE,
+} from "../utils/geolocation";
 import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -30,7 +35,8 @@ import {
   Eye,
   EyeOff,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  LocateFixed,
 } from '../components/Icons';
 import "./Signup.css";
 
@@ -60,6 +66,7 @@ const Signup = () => {
     birthday: "",
     permanentAddress: "",
     presentAddress: "",
+    location: "",
     purok: "",
     contactNumber: "",
     proofFile: "",
@@ -70,6 +77,10 @@ const Signup = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [permanentCoords, setPermanentCoords] = useState(null);
+  const [presentCoords, setPresentCoords] = useState(null);
+  const [locatingField, setLocatingField] = useState(null);
+  const [locationDenied, setLocationDenied] = useState(false);
   
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -162,6 +173,9 @@ const Signup = () => {
     if (step === 2) {
       if (!formData.permanentAddress.trim()) newErrors.permanentAddress = "Permanent Address is required.";
       if (!formData.presentAddress.trim()) newErrors.presentAddress = "Present Address is required.";
+      if (locationDenied || (!presentCoords && !permanentCoords)) {
+        newErrors.location = LOCATION_DENIED_MESSAGE;
+      }
     }
 
     if (step === 3) {
@@ -199,6 +213,34 @@ const Signup = () => {
 
   const handleBack = () => {
     setCurrentStep(prev => prev - 1);
+  };
+
+  const handleUseCurrentLocation = async () => {
+    setLocatingField("both");
+    setErrors((prev) => ({ ...prev, location: "", permanentAddress: "", presentAddress: "" }));
+
+    try {
+      const coords = await getCurrentPosition();
+      setLocationDenied(false);
+      setPermanentCoords(coords);
+      setPresentCoords(coords);
+      showToast("Location captured successfully. Please type your addresses.", "success");
+    } catch (err) {
+      console.error("Geolocation error:", err);
+      if (isPermissionDeniedError(err)) {
+        setLocationDenied(true);
+        setErrors((prev) => ({ ...prev, location: LOCATION_DENIED_MESSAGE }));
+        showToast(LOCATION_DENIED_MESSAGE, "error");
+      } else {
+        const message =
+          err?.message ||
+          "Unable to get your location. Please check your device settings and try again.";
+        setErrors((prev) => ({ ...prev, location: message }));
+        showToast(message, "error");
+      }
+    } finally {
+      setLocatingField(null);
+    }
   };
 
   const uploadToCloudinary = async (file) => {
@@ -270,6 +312,16 @@ const Signup = () => {
         proofUrl,
         status: "emailUnverified",
         createdAt: serverTimestamp(),
+        ...(permanentCoords && {
+          permanentLatitude: permanentCoords.lat,
+          permanentLongitude: permanentCoords.lng,
+        }),
+        ...((presentCoords || permanentCoords) && {
+          latitude: (presentCoords || permanentCoords).lat,
+          longitude: (presentCoords || permanentCoords).lng,
+          presentLatitude: (presentCoords || permanentCoords).lat,
+          presentLongitude: (presentCoords || permanentCoords).lng,
+        }),
       });
 
       try {
@@ -452,6 +504,67 @@ const Signup = () => {
             {/* STEP 2: Address Details */}
             {currentStep === 2 && (
               <div className="form-step slide-in">
+                <div className="location-home-notice" role="note">
+                  <Info size={16} strokeWidth={2} />
+                  <p>
+                    <strong>Important:</strong> Please make sure you are physically at your home when filling up your address so that your location is accurately recorded.
+                  </p>
+                </div>
+
+                {(locationDenied || errors.location) && (
+                  <div className="location-denied-banner" role="alert">
+                    <AlertTriangle size={16} strokeWidth={2} />
+                    <div>
+                      <p>{errors.location || LOCATION_DENIED_MESSAGE}</p>
+                      <div className="location-help-steps">
+                        <p className="location-help-title">How to enable location access:</p>
+                        <ol>
+                          <li>
+                            <strong>Chrome / Edge (Desktop):</strong> Click the lock or tune icon in the address bar → Site settings → Location → Allow, then reload this page.
+                          </li>
+                          <li>
+                            <strong>Chrome (Android):</strong> Tap the lock icon → Permissions → Location → Allow. Also enable Location in your phone Settings.
+                          </li>
+                          <li>
+                            <strong>Safari (iPhone / iPad):</strong> Open Settings → Safari → Location → Allow, or Settings → Privacy &amp; Security → Location Services → Safari Websites → Allow.
+                          </li>
+                          <li>
+                            After enabling, tap <em>Use My Current Location</em> again below.
+                          </li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Single shared location button — above both address fields */}
+                <div className="location-capture-row">
+                  <button
+                    type="button"
+                    className="btn-use-location btn-use-location--full"
+                    onClick={handleUseCurrentLocation}
+                    disabled={loading || locatingField !== null}
+                  >
+                    <LocateFixed size={14} strokeWidth={2} />
+                    {locatingField === "both"
+                      ? "Detecting location..."
+                      : permanentCoords && presentCoords
+                        ? "Location captured — tap to refresh"
+                        : "Use My Current Location"}
+                  </button>
+                  {permanentCoords && presentCoords && (
+                    <span className="location-coords-hint location-coords-hint--shared">
+                      <CheckCircle size={12} strokeWidth={2} />
+                      GPS saved ({permanentCoords.lat.toFixed(5)}, {permanentCoords.lng.toFixed(5)}) — applied to both addresses
+                    </span>
+                  )}
+                  {!permanentCoords && !presentCoords && !locationDenied && (
+                    <span className="location-required-hint">
+                      Location access is required. Tap the button above while at your home address.
+                    </span>
+                  )}
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">
                     <span className="label-icon">
@@ -677,6 +790,14 @@ const Signup = () => {
                       <span className="summary-label">Present Address</span>
                       <span className="summary-value">{formData.presentAddress}, Mabayuan, Olongapo City, Philippines</span>
                     </div>
+                    {presentCoords && (
+                      <div className="summary-row">
+                        <span className="summary-label">GPS Location</span>
+                        <span className="summary-value">
+                          {presentCoords.lat.toFixed(5)}, {presentCoords.lng.toFixed(5)}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="summary-section">

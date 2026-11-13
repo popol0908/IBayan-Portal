@@ -84,6 +84,8 @@ service cloud.firestore {
       allow read: if isAdmin();
       // Users can create a household
       allow create: if isAuthenticated() && request.resource.data.submittedBy == request.auth.uid;
+      // Users can update their own household profile
+      allow update: if isAuthenticated() && resource.data.submittedBy == request.auth.uid;
       // Admins can update or delete
       allow update, delete: if isAdmin();
     }

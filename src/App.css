@@ -146,6 +146,14 @@ body.sidebar-collapsed .App {
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  color: var(--text-primary);
+  background-color: var(--background-white);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder,
+.form-select::placeholder {
+  color: #9ca3af;
 }
 
 .form-input:focus,
